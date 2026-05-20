@@ -32,6 +32,102 @@ The full local verification command is:
 python scripts/run_all_smoke_tests.py --check-gifs
 ```
 
+## Handoff Snapshot
+
+This section is written for the next coding agent. It should be enough to
+resume without rereading the whole repository first.
+
+Current repository state:
+
+- Branch: `main`
+- Check the latest pushed commit with `git log --oneline --decorate -1`.
+- Latest known GitHub Actions run on `main`: green on Python 3.10, 3.11, and
+  3.12
+- Last local verification command run successfully:
+
+```bash
+python scripts/run_all_smoke_tests.py --check-gifs
+```
+
+Current high-value files to read before changing code:
+
+1. `docs/implementation_gap_audit.md`
+2. `docs/trace.md`
+3. `docs/example_authoring.md`
+4. `pir/adapters/gymnasium_adapter.py`
+5. `tests/test_gymnasium_adapter.py`
+6. `examples/navigation/09_blocked_path_recovery.py`
+
+Recent completed work:
+
+- Initial repository contents were committed and pushed.
+- CI was confirmed green after the initial push.
+- `DynamicObstacleGridWorldGymnasiumAdapter` was added.
+- Trace summaries were added through `Trace.summary()` and
+  `summarize_trace(trace)`.
+- `examples/runtime/26_trace_replay.py` was added.
+- `docs/trace.md` was added.
+- `docs/implementation_gap_audit.md` was added.
+- Category READMEs were tightened with more "What this teaches" and "Things to
+  try" sections.
+
+The next agent should not redo those items. If any of them seem missing, first
+check the current branch and latest pulled commit.
+
+Recommended next task:
+
+1. Add a clean `BlockedPathWorld` Gymnasium adapter.
+2. Do not import `examples/navigation/09_blocked_path_recovery.py` from
+   `pir/adapters`; that would make package code depend on examples.
+3. First extract the reusable `BlockedPathWorld` environment into a package
+   module, most likely `pir/worlds/blocked_path.py`.
+4. Keep the example's agent and teaching loop in
+   `examples/navigation/09_blocked_path_recovery.py`.
+5. Update the example to import the extracted world, but keep its behavior and
+   smoke assertions unchanged.
+6. Add `BlockedPathWorldGymnasiumAdapter` in
+   `pir/adapters/gymnasium_adapter.py`.
+7. Export it from `pir/adapters/__init__.py`.
+8. Add focused adapter tests covering reset shape, step shape, action decoding,
+   success termination, timeout truncation, and recoverable `blocked_path`
+   failure.
+9. Update `README.md`, `docs/status.md`, and this file if adapter counts or
+   current status change.
+10. Run the full verification command before committing or pushing.
+
+Suggested acceptance tests for `BlockedPathWorldGymnasiumAdapter`:
+
+- `reset()` returns encoded observation keys:
+  `time`, `robot`, `goal`, `known_map`, `dynamic_blocker`,
+  `last_blocked_cell`.
+- `info["raw_obs"]` preserves the original world observation.
+- integer action `GRID_ACTIONS.index("east")` decodes to `"east"`.
+- moving into the goal returns `terminated=True`, `truncated=False`.
+- hitting `max_steps` returns `terminated=False`, `truncated=True` with a
+  nonrecoverable `timeout` failure.
+- moving into the active blocker returns `terminated=False`, `truncated=False`
+  with recoverable `blocked_path`.
+
+Preferred implementation boundary:
+
+- `pir/worlds/blocked_path.py`: world class and small grid helpers needed by
+  the world.
+- `examples/navigation/09_blocked_path_recovery.py`: agent, A* policy,
+  rendering, and example `run()` loop.
+- `pir/adapters/gymnasium_adapter.py`: adapter only, following the existing
+  `GridWorldGymnasiumAdapter` pattern.
+
+Do not start yet:
+
+- Do not add Gymnasium as a core dependency.
+- Do not add ROS2, MuJoCo, PyBullet, Torch, JAX, TensorFlow, Docker, or GPU
+  requirements.
+- Do not convert examples into a framework.
+- Do not move shared code into `pir/` unless the move makes package boundaries
+  cleaner or avoids three-or-more-example repetition.
+- Do not regenerate GIFs unless a visible README GIF changes or a new major
+  example is added.
+
 ## Product Boundary
 
 This project is an educational collection of interactive robotics loops. It is
@@ -136,6 +232,15 @@ Next candidates:
 2. one continuous-control example such as `MovingObstacleWorld`
 3. a tiny embodied-AI wrapper for controlled language goals
 
+Detailed next step for `BlockedPathWorld`:
+
+- Extract only the world/environment portion from
+  `examples/navigation/09_blocked_path_recovery.py`.
+- Keep the example readable and local where possible; the agent and teaching
+  policy should remain in the example.
+- Add the adapter after the package boundary is clean.
+- Tests should be added before broadening the adapter API further.
+
 Rules:
 
 - adapters must be importable without Gymnasium installed
@@ -178,7 +283,7 @@ Selection rule:
 
 Goal: make the internal loop easier to inspect after a run.
 
-Already done:
+Done baseline:
 
 - lightweight `Trace.summary()` and `summarize_trace(trace)` helpers
 - tests for reward, success, failure-count, terminal/recoverable failure, and
@@ -190,6 +295,9 @@ Already done:
 Tasks:
 
 1. Keep trace tooling small enough that it does not become a logging framework.
+2. Only add more trace APIs when at least two examples need the same inspection
+   pattern.
+3. Prefer small examples and docs over a generalized replay framework.
 
 Acceptance criteria:
 
@@ -211,8 +319,9 @@ Current status:
 
 Next:
 
-- extend to selected worlds only when the action and observation mapping stays
-  clear
+- add `BlockedPathWorld` after extracting the world boundary cleanly
+- extend to other selected worlds only when the action and observation mapping
+  stays clear
 - keep examples independent from Gymnasium
 
 ### Simulator Bridge
@@ -272,6 +381,20 @@ When a new example is added, update:
 6. `scripts/make_gifs.py` if it needs a GIF
 7. tests
 
+When a new adapter is added, update:
+
+1. `pir/adapters/gymnasium_adapter.py`
+2. `pir/adapters/__init__.py`
+3. `tests/test_gymnasium_adapter.py`
+4. `README.md` if it changes the public adapter list
+5. `docs/status.md`
+6. `docs/plan.md`
+7. `docs/simulator_integration_strategy.md` if bridge status changes
+
+When package code is extracted from an example, keep the example's learner-facing
+loop visible. The package module should make boundaries cleaner, not hide the
+teaching logic.
+
 ## Testing Plan
 
 Keep test types small and explicit:
@@ -301,6 +424,38 @@ A new example is done when:
 6. category README includes the example
 7. GIF exists if the example is a major teaching example
 8. `python scripts/run_all_smoke_tests.py --check-gifs` passes
+
+## Definition Of Done For A New Adapter
+
+A new optional adapter is done when:
+
+1. the adapter module imports without Gymnasium installed
+2. `pip install -e ".[rl]"` provides action and observation spaces
+3. `reset()` returns `(obs, info)`
+4. `step()` returns `(obs, reward, terminated, truncated, info)`
+5. `info["raw_obs"]` preserves the unencoded toy-world observation
+6. action decoding is tested
+7. success is tested as termination
+8. timeout is tested as truncation
+9. at least one domain failure path is tested
+10. examples are not rewritten around Gymnasium
+11. `python scripts/run_all_smoke_tests.py --check-gifs` passes
+
+## Suggested Claude Work Plan
+
+If Claude is taking over, the most efficient first pass is:
+
+1. Run `git status --short --branch`.
+2. Run `python scripts/run_all_smoke_tests.py --check-gifs` if local
+   dependencies are already installed.
+3. Read `examples/navigation/09_blocked_path_recovery.py`.
+4. Extract `BlockedPathWorld` into `pir/worlds/blocked_path.py`.
+5. Update the example import and keep its smoke test green.
+6. Add `BlockedPathWorldGymnasiumAdapter`.
+7. Add adapter tests.
+8. Run `python -m pytest tests/test_gymnasium_adapter.py -q`.
+9. Run the full smoke plus GIF check.
+10. Commit and push only after the worktree is cleanly understood.
 
 ## Do Not Start Yet
 
