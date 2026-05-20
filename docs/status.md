@@ -13,6 +13,7 @@ see what exists, what is verified, and what should come next.
 - Contributor extra: `pip install -e ".[dev]"`
 - CI: Python 3.10, 3.11, 3.12
 - Execution plan: `docs/plan.md`
+- Trace inspection docs: `docs/trace.md`
 - Bridge docs: `docs/ros2_bridge_strategy.md`,
   `docs/simulator_integration_strategy.md`
 - Optional adapters: `GridWorldGymnasiumAdapter`,
@@ -51,8 +52,8 @@ The regression suite also checks structured `Failure` objects for representative
 recoverable and terminal failures.
 The adapter suite checks the Gymnasium-style `reset()` / `step()` contract
 without making Gymnasium a core dependency.
-The trace summary tests check compact reward, success, failure, and loop-counter
-extraction from headless runs.
+The trace docs and summary tests cover compact reward, success, failure, and
+loop-counter extraction from headless runs.
 The Markdown asset check verifies local README image links and category GIF
 galleries.
 GitHub Actions runs the smoke suite and GIF checks on Python 3.10, 3.11, and
@@ -85,8 +86,8 @@ dependency boundaries:
 2. expand regression tests for shared contracts as new examples are added
 3. extract shared helpers only where three or more examples naturally repeat
 4. extend optional Gymnasium compatibility to the next clear toy-world mappings
-5. document trace fields and keep replay tooling small enough that it does not
-   become a logging framework
+5. keep trace replay tooling small enough that it does not become a logging
+   framework
 
 The root first-run experience should remain:
 
