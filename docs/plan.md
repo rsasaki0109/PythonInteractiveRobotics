@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 22 runnable examples
+- 23 runnable examples
 - 20 numbered learning-path examples
-- 2 extra examples outside the original learning-path roadmap
-- 21 generated README GIFs
-- 59 smoke and regression tests
+- 3 extra examples outside the original learning-path roadmap
+- 22 generated README GIFs
+- 65 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -81,6 +81,10 @@ Recent completed work:
 - Focused adapter tests were added covering reset shape, step shape, action
   decoding, success termination, timeout truncation, and recoverable
   `blocked_path` failure.
+- `examples/navigation/10_localization_uncertainty_recovery.py` was added.
+  The agent wakes up with a bimodal pose belief, takes information actions
+  toward the symmetric landmark, then switches one-way to goal navigation
+  after the belief collapses. A GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
@@ -89,8 +93,9 @@ Recommended next task:
 
 1. Pick the next adapter or example from the "Next candidates" list under
    Priority 3 and Priority 4. A continuous-control wrapper such as
-   `MovingObstacleWorld`, or `examples/navigation/10_localization_uncertainty_recovery.py`,
-   are both reasonable next steps.
+   `MovingObstacleWorld`, or a manipulation belief-grasp example
+   (`examples/manipulation/08_belief_grasp_selection.py`) are both reasonable
+   next steps.
 2. Keep the package/example boundary the same as the `BlockedPathWorld` work:
    environment in `pir/worlds/`, agent + policy + run loop in the example.
 3. Adapter tests should be added before broadening the adapter API further.
@@ -226,21 +231,25 @@ Acceptance criteria:
 
 ### Priority 4: Add The Next Example Tier
 
-Goal: grow from 22 examples toward 30 examples without losing readability.
+Goal: grow from 23 examples toward 30 examples without losing readability.
+
+Already done from the previous tier:
+
+- `examples/navigation/10_localization_uncertainty_recovery.py` — pose
+  uncertainty -> information action -> resume goal navigation.
 
 Recommended next examples:
 
 | Priority | Example | Area | Loop |
 | --- | --- | --- | --- |
-| 1 | `examples/navigation/10_localization_uncertainty_recovery.py` | navigation | pose uncertainty -> information action -> recover |
-| 2 | `examples/manipulation/08_belief_grasp_selection.py` | manipulation | pose belief -> grasp choice -> failure update |
-| 3 | `examples/manipulation/09_active_viewpoint_for_grasp.py` | manipulation | choose view -> reduce occlusion -> grasp |
-| 4 | `examples/embodied_ai/21_object_permanence_toy.py` | embodied AI | object disappears -> memory persists -> search |
-| 5 | `examples/embodied_ai/22_where_did_i_see_it.py` | embodied AI | memory query -> revisit place -> act |
-| 6 | `examples/world_models/23_model_error_recovery.py` | world model | prediction failure -> update model -> recover |
-| 7 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
-| 8 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
-| 9 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
+| 1 | `examples/manipulation/08_belief_grasp_selection.py` | manipulation | pose belief -> grasp choice -> failure update |
+| 2 | `examples/manipulation/09_active_viewpoint_for_grasp.py` | manipulation | choose view -> reduce occlusion -> grasp |
+| 3 | `examples/embodied_ai/21_object_permanence_toy.py` | embodied AI | object disappears -> memory persists -> search |
+| 4 | `examples/embodied_ai/22_where_did_i_see_it.py` | embodied AI | memory query -> revisit place -> act |
+| 5 | `examples/world_models/23_model_error_recovery.py` | world model | prediction failure -> update model -> recover |
+| 6 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
+| 7 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
+| 8 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
 
 Selection rule:
 

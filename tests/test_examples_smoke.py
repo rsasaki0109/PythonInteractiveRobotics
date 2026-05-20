@@ -251,6 +251,20 @@ def test_blocked_path_recovery_runs_headless() -> None:
     assert any(failure.kind == "blocked_path" for failure in trace.failures())
 
 
+def test_localization_uncertainty_recovery_runs_headless() -> None:
+    module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
+
+    trace = module.run(seed=0, render=False, max_steps=60)
+
+    final_info = trace.infos[-1]
+    assert final_info["success"] is True
+    assert final_info["localization_recovery_count"] >= 1
+    assert final_info["entropy"] < 0.55
+    assert any(info.get("agent_state") == "localize" for info in trace.infos)
+    assert any(info.get("agent_state") == "go_to_goal" for info in trace.infos)
+    assert not trace.failures()
+
+
 def test_door_search_pomdp_runs_headless() -> None:
     module = load_example("examples/embodied_ai/10_door_search_pomdp.py")
 

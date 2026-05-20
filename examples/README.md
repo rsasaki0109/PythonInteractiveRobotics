@@ -24,6 +24,7 @@ Run any example headless with its `--no-render` flag when available.
 | `navigation/07_active_slam_toy.py` | `python examples/navigation/07_active_slam_toy.py` | act to reduce map and pose uncertainty |
 | `navigation/08_interactive_mpc.py` | `python examples/navigation/08_interactive_mpc.py` | predict -> control -> replan |
 | `navigation/09_blocked_path_recovery.py` | `python examples/navigation/09_blocked_path_recovery.py` | detect blocked path -> recover -> replan |
+| `navigation/10_localization_uncertainty_recovery.py` | `python examples/navigation/10_localization_uncertainty_recovery.py` | ambiguous pose -> information action -> resume goal |
 
 ## Manipulation
 

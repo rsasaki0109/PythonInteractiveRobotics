@@ -31,6 +31,10 @@ state.
 | --- | --- |
 | ![A point robot repeatedly replans short-horizon controls around a moving obstacle.](../../docs/assets/gifs/interactive_mpc.gif) | ![A grid robot detects a newly blocked path, steps back, marks the blocked cell, and replans.](../../docs/assets/gifs/blocked_path_recovery.gif) |
 
+| Localization uncertainty recovery |
+| --- |
+| ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](../../docs/assets/gifs/localization_uncertainty_recovery.gif) |
+
 ## `02_reactive_obstacle_avoidance.py`
 
 ### What this teaches
@@ -307,3 +311,39 @@ plan path -> execute -> detect blocked path -> mark blocked -> recover -> replan
 - Remove the step-back recovery and compare replanning.
 - Count recoverable failures in the returned `Trace`.
 - Make the blocked cell permanent only after two failed moves.
+
+## `10_localization_uncertainty_recovery.py`
+
+### What this teaches
+
+The robot can wake up in a state where the pose belief is ambiguous: two mirror
+cells give identical landmark distances. Before chasing the goal, the agent
+takes an information action to break the symmetry, then resumes navigation
+once the belief collapses.
+
+### Run
+
+```bash
+python examples/navigation/10_localization_uncertainty_recovery.py
+```
+
+### Key loop
+
+```text
+bimodal belief -> entropy high -> move toward landmark -> belief collapses -> go to goal
+```
+
+### Simplifications
+
+- grid world
+- one landmark on the axis of symmetry
+- prior is hand-built to be bimodal
+- one-way state machine: `localize` -> `go_to_goal`
+- no relocalization once goal seeking starts
+
+### Things to try
+
+- Change the two `candidate_cells` so the symmetry is column-aligned instead.
+- Lower `entropy_threshold` and watch `localization_recovery_count` grow.
+- Add a second landmark off the axis and remove the information loop.
+- Raise `range_sigma` and see whether the belief still collapses cleanly.
