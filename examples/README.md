@@ -56,6 +56,7 @@ Run any example headless with its `--no-render` flag when available.
 | Example | Run | Loop |
 | --- | --- | --- |
 | `world_models/20_tiny_world_model_planning.py` | `python examples/world_models/20_tiny_world_model_planning.py` | predict -> act -> observe model error -> update -> replan |
+| `world_models/23_model_error_recovery.py` | `python examples/world_models/23_model_error_recovery.py` | predict -> error spike -> probe -> update model -> resume |
 
 ## Verification
 

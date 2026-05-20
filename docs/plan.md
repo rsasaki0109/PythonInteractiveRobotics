@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 27 runnable examples
+- 28 runnable examples
 - 20 numbered learning-path examples
-- 7 extra examples outside the original learning-path roadmap
-- 26 generated README GIFs
-- 69 smoke and regression tests
+- 8 extra examples outside the original learning-path roadmap
+- 27 generated README GIFs
+- 70 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -102,6 +102,11 @@ Recent completed work:
   explores several waypoints, memorizes every object it sees, queries the
   memory for the target object, walks back to the remembered position, and
   interacts there. GIF and smoke test cover the loop.
+- `examples/world_models/23_model_error_recovery.py` was added. The agent
+  starts with an identity dynamics model, detects a regime shift when
+  prediction error spikes, runs a short system-identification probe phase,
+  averages observed offsets, updates the learned offset, and resumes goal
+  navigation with the corrected model. GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
@@ -262,15 +267,16 @@ Already done from the previous tier:
   memory persists across occlusion -> peek to recover.
 - `examples/embodied_ai/22_where_did_i_see_it.py` — explore -> memorize ->
   query memory -> revisit -> interact.
+- `examples/world_models/23_model_error_recovery.py` — regime-shift
+  detection -> system_id probe -> model update -> resume.
 
 Recommended next examples:
 
 | Priority | Example | Area | Loop |
 | --- | --- | --- | --- |
-| 1 | `examples/world_models/23_model_error_recovery.py` | world model | prediction failure -> update model -> recover |
-| 2 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
-| 3 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
-| 4 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
+| 1 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
+| 2 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
+| 3 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
 
 Selection rule:
 
