@@ -16,7 +16,7 @@ The repository currently has:
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
-  `DynamicObstacleGridWorld`, and `Tabletop2D`
+  `DynamicObstacleGridWorld`, `Tabletop2D`, and `BlockedPathWorld`
 - bridge strategy docs for ROS2 and simulators
 - trace inspection docs for headless run analysis
 
@@ -70,52 +70,30 @@ Recent completed work:
 - `docs/implementation_gap_audit.md` was added.
 - Category READMEs were tightened with more "What this teaches" and "Things to
   try" sections.
+- `BlockedPathWorld` was extracted to `pir/worlds/blocked_path.py`; the
+  example at `examples/navigation/09_blocked_path_recovery.py` imports the
+  world from there while keeping its agent, A* policy, and run loop visible.
+- `BlockedPathWorldGymnasiumAdapter` was added in
+  `pir/adapters/gymnasium_adapter.py` and exported from
+  `pir/adapters/__init__.py`. Optional `dynamic_blocker` / `last_blocked_cell`
+  cells are encoded as `(-1, -1)` sentinels and preserved untouched in
+  `info["raw_obs"]`.
+- Focused adapter tests were added covering reset shape, step shape, action
+  decoding, success termination, timeout truncation, and recoverable
+  `blocked_path` failure.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
 
 Recommended next task:
 
-1. Add a clean `BlockedPathWorld` Gymnasium adapter.
-2. Do not import `examples/navigation/09_blocked_path_recovery.py` from
-   `pir/adapters`; that would make package code depend on examples.
-3. First extract the reusable `BlockedPathWorld` environment into a package
-   module, most likely `pir/worlds/blocked_path.py`.
-4. Keep the example's agent and teaching loop in
-   `examples/navigation/09_blocked_path_recovery.py`.
-5. Update the example to import the extracted world, but keep its behavior and
-   smoke assertions unchanged.
-6. Add `BlockedPathWorldGymnasiumAdapter` in
-   `pir/adapters/gymnasium_adapter.py`.
-7. Export it from `pir/adapters/__init__.py`.
-8. Add focused adapter tests covering reset shape, step shape, action decoding,
-   success termination, timeout truncation, and recoverable `blocked_path`
-   failure.
-9. Update `README.md`, `docs/status.md`, and this file if adapter counts or
-   current status change.
-10. Run the full verification command before committing or pushing.
-
-Suggested acceptance tests for `BlockedPathWorldGymnasiumAdapter`:
-
-- `reset()` returns encoded observation keys:
-  `time`, `robot`, `goal`, `known_map`, `dynamic_blocker`,
-  `last_blocked_cell`.
-- `info["raw_obs"]` preserves the original world observation.
-- integer action `GRID_ACTIONS.index("east")` decodes to `"east"`.
-- moving into the goal returns `terminated=True`, `truncated=False`.
-- hitting `max_steps` returns `terminated=False`, `truncated=True` with a
-  nonrecoverable `timeout` failure.
-- moving into the active blocker returns `terminated=False`, `truncated=False`
-  with recoverable `blocked_path`.
-
-Preferred implementation boundary:
-
-- `pir/worlds/blocked_path.py`: world class and small grid helpers needed by
-  the world.
-- `examples/navigation/09_blocked_path_recovery.py`: agent, A* policy,
-  rendering, and example `run()` loop.
-- `pir/adapters/gymnasium_adapter.py`: adapter only, following the existing
-  `GridWorldGymnasiumAdapter` pattern.
+1. Pick the next adapter or example from the "Next candidates" list under
+   Priority 3 and Priority 4. A continuous-control wrapper such as
+   `MovingObstacleWorld`, or `examples/navigation/10_localization_uncertainty_recovery.py`,
+   are both reasonable next steps.
+2. Keep the package/example boundary the same as the `BlockedPathWorld` work:
+   environment in `pir/worlds/`, agent + policy + run loop in the example.
+3. Adapter tests should be added before broadening the adapter API further.
 
 Do not start yet:
 
@@ -225,21 +203,12 @@ Already done:
 - `GridWorldGymnasiumAdapter`
 - `DynamicObstacleGridWorldGymnasiumAdapter`
 - `Tabletop2DGymnasiumAdapter`
+- `BlockedPathWorldGymnasiumAdapter`
 
 Next candidates:
 
-1. `BlockedPathWorld`
-2. one continuous-control example such as `MovingObstacleWorld`
-3. a tiny embodied-AI wrapper for controlled language goals
-
-Detailed next step for `BlockedPathWorld`:
-
-- Extract only the world/environment portion from
-  `examples/navigation/09_blocked_path_recovery.py`.
-- Keep the example readable and local where possible; the agent and teaching
-  policy should remain in the example.
-- Add the adapter after the package boundary is clean.
-- Tests should be added before broadening the adapter API further.
+1. one continuous-control example such as `MovingObstacleWorld`
+2. a tiny embodied-AI wrapper for controlled language goals
 
 Rules:
 
@@ -316,10 +285,10 @@ Current status:
 - `GridWorld2D` adapter exists
 - `DynamicObstacleGridWorld` adapter exists
 - `Tabletop2D` adapter exists
+- `BlockedPathWorld` adapter exists
 
 Next:
 
-- add `BlockedPathWorld` after extracting the world boundary cleanly
 - extend to other selected worlds only when the action and observation mapping
   stays clear
 - keep examples independent from Gymnasium
@@ -448,14 +417,16 @@ If Claude is taking over, the most efficient first pass is:
 1. Run `git status --short --branch`.
 2. Run `python scripts/run_all_smoke_tests.py --check-gifs` if local
    dependencies are already installed.
-3. Read `examples/navigation/09_blocked_path_recovery.py`.
-4. Extract `BlockedPathWorld` into `pir/worlds/blocked_path.py`.
-5. Update the example import and keep its smoke test green.
-6. Add `BlockedPathWorldGymnasiumAdapter`.
-7. Add adapter tests.
-8. Run `python -m pytest tests/test_gymnasium_adapter.py -q`.
-9. Run the full smoke plus GIF check.
-10. Commit and push only after the worktree is cleanly understood.
+3. Pick the next adapter or example from "Next candidates" under
+   `Priority 3: Extend Optional Gymnasium Compatibility` and
+   `Priority 4: Add The Next Example Tier`.
+4. Keep the package/example boundary the same as the `BlockedPathWorld`
+   work: environment in `pir/worlds/`, agent + policy + run loop in the
+   example.
+5. Add adapter or smoke tests before broadening any public API.
+6. Run `python -m pytest tests/test_gymnasium_adapter.py -q` and the full
+   smoke plus GIF check.
+7. Commit and push only after the worktree is cleanly understood.
 
 ## Do Not Start Yet
 

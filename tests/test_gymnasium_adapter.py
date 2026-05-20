@@ -6,6 +6,7 @@ import pytest
 from pir.adapters.gymnasium_adapter import (
     GRID_ACTIONS,
     TABLETOP_ACTIONS,
+    BlockedPathWorldGymnasiumAdapter,
     DynamicObstacleGridWorldGymnasiumAdapter,
     GridWorldGymnasiumAdapter,
     Tabletop2DGymnasiumAdapter,
@@ -14,6 +15,7 @@ from pir.adapters.gymnasium_adapter import (
     split_done,
 )
 from pir.core.types import Failure
+from pir.worlds.blocked_path import BlockedPathWorld
 from pir.worlds.grid_world import DynamicObstacleGridWorld, GridWorld2D
 from pir.worlds.tabletop_2d import Tabletop2D
 
@@ -289,3 +291,102 @@ def test_decode_tabletop_action_rejects_unknown_actions() -> None:
 
     with pytest.raises(TypeError):
         decode_tabletop_action(1.2)  # type: ignore[arg-type]
+
+
+def test_blocked_path_adapter_reset_returns_gymnasium_shape() -> None:
+    env = BlockedPathWorldGymnasiumAdapter()
+
+    obs, info = env.reset(seed=0)
+
+    assert set(obs) == {
+        "time",
+        "robot",
+        "goal",
+        "known_map",
+        "dynamic_blocker",
+        "last_blocked_cell",
+    }
+    assert obs["time"].shape == (1,)
+    assert obs["robot"].shape == (2,)
+    assert obs["goal"].shape == (2,)
+    assert obs["known_map"].shape == (env.unwrapped.height, env.unwrapped.width)
+    assert obs["known_map"].dtype == np.int8
+    assert obs["dynamic_blocker"].tolist() == [-1, -1]
+    assert obs["last_blocked_cell"].tolist() == [-1, -1]
+    assert info["raw_obs"]["robot"] == env.unwrapped.start
+    assert info["raw_obs"]["dynamic_blocker"] is None
+    if env.observation_space is not None:
+        assert env.observation_space.contains(obs)
+
+
+def test_blocked_path_adapter_step_decodes_discrete_action() -> None:
+    env = BlockedPathWorldGymnasiumAdapter()
+    env.reset(seed=0)
+
+    obs, reward, terminated, truncated, info = env.step(GRID_ACTIONS.index("east"))
+
+    assert obs["robot"].tolist() == [6, 2]
+    assert reward == pytest.approx(-0.01)
+    assert terminated is False
+    assert truncated is False
+    assert info["decoded_action"] == "east"
+    assert info["gymnasium_action"] == GRID_ACTIONS.index("east")
+    assert info["raw_obs"]["robot"] == (6, 2)
+    if env.action_space is not None:
+        assert env.action_space.n == len(GRID_ACTIONS)
+
+
+def test_blocked_path_adapter_splits_success_as_terminated() -> None:
+    world = BlockedPathWorld(
+        start=(6, 11),
+        goal=(6, 12),
+        blocker_spawn_time=99,
+        max_steps=5,
+    )
+    env = BlockedPathWorldGymnasiumAdapter(world)
+    env.reset(seed=0)
+
+    obs, reward, terminated, truncated, info = env.step("east")
+
+    assert obs["robot"].tolist() == [6, 12]
+    assert reward == pytest.approx(1.0)
+    assert terminated is True
+    assert truncated is False
+    assert info["success"] is True
+
+
+def test_blocked_path_adapter_splits_timeout_as_truncated() -> None:
+    world = BlockedPathWorld(blocker_spawn_time=99, max_steps=1)
+    env = BlockedPathWorldGymnasiumAdapter(world)
+    env.reset(seed=0)
+
+    _, _, terminated, truncated, info = env.step("east")
+
+    assert terminated is False
+    assert truncated is True
+    assert isinstance(info["failure"], Failure)
+    assert info["failure"].kind == "timeout"
+    assert info["failure"].recoverable is False
+
+
+def test_blocked_path_adapter_keeps_recoverable_block_nonterminal() -> None:
+    world = BlockedPathWorld(
+        start=(6, 5),
+        blocker_cell=(6, 6),
+        blocker_spawn_time=0,
+        max_steps=5,
+    )
+    env = BlockedPathWorldGymnasiumAdapter(world)
+    env.reset(seed=0)
+
+    obs, reward, terminated, truncated, info = env.step("east")
+
+    assert obs["robot"].tolist() == [6, 5]
+    assert obs["dynamic_blocker"].tolist() == [6, 6]
+    assert obs["last_blocked_cell"].tolist() == [6, 6]
+    assert reward == pytest.approx(-0.18)
+    assert terminated is False
+    assert truncated is False
+    assert isinstance(info["failure"], Failure)
+    assert info["failure"].kind == "blocked_path"
+    assert info["failure"].recoverable is True

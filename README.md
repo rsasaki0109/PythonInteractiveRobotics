@@ -240,11 +240,12 @@ pip install -e ".[pybullet]"
 
 ROS2 and simulator integrations are optional bridges, not core dependencies.
 
-`GridWorld2D`, `DynamicObstacleGridWorld`, and `Tabletop2D` also have
-lightweight Gymnasium-style adapters:
+`GridWorld2D`, `DynamicObstacleGridWorld`, `BlockedPathWorld`, and `Tabletop2D`
+also have lightweight Gymnasium-style adapters:
 
 ```python
 from pir.adapters import (
+    BlockedPathWorldGymnasiumAdapter,
     DynamicObstacleGridWorldGymnasiumAdapter,
     GridWorldGymnasiumAdapter,
     Tabletop2DGymnasiumAdapter,
@@ -257,6 +258,10 @@ obs, reward, terminated, truncated, info = env.step(1)  # north
 dynamic = DynamicObstacleGridWorldGymnasiumAdapter(seed=0)
 obs, info = dynamic.reset(seed=0)
 obs, reward, terminated, truncated, info = dynamic.step(2)  # east
+
+blocked = BlockedPathWorldGymnasiumAdapter()
+obs, info = blocked.reset(seed=0)
+obs, reward, terminated, truncated, info = blocked.step(2)  # east
 
 tabletop = Tabletop2DGymnasiumAdapter(seed=0)
 obs, info = tabletop.reset(seed=0)
