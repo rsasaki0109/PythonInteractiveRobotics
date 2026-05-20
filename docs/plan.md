@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 25 runnable examples
+- 26 runnable examples
 - 20 numbered learning-path examples
-- 5 extra examples outside the original learning-path roadmap
-- 24 generated README GIFs
-- 67 smoke and regression tests
+- 6 extra examples outside the original learning-path roadmap
+- 25 generated README GIFs
+- 68 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -94,6 +94,10 @@ Recent completed work:
   its pose belief, runs a Bayes update from each observation, then grasps
   with the type that maximizes expected success. GIF and smoke test cover
   the loop.
+- `examples/embodied_ai/21_object_permanence_toy.py` was added. The agent
+  sees an object once, watches it go behind an occluder, persists the last
+  known position across the disappearance, walks to it, and peeks behind
+  the occluder to recover the object. GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
@@ -250,17 +254,18 @@ Already done from the previous tier:
   grasp choice -> failure update -> retry.
 - `examples/manipulation/09_active_viewpoint_for_grasp.py` — pose belief ->
   active viewpoint -> Bayes update -> grasp.
+- `examples/embodied_ai/21_object_permanence_toy.py` — see object ->
+  memory persists across occlusion -> peek to recover.
 
 Recommended next examples:
 
 | Priority | Example | Area | Loop |
 | --- | --- | --- | --- |
-| 1 | `examples/embodied_ai/21_object_permanence_toy.py` | embodied AI | object disappears -> memory persists -> search |
-| 2 | `examples/embodied_ai/22_where_did_i_see_it.py` | embodied AI | memory query -> revisit place -> act |
-| 3 | `examples/world_models/23_model_error_recovery.py` | world model | prediction failure -> update model -> recover |
-| 4 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
-| 5 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
-| 6 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
+| 1 | `examples/embodied_ai/22_where_did_i_see_it.py` | embodied AI | memory query -> revisit place -> act |
+| 2 | `examples/world_models/23_model_error_recovery.py` | world model | prediction failure -> update model -> recover |
+| 3 | `examples/navigation/24_information_gain_navigation.py` | navigation | goal progress vs information gain |
+| 4 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
+| 5 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
 
 Selection rule:
 

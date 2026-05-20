@@ -972,6 +972,35 @@ def make_tiny_world_model_planning() -> Path:
     return save_gif("tiny_world_model_planning.gif", frames)
 
 
+def make_object_permanence_toy() -> Path:
+    module = load_example("examples/embodied_ai/21_object_permanence_toy.py")
+    env = module.ObjectPermanenceWorld(seed=0, max_steps=30)
+    agent = module.ObjectPermanenceAgent(peek_radius=env.peek_radius, move_speed=env.move_speed)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 5.0), dpi=80)
+        module.draw_object_permanence_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(30):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("object_permanence_toy.gif", frames)
+
+
 def make_door_search_pomdp() -> Path:
     module = load_example("examples/embodied_ai/10_door_search_pomdp.py")
     env = module.DoorSearchWorld(max_steps=40)
@@ -1027,6 +1056,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
     "door": make_door_search_pomdp,
+    "permanence": make_object_permanence_toy,
 }
 
 

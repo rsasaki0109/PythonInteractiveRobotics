@@ -36,11 +36,11 @@
 2. `examples/embodied_ai/10_door_search_pomdp.py`
 3. `examples/embodied_ai/18_goal_conditioned_minikitchen.py`
 4. `examples/embodied_ai/19_tiny_vla_loop.py`
-5. `examples/world_models/20_tiny_world_model_planning.py`
+5. `examples/embodied_ai/21_object_permanence_toy.py`
+6. `examples/world_models/20_tiny_world_model_planning.py`
 
 ## Future Embodied AI Extensions
 
-1. object permanence toy
-2. curiosity grid exploration
+1. curiosity grid exploration
 
 See `docs/goal_commands.md` for the first controlled-language command set.
