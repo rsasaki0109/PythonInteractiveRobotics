@@ -28,6 +28,7 @@
 6. `examples/manipulation/06_push_then_grasp.py`
 7. `examples/manipulation/07_probabilistic_suction_sorting.py`
 8. `examples/manipulation/08_belief_grasp_selection.py`
+9. `examples/manipulation/09_active_viewpoint_for_grasp.py`
 
 ## Embodied AI
 

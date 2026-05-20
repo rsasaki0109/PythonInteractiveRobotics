@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 24 runnable examples
+- 25 runnable examples
 - 20 learning-path roadmap examples
-- 23 README GIFs generated from runnable examples
-- 66 smoke and regression tests
+- 24 README GIFs generated from runnable examples
+- 67 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -100,9 +100,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A target starts under a shelf, the robot detects a blocked grasp, pushes it into open space, and then picks it.](docs/assets/gifs/push_then_grasp.gif) | ![A suction sorter estimates per-object success probabilities, recovers from a suction miss, prepares the seal, retries, and sorts into bins.](docs/assets/gifs/probabilistic_suction_sorting.gif) |
 
-| Belief-guided grasp selection |
-| --- |
-| ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](docs/assets/gifs/belief_grasp_selection.gif) |
+| Belief-guided grasp selection | Active viewpoint for grasp |
+| --- | --- |
+| ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](docs/assets/gifs/belief_grasp_selection.gif) | ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](docs/assets/gifs/active_viewpoint_for_grasp.gif) |
 
 ### Navigation and recovery
 
