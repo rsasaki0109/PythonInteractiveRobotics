@@ -972,6 +972,39 @@ def make_tiny_world_model_planning() -> Path:
     return save_gif("tiny_world_model_planning.gif", frames)
 
 
+def make_where_did_i_see_it() -> Path:
+    module = load_example("examples/embodied_ai/22_where_did_i_see_it.py")
+    env = module.WhereDidISeeItWorld(seed=0, max_steps=30)
+    agent = module.WhereDidISeeItAgent(
+        move_speed=env.move_speed,
+        interact_radius=env.interact_radius,
+    )
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 5.0), dpi=80)
+        module.draw_where_did_i_see_it_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for step in range(30):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        if step % 2 == 0 or done or agent.state in {"query", "revisit", "interact"}:
+            append_frame(info)
+        if done:
+            break
+
+    return save_gif("where_did_i_see_it.gif", frames)
+
+
 def make_object_permanence_toy() -> Path:
     module = load_example("examples/embodied_ai/21_object_permanence_toy.py")
     env = module.ObjectPermanenceWorld(seed=0, max_steps=30)
@@ -1057,6 +1090,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "world_model": make_tiny_world_model_planning,
     "door": make_door_search_pomdp,
     "permanence": make_object_permanence_toy,
+    "memory_query": make_where_did_i_see_it,
 }
 
 

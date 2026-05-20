@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 26 runnable examples
+- 27 runnable examples
 - 20 learning-path roadmap examples
-- 25 README GIFs generated from runnable examples
-- 68 smoke and regression tests
+- 26 README GIFs generated from runnable examples
+- 69 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -136,9 +136,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](docs/assets/gifs/tiny_vla_loop.gif) |
 
-| Object permanence toy |
-| --- |
-| ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](docs/assets/gifs/object_permanence_toy.gif) |
+| Object permanence toy | Where did I see it |
+| --- | --- |
+| ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](docs/assets/gifs/object_permanence_toy.gif) | ![An embodied agent explores three waypoints, memorizes every object it sees, queries the memory for the target object, walks back to the remembered position, and interacts there.](docs/assets/gifs/where_did_i_see_it.gif) |
 
 ### World models
 
