@@ -26,9 +26,9 @@ search, push, or prepare before trying again.
 | --- | --- |
 | ![A tabletop agent searches viewpoints, stores object memory, misses a low-confidence pick, then reobserves and succeeds.](../../docs/assets/gifs/object_search_and_pick.gif) | ![A target starts under a shelf, the robot detects a blocked grasp, pushes it into open space, and then picks it.](../../docs/assets/gifs/push_then_grasp.gif) |
 
-| Probabilistic suction sorting |
-| --- |
-| ![A suction sorter estimates per-object success probabilities, recovers from a suction miss, prepares the seal, retries, and sorts into bins.](../../docs/assets/gifs/probabilistic_suction_sorting.gif) |
+| Probabilistic suction sorting | Belief-guided grasp selection |
+| --- | --- |
+| ![A suction sorter estimates per-object success probabilities, recovers from a suction miss, prepares the seal, retries, and sorts into bins.](../../docs/assets/gifs/probabilistic_suction_sorting.gif) | ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](../../docs/assets/gifs/belief_grasp_selection.gif) |
 
 ## `01_pick_and_retry.py`
 
@@ -280,3 +280,39 @@ observe objects -> choose likely suction target -> pick -> sort to bin -> miss -
 - Sort by lowest success first instead of highest.
 - Add a bin placement error.
 - Make preparation cost more time or reward.
+
+## `08_belief_grasp_selection.py`
+
+### What this teaches
+
+A grasp choice should be made under uncertainty about the object's pose.
+The agent keeps a belief over three pose hypotheses, picks the grasp that
+maximizes expected success across that belief, and runs a Bayes update on
+every miss until the right grasp is selected.
+
+### Run
+
+```bash
+python examples/manipulation/08_belief_grasp_selection.py
+```
+
+### Key loop
+
+```text
+pose belief -> expected success per grasp -> argmax grasp -> miss -> Bayes update -> retry
+```
+
+### Simplifications
+
+- discrete 3-by-3 grasp / pose success matrix
+- no observation channel besides the grasp outcome
+- single object on the tabletop
+- recoverable failures until `max_attempts`
+- uniform initial belief
+
+### Things to try
+
+- Change the success matrix so two grasps share a row.
+- Initialize the belief with a strong prior on the wrong pose.
+- Lower `max_attempts` and watch the recoverable flag flip.
+- Add a fourth pose and a fourth grasp.
