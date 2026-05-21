@@ -30,6 +30,10 @@ search, push, or prepare before trying again.
 | --- | --- |
 | ![A suction sorter estimates per-object success probabilities, recovers from a suction miss, prepares the seal, retries, and sorts into bins.](../../docs/assets/gifs/probabilistic_suction_sorting.gif) | ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](../../docs/assets/gifs/belief_grasp_selection.gif) |
 
+| Active viewpoint for grasp |
+| --- |
+| ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](../../docs/assets/gifs/active_viewpoint_for_grasp.gif) |
+
 ## `01_pick_and_retry.py`
 
 ### What this teaches
@@ -316,3 +320,40 @@ pose belief -> expected success per grasp -> argmax grasp -> miss -> Bayes updat
 - Initialize the belief with a strong prior on the wrong pose.
 - Lower `max_attempts` and watch the recoverable flag flip.
 - Add a fourth pose and a fourth grasp.
+
+## `09_active_viewpoint_for_grasp.py`
+
+### What this teaches
+
+A grasp choice can be improved before the gripper moves by spending one or two
+observations on the right viewpoint. The agent keeps a belief over three pose
+hypotheses, picks the viewpoint that maximizes expected reliability (lowest
+expected occlusion) under that belief, runs a Bayes update from each
+observation, and only then chooses the grasp that maximizes expected success.
+
+### Run
+
+```bash
+python examples/manipulation/09_active_viewpoint_for_grasp.py
+```
+
+### Key loop
+
+```text
+pose belief -> expected reliability per view -> argmax view -> observe -> Bayes update -> grasp
+```
+
+### Simplifications
+
+- discrete 3-by-3 viewpoint / pose occlusion matrix
+- discrete 3-by-3 grasp / pose success matrix
+- observation either returns the true pose or one wrong pose, sampled per view
+- single object on the tabletop
+- recoverable failures until `max_attempts`
+
+### Things to try
+
+- Bias the initial belief toward one pose and see which view is picked first.
+- Increase occlusion across all viewpoints and watch entropy stay high.
+- Lower `belief_threshold` and watch the agent grasp earlier.
+- Add a fourth viewpoint that is uniformly mediocre and see it never get picked.

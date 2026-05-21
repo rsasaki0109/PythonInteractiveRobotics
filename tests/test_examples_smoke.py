@@ -146,6 +146,21 @@ def test_belief_grasp_selection_runs_headless() -> None:
     assert int(max(range(len(final_belief)), key=lambda i: final_belief[i])) == 0
 
 
+def test_active_viewpoint_for_grasp_runs_headless() -> None:
+    module = load_example("examples/manipulation/09_active_viewpoint_for_grasp.py")
+
+    trace = module.run(seed=4, render=False, max_steps=14, true_pose=2)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["view_count"] >= 2
+    assert final["belief_update_count"] >= 2
+    assert final["failed_attempts"] >= 1
+    assert any(failure.kind == "grasp_miss" for failure in trace.failures())
+    assert any(info.get("action_type") == "look" for info in trace.infos)
+    assert any(info.get("action_type") == "grasp" for info in trace.infos)
+
+
 def test_reactive_obstacle_avoidance_runs_headless() -> None:
     module = load_example("examples/navigation/02_reactive_obstacle_avoidance.py")
 
