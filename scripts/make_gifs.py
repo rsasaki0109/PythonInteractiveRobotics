@@ -881,6 +881,84 @@ def make_active_viewpoint_for_grasp() -> Path:
     return save_gif("active_viewpoint_for_grasp.gif", frames)
 
 
+def make_safety_filter_cbf() -> Path:
+    module = load_example("examples/navigation/29_safety_filter_cbf.py")
+    env = module.SafetyFilterWorld(seed=0, max_steps=120)
+    agent = module.SafetyFilterAgent(env.config)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 5.0), dpi=80)
+        cfg = env.config
+        ax.set_xlim(cfg.world_min, cfg.world_max)
+        ax.set_ylim(cfg.world_min, cfg.world_max)
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.25)
+        ax.set_title(
+            f"CBF safety filter step={env.step_count}"
+            f" filter={'on' if agent.filter_active else 'off'}"
+        )
+        for obs_def in env.obstacles:
+            barrier = Circle(
+                obs_def.position,
+                obs_def.radius + cfg.robot_radius + cfg.safety_margin,
+                color="tab:red",
+                fill=False,
+                linestyle=":",
+                alpha=0.55,
+            )
+            disc = Circle(obs_def.position, obs_def.radius, color="tab:red", alpha=0.55)
+            ax.add_patch(barrier)
+            ax.add_patch(disc)
+        goal = Circle(env._goal, cfg.goal_radius, color="tab:green", alpha=0.25)
+        ax.add_patch(goal)
+        ax.scatter([env._goal[0]], [env._goal[1]], marker="*", s=160, color="tab:green")
+        trajectory = np.asarray(env.trajectory)
+        ax.plot(trajectory[:, 0], trajectory[:, 1], color="tab:blue", alpha=0.65, linewidth=1.5)
+        ax.add_patch(Circle(env.robot, cfg.robot_radius, color="tab:blue"))
+        if agent.last_u_nominal is not None:
+            ax.arrow(
+                env.robot[0],
+                env.robot[1],
+                agent.last_u_nominal[0] * 2.5,
+                agent.last_u_nominal[1] * 2.5,
+                head_width=0.18,
+                color="tab:orange",
+                alpha=0.85,
+                length_includes_head=True,
+            )
+        if agent.last_u_safe is not None:
+            ax.arrow(
+                env.robot[0],
+                env.robot[1],
+                agent.last_u_safe[0] * 2.5,
+                agent.last_u_safe[1] * 2.5,
+                head_width=0.18,
+                color="tab:blue",
+                alpha=0.95,
+                length_includes_head=True,
+            )
+        ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(120):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("safety_filter_cbf.gif", frames)
+
+
 def make_curiosity_grid_exploration() -> Path:
     module = load_example("examples/embodied_ai/28_curiosity_grid_exploration.py")
     env = module.CuriosityGridWorld(max_steps=120)
@@ -1231,6 +1309,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "info_gain": make_information_gain_navigation,
     "multi_agent": make_multi_agent_avoidance,
     "curiosity": make_curiosity_grid_exploration,
+    "safety_filter": make_safety_filter_cbf,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,

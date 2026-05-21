@@ -27,6 +27,7 @@ Run any example headless with its `--no-render` flag when available.
 | `navigation/10_localization_uncertainty_recovery.py` | `python examples/navigation/10_localization_uncertainty_recovery.py` | ambiguous pose -> information action -> resume goal |
 | `navigation/24_information_gain_navigation.py` | `python examples/navigation/24_information_gain_navigation.py` | scout observation -> reveal gate -> A* with full info |
 | `navigation/27_multi_agent_avoidance.py` | `python examples/navigation/27_multi_agent_avoidance.py` | observe agents -> predict next -> A* around predictions |
+| `navigation/29_safety_filter_cbf.py` | `python examples/navigation/29_safety_filter_cbf.py` | nominal u -> CBF projection -> safe u |
 
 ## Manipulation
 

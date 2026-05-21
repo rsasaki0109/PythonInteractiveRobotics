@@ -6,10 +6,10 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 
 ## Current Stable Surface
 
-- 31 runnable examples
-- 20 numbered learning-path examples plus 11 extras
-- 30 generated README GIFs with nonblank checks
-- 79 smoke, adapter, and regression tests
+- 32 runnable examples
+- 20 numbered learning-path examples plus 12 extras
+- 31 generated README GIFs with nonblank checks
+- 80 smoke, adapter, and regression tests
 - CI green on Python 3.10, 3.11, and 3.12
 - Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
   `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`

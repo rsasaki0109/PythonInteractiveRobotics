@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 31 runnable examples
+- 32 runnable examples
 - 20 numbered learning-path examples
-- 11 extra examples outside the original learning-path roadmap
-- 30 generated README GIFs
-- 79 smoke and regression tests
+- 12 extra examples outside the original learning-path roadmap
+- 31 generated README GIFs
+- 80 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -104,6 +104,15 @@ Recent completed work:
   `21_object_permanence_toy.py` without adding a clearly different lesson.
   The remaining cognitive-robotics example for memory under loss of
   observation is `21_object_permanence_toy.py`.
+- `examples/navigation/29_safety_filter_cbf.py` was added. A naive
+  go-to-goal nominal policy is paired with a separate runtime safety
+  filter that, at every step, projects the nominal velocity onto the
+  closest CBF-style safe half-space for each obstacle. The example
+  exposes `u_nominal`, `u_safe`, `barrier_h_min`, `closest_approach`,
+  `filter_active_count`, and `stuck_count` in `info`, and surfaces a
+  recoverable `safety_filter_stuck` Failure when the projection clips
+  the velocity below the stuck threshold. GIF and smoke test cover the
+  loop.
 - `examples/world_models/23_model_error_recovery.py` was added. The agent
   starts with an identity dynamics model, detects a regime shift when
   prediction error spikes, runs a short system-identification probe phase,

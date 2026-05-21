@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import numpy as np
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -356,6 +358,31 @@ def test_curiosity_grid_exploration_runs_headless() -> None:
     # commitment to paths: not switching every single step
     assert final["target_switches"] <= len(trace.actions) // 2
     assert not trace.failures()
+
+
+def test_safety_filter_cbf_runs_headless() -> None:
+    module = load_example("examples/navigation/29_safety_filter_cbf.py")
+
+    trace = module.run(seed=0, render=False, max_steps=200)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    # the filter must engage along the way - this is the whole point
+    assert final["filter_active_count"] >= 5
+    # but the filter must also let the robot reach the goal
+    assert final["stuck_count"] == 0
+    # closest approach should be inside the safety margin but strictly above
+    # collision (clearance > robot_radius)
+    assert final["closest_approach"] > 0.0
+    # no collision or timeout
+    assert not trace.failures()
+    # nominal velocity must differ from safe velocity on at least one step
+    assert any(
+        info.get("u_nominal") is not None
+        and info.get("u_safe") is not None
+        and not np.allclose(info["u_nominal"], info["u_safe"])
+        for info in trace.infos
+    )
 
 
 def test_localization_uncertainty_recovery_runs_headless() -> None:
