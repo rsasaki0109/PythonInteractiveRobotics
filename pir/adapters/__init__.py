@@ -3,6 +3,7 @@
 from pir.adapters.gymnasium_adapter import (
     GRID_ACTIONS,
     TABLETOP_ACTIONS,
+    BlockedPathWorldGymnasiumAdapter,
     DynamicObstacleGridWorldGymnasiumAdapter,
     GridWorldGymnasiumAdapter,
     Tabletop2DGymnasiumAdapter,
@@ -14,6 +15,7 @@ from pir.adapters.gymnasium_adapter import (
 __all__ = [
     "GRID_ACTIONS",
     "TABLETOP_ACTIONS",
+    "BlockedPathWorldGymnasiumAdapter",
     "DynamicObstacleGridWorldGymnasiumAdapter",
     "GridWorldGymnasiumAdapter",
     "Tabletop2DGymnasiumAdapter",

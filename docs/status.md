@@ -17,7 +17,8 @@ see what exists, what is verified, and what should come next.
 - Bridge docs: `docs/ros2_bridge_strategy.md`,
   `docs/simulator_integration_strategy.md`
 - Optional adapters: `GridWorldGymnasiumAdapter`,
-  `DynamicObstacleGridWorldGymnasiumAdapter`, `Tabletop2DGymnasiumAdapter`
+  `DynamicObstacleGridWorldGymnasiumAdapter`, `Tabletop2DGymnasiumAdapter`,
+  `BlockedPathWorldGymnasiumAdapter`
 
 `examples/embodied_ai/01_goal_command_pick.py` is an extra flagship
 goal-command example. The numbered 20-example roadmap is tracked in

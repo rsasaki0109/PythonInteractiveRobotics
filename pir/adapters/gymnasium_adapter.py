@@ -12,7 +12,9 @@ from typing import Any
 import numpy as np
 
 from pir.core.types import Failure
+from pir.worlds.blocked_path import BlockedPathWorld
 from pir.worlds.grid_world import (
+    FREE,
     OCCUPIED,
     UNKNOWN,
     DynamicObstacleGridWorld,
@@ -197,6 +199,127 @@ class DynamicObstacleGridWorldGymnasiumAdapter(GridWorldGymnasiumAdapter):
             "predicted_dynamic_obstacles",
             [],
         )
+        return gym_info
+
+
+class BlockedPathWorldGymnasiumAdapter(_GymEnv):
+    """Expose `BlockedPathWorld` through the Gymnasium `reset` / `step` shape."""
+
+    metadata = {"render_modes": ["human"]}
+
+    def __init__(
+        self,
+        env: BlockedPathWorld | None = None,
+        *,
+        render_mode: str | None = None,
+        **world_kwargs: Any,
+    ) -> None:
+        self.env = env if env is not None else BlockedPathWorld(**world_kwargs)
+        self.render_mode = render_mode
+        self.action_space = self._make_action_space()
+        self.observation_space = self._make_observation_space()
+
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+        del options
+        raw_obs = self.env.reset(seed=seed)
+        return self._encode_observation(raw_obs), self._make_info(raw_obs)
+
+    def step(
+        self,
+        action: int | np.integer[Any] | str | dict[str, Any],
+    ) -> tuple[dict[str, np.ndarray], float, bool, bool, dict[str, Any]]:
+        decoded_action = decode_grid_action(action)
+        result = self.env.step(decoded_action)
+        raw_obs, reward, done, info = result.as_tuple()
+        terminated, truncated = split_done(done, info)
+        gym_info = self._make_info(raw_obs, info)
+        gym_info["gymnasium_action"] = action
+        gym_info["decoded_action"] = decoded_action
+        return self._encode_observation(raw_obs), reward, terminated, truncated, gym_info
+
+    def render(self) -> None:
+        self.env.render()
+
+    def close(self) -> None:
+        figure = getattr(self.env, "_fig", None)
+        if figure is None:
+            return
+        import matplotlib.pyplot as plt
+
+        plt.close(figure)
+        self.env._fig = None
+        if hasattr(self.env, "_ax"):
+            self.env._ax = None
+
+    @property
+    def unwrapped(self) -> BlockedPathWorld:
+        return self.env
+
+    def _make_action_space(self) -> Any | None:
+        if spaces is None:
+            return None
+        return spaces.Discrete(len(GRID_ACTIONS))
+
+    def _make_observation_space(self) -> Any | None:
+        if spaces is None:
+            return None
+        high_cell = max(self.env.height - 1, self.env.width - 1)
+        return spaces.Dict(
+            {
+                "time": spaces.Box(
+                    low=0,
+                    high=self.env.max_steps,
+                    shape=(1,),
+                    dtype=np.int64,
+                ),
+                "robot": spaces.Box(low=0, high=high_cell, shape=(2,), dtype=np.int64),
+                "goal": spaces.Box(low=0, high=high_cell, shape=(2,), dtype=np.int64),
+                "known_map": spaces.Box(
+                    low=FREE,
+                    high=OCCUPIED,
+                    shape=(self.env.height, self.env.width),
+                    dtype=np.int8,
+                ),
+                "dynamic_blocker": spaces.Box(
+                    low=-1,
+                    high=high_cell,
+                    shape=(2,),
+                    dtype=np.int64,
+                ),
+                "last_blocked_cell": spaces.Box(
+                    low=-1,
+                    high=high_cell,
+                    shape=(2,),
+                    dtype=np.int64,
+                ),
+            }
+        )
+
+    def _encode_observation(self, raw_obs: dict[str, Any]) -> dict[str, np.ndarray]:
+        return {
+            "time": np.asarray([raw_obs["time"]], dtype=np.int64),
+            "robot": np.asarray(raw_obs["robot"], dtype=np.int64),
+            "goal": np.asarray(raw_obs["goal"], dtype=np.int64),
+            "known_map": np.asarray(raw_obs["known_map"], dtype=np.int8),
+            "dynamic_blocker": _optional_cell_array(raw_obs.get("dynamic_blocker")),
+            "last_blocked_cell": _optional_cell_array(raw_obs.get("last_blocked_cell")),
+        }
+
+    def _make_info(
+        self,
+        raw_obs: dict[str, Any],
+        info: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        gym_info = {} if info is None else dict(info)
+        gym_info["raw_obs"] = raw_obs
+        gym_info["dynamic_blocker"] = raw_obs.get("dynamic_blocker")
+        gym_info["last_blocked_cell"] = raw_obs.get("last_blocked_cell")
+        gym_info["trajectory"] = raw_obs.get("trajectory")
         return gym_info
 
 
@@ -413,6 +536,12 @@ def _position_or_zero(position: Any) -> np.ndarray:
 
 def _grid_cells_array(cells: list[tuple[int, int]]) -> np.ndarray:
     return np.asarray(cells, dtype=np.int64).reshape((-1, 2))
+
+
+def _optional_cell_array(cell: tuple[int, int] | None) -> np.ndarray:
+    if cell is None:
+        return np.asarray([-1, -1], dtype=np.int64)
+    return np.asarray(cell, dtype=np.int64)
 
 
 def split_done(done: bool, info: dict[str, Any]) -> tuple[bool, bool]:
