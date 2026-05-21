@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 28 runnable examples
+- 29 runnable examples
 - 20 learning-path roadmap examples
-- 27 README GIFs generated from runnable examples
-- 70 smoke and regression tests
+- 28 README GIFs generated from runnable examples
+- 72 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -125,6 +125,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | Blocked path recovery | Localization uncertainty recovery |
 | --- | --- |
 | ![A grid robot detects a newly blocked path, steps back, marks the blocked cell, and replans.](docs/assets/gifs/blocked_path_recovery.gif) | ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](docs/assets/gifs/localization_uncertainty_recovery.gif) |
+
+| Information-gain navigation |
+| --- |
+| ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](docs/assets/gifs/information_gain_navigation.gif) |
 
 ### Embodied AI
 

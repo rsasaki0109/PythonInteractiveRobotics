@@ -31,9 +31,9 @@ state.
 | --- | --- |
 | ![A point robot repeatedly replans short-horizon controls around a moving obstacle.](../../docs/assets/gifs/interactive_mpc.gif) | ![A grid robot detects a newly blocked path, steps back, marks the blocked cell, and replans.](../../docs/assets/gifs/blocked_path_recovery.gif) |
 
-| Localization uncertainty recovery |
-| --- |
-| ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](../../docs/assets/gifs/localization_uncertainty_recovery.gif) |
+| Localization uncertainty recovery | Information-gain navigation |
+| --- | --- |
+| ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](../../docs/assets/gifs/localization_uncertainty_recovery.gif) | ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](../../docs/assets/gifs/information_gain_navigation.gif) |
 
 ## `02_reactive_obstacle_avoidance.py`
 
@@ -347,3 +347,43 @@ bimodal belief -> entropy high -> move toward landmark -> belief collapses -> go
 - Lower `entropy_threshold` and watch `localization_recovery_count` grow.
 - Add a second landmark off the axis and remove the information loop.
 - Raise `range_sigma` and see whether the belief still collapses cleanly.
+
+## `24_information_gain_navigation.py`
+
+### What this teaches
+
+When the cost of a wrong route is high, an agent should spend a few steps on
+information-gathering before committing. Here the wall between start and goal
+has one candidate gate of unknown state. The agent first scouts an observation
+point that lidar-reveals the gate, updates its belief, and only then runs A*
+with full information. Compare to `04_online_replanning_astar.py`, which
+discovers the same information passively while running greedy A* on an
+optimistic map.
+
+### Run
+
+```bash
+python examples/navigation/24_information_gain_navigation.py
+```
+
+### Key loop
+
+```text
+unknown gate -> scout to observation point -> lidar reveals gate -> A* with full info -> goal
+```
+
+### Simplifications
+
+- grid world with one vertical wall and one candidate gate
+- one bottom opening is always known free
+- gate state is binary (open or closed) and revealed by direct lidar
+- observation point is a fixed cell on the way to the gate
+- A* treats unknown cells as free during scouting
+- no continuous information value computation
+
+### Things to try
+
+- Run with `--candidate-closed` and compare path length and replan count.
+- Move `observation_point` further from the gate and watch the scout cost rise.
+- Lower `lidar_range` so the gate cannot be revealed from the scout point.
+- Add a second candidate gate elsewhere and observe which one is scouted first.

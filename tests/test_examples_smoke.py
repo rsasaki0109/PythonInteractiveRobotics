@@ -280,6 +280,35 @@ def test_blocked_path_recovery_runs_headless() -> None:
     assert any(failure.kind == "blocked_path" for failure in trace.failures())
 
 
+def test_information_gain_navigation_runs_headless() -> None:
+    module = load_example("examples/navigation/24_information_gain_navigation.py")
+
+    trace = module.run(seed=0, render=False, max_steps=100, candidate_open=True)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["info_gain_step_count"] >= 1
+    assert final["navigation_step_count"] >= 1
+    assert final["observed_candidate"] is True
+    assert final["belief"] == 1.0
+    assert final["replan_count"] >= 2
+    assert any(info.get("agent_state") == "scout" for info in trace.infos)
+    assert any(info.get("agent_state") == "navigate" for info in trace.infos)
+    assert not trace.failures()
+
+
+def test_information_gain_navigation_closed_gate() -> None:
+    module = load_example("examples/navigation/24_information_gain_navigation.py")
+
+    trace = module.run(seed=0, render=False, max_steps=100, candidate_open=False)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["belief"] == 0.0
+    assert final["observed_candidate"] is True
+    assert final["info_gain_step_count"] >= 1
+
+
 def test_localization_uncertainty_recovery_runs_headless() -> None:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
 
