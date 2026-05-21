@@ -1,4 +1,19 @@
-"""Online A* replanning when new obstacles are observed."""
+"""Online A* replanning when new obstacles are observed.
+
+The agent plans through UNKNOWN cells under the optimistic assumption that
+they are free. When a hidden wall enters the lidar field of view it is
+revealed as OCCUPIED, the path becomes invalid, and A* runs again on the
+updated map.
+
+Success: robot reaches the goal cell.
+Failure: timeout (terminal).
+
+Compare to `09_blocked_path_recovery.py`. That example triggers replanning
+through an *execution failure* (the agent tried to step into a blocked
+cell and got back a `Failure`). This example triggers replanning through
+*passive observation* (the lidar reveals a wall before the agent ever
+touches it).
+"""
 
 from __future__ import annotations
 

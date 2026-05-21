@@ -1,4 +1,21 @@
-"""Detect a blocked path, recover, and replan around it."""
+"""Detect a blocked path, recover, and replan around it.
+
+The map is fully known. A dynamic blocker appears mid-run on the planned
+path. When the agent tries to step into that cell the world returns
+`Failure(kind="blocked_path", recoverable=True)`. The agent steps back,
+marks the cell, and replans on a map that treats the blocked cell as
+occupied.
+
+Success: robot reaches the goal cell.
+Failure: blocked_path (recoverable), collision (recoverable), timeout
+(terminal).
+
+Compare to `04_online_replanning_astar.py`. That example triggers
+replanning through *passive observation* (lidar reveals an unknown wall).
+This example triggers replanning through *execution failure* (the agent
+attempts a step, the world rejects it, and the agent has to recover
+before replanning).
+"""
 
 from __future__ import annotations
 
