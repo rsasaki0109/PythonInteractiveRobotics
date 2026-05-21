@@ -9,7 +9,9 @@ from pir.adapters.gymnasium_adapter import (
     BlockedPathWorldGymnasiumAdapter,
     DynamicObstacleGridWorldGymnasiumAdapter,
     GridWorldGymnasiumAdapter,
+    MovingObstacleWorldGymnasiumAdapter,
     Tabletop2DGymnasiumAdapter,
+    decode_continuous_action,
     decode_grid_action,
     decode_tabletop_action,
     split_done,
@@ -17,6 +19,7 @@ from pir.adapters.gymnasium_adapter import (
 from pir.core.types import Failure
 from pir.worlds.blocked_path import BlockedPathWorld
 from pir.worlds.grid_world import DynamicObstacleGridWorld, GridWorld2D
+from pir.worlds.moving_obstacle import MovingObstacleWorld
 from pir.worlds.tabletop_2d import Tabletop2D
 
 
@@ -390,3 +393,73 @@ def test_blocked_path_adapter_keeps_recoverable_block_nonterminal() -> None:
     assert isinstance(info["failure"], Failure)
     assert info["failure"].kind == "blocked_path"
     assert info["failure"].recoverable is True
+
+
+def test_moving_obstacle_adapter_reset_returns_gymnasium_shape() -> None:
+    env = MovingObstacleWorldGymnasiumAdapter(seed=0)
+
+    obs, info = env.reset(seed=0)
+
+    assert set(obs) == {"time", "robot", "goal", "obstacle", "obstacle_velocity"}
+    assert obs["time"].shape == (1,)
+    assert obs["robot"].shape == (2,)
+    assert obs["goal"].shape == (2,)
+    assert obs["obstacle"].shape == (2,)
+    assert obs["obstacle_velocity"].shape == (2,)
+    assert obs["obstacle"].dtype == np.float32
+    assert info["raw_obs"]["robot"].tolist() == pytest.approx([1.0, 1.0])
+    if env.observation_space is not None:
+        assert env.observation_space.contains(obs)
+
+
+def test_moving_obstacle_adapter_step_decodes_continuous_action() -> None:
+    env = MovingObstacleWorldGymnasiumAdapter(seed=0)
+    env.reset(seed=0)
+
+    action = np.asarray([0.30, 0.10], dtype=np.float32)
+    obs, reward, terminated, truncated, info = env.step(action)
+
+    assert obs["robot"].tolist() == pytest.approx([1.30, 1.10], rel=1e-5)
+    assert terminated is False
+    assert truncated is False
+    assert info["decoded_action"].tolist() == pytest.approx([0.30, 0.10], rel=1e-5)
+    if env.action_space is not None:
+        assert env.action_space.shape == (2,)
+
+
+def test_moving_obstacle_adapter_splits_success_as_terminated() -> None:
+    world = MovingObstacleWorld(seed=0, max_steps=200)
+    world.reset(seed=0)
+    world.robot = np.array([8.8, 8.5], dtype=float)
+    world.goal = np.array([8.9, 8.6], dtype=float)
+    env = MovingObstacleWorldGymnasiumAdapter(world)
+
+    obs, reward, terminated, truncated, info = env.step(np.zeros(2, dtype=np.float32))
+
+    assert terminated is True
+    assert truncated is False
+    assert info["success"] is True
+
+
+def test_moving_obstacle_adapter_splits_timeout_as_truncated() -> None:
+    world = MovingObstacleWorld(seed=0, max_steps=1)
+    env = MovingObstacleWorldGymnasiumAdapter(world)
+    env.reset(seed=0)
+
+    _, _, terminated, truncated, info = env.step(np.zeros(2, dtype=np.float32))
+
+    assert terminated is False
+    assert truncated is True
+    assert isinstance(info["failure"], Failure)
+    assert info["failure"].kind == "timeout"
+    assert info["failure"].recoverable is False
+
+
+def test_decode_continuous_action_rejects_bad_shapes() -> None:
+    with pytest.raises(ValueError):
+        decode_continuous_action(np.zeros(3, dtype=np.float32))
+    with pytest.raises(ValueError):
+        decode_continuous_action({"unknown_key": [0.0, 0.0]})
+
+    velocity = decode_continuous_action({"velocity": [0.1, -0.1]})
+    assert velocity.tolist() == pytest.approx([0.1, -0.1])
