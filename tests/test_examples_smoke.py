@@ -146,6 +146,22 @@ def test_belief_grasp_selection_runs_headless() -> None:
     assert int(max(range(len(final_belief)), key=lambda i: final_belief[i])) == 0
 
 
+def test_clear_path_before_pick_runs_headless() -> None:
+    module = load_example("examples/manipulation/25_clear_path_before_pick.py")
+
+    trace = module.run(seed=0, render=False, max_steps=15)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["precondition_failure_count"] == 1
+    assert final["clear_step_count"] == 1
+    assert final["retry_count"] == 1
+    assert any(failure.kind == "precondition_blocked" for failure in trace.failures())
+    assert any(info.get("agent_state") == "clear_obstacle" for info in trace.infos)
+    assert any(info.get("agent_state") == "place_obstacle" for info in trace.infos)
+    assert any(info.get("agent_state") == "retry_target" for info in trace.infos)
+
+
 def test_active_viewpoint_for_grasp_runs_headless() -> None:
     module = load_example("examples/manipulation/09_active_viewpoint_for_grasp.py")
 

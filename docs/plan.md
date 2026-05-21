@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 29 runnable examples
+- 30 runnable examples
 - 20 numbered learning-path examples
-- 9 extra examples outside the original learning-path roadmap
-- 28 generated README GIFs
-- 72 smoke and regression tests
+- 10 extra examples outside the original learning-path roadmap
+- 29 generated README GIFs
+- 73 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -112,6 +112,10 @@ Recent completed work:
   then runs A* with full information to either a short route through the
   gate or a longer detour through the bottom opening. GIF and two smoke
   tests (open and closed gate) cover the loop.
+- `examples/manipulation/25_clear_path_before_pick.py` was added. The
+  agent tries to pick the target, hits a `precondition_blocked` failure,
+  picks the obstacle, places it in a known clear zone, and retries the
+  original pick. GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
@@ -276,13 +280,14 @@ Already done from the previous tier:
   detection -> system_id probe -> model update -> resume.
 - `examples/navigation/24_information_gain_navigation.py` — scout the
   gate -> reveal candidate state -> A* with full information.
+- `examples/manipulation/25_clear_path_before_pick.py` — try target ->
+  precondition fails -> pick obstacle -> place in clear zone -> retry.
 
 Recommended next examples:
 
 | Priority | Example | Area | Loop |
 | --- | --- | --- | --- |
-| 1 | `examples/manipulation/25_clear_path_before_pick.py` | manipulation | precondition failure -> clear obstacle -> pick |
-| 2 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
+| 1 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
 
 Selection rule:
 
