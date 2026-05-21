@@ -37,6 +37,7 @@ Run any example headless with its `--no-render` flag when available.
 | `manipulation/05_object_search_and_pick.py` | `python examples/manipulation/05_object_search_and_pick.py` | search viewpoint -> memory -> pick -> retry |
 | `manipulation/06_push_then_grasp.py` | `python examples/manipulation/06_push_then_grasp.py` | blocked grasp -> push world -> grasp |
 | `manipulation/07_probabilistic_suction_sorting.py` | `python examples/manipulation/07_probabilistic_suction_sorting.py` | suction miss -> update probability -> prepare -> sort |
+| `manipulation/08_belief_grasp_selection.py` | `python examples/manipulation/08_belief_grasp_selection.py` | pose belief -> grasp choice -> miss -> update -> retry |
 
 ## Embodied AI
 

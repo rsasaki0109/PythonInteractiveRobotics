@@ -791,6 +791,35 @@ def make_blocked_path_recovery() -> Path:
     return save_gif("blocked_path_recovery.gif", frames)
 
 
+def make_belief_grasp_selection() -> Path:
+    module = load_example("examples/manipulation/08_belief_grasp_selection.py")
+    env = module.BeliefGraspWorld(seed=0, true_pose=0, max_attempts=6)
+    agent = module.BeliefGraspAgent()
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.6, 4.0), dpi=80)
+        module.draw_belief_grasp_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(10):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("belief_grasp_selection.gif", frames)
+
+
 def make_localization_uncertainty_recovery() -> Path:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
     env = module.LocalizationRecoveryWorld(seed=0, max_steps=60)
@@ -952,6 +981,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "search_pick": make_object_search_and_pick,
     "push": make_push_then_grasp,
     "suction": make_probabilistic_suction_sorting,
+    "belief_grasp": make_belief_grasp_selection,
     "reactive": make_reactive_obstacle,
     "dynamic": make_dynamic_obstacle,
     "replanning": make_online_replanning,

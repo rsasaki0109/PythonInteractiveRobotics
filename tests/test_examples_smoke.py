@@ -132,6 +132,20 @@ def test_probabilistic_suction_sorting_runs_headless() -> None:
     assert any(failure.kind == "suction_miss" for failure in trace.failures())
 
 
+def test_belief_grasp_selection_runs_headless() -> None:
+    module = load_example("examples/manipulation/08_belief_grasp_selection.py")
+
+    trace = module.run(seed=0, render=False, max_steps=10, true_pose=0)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["belief_update_count"] >= 1
+    assert final["failed_attempts"] >= 1
+    assert any(failure.kind == "grasp_miss" for failure in trace.failures())
+    final_belief = final["belief"]
+    assert int(max(range(len(final_belief)), key=lambda i: final_belief[i])) == 0
+
+
 def test_reactive_obstacle_avoidance_runs_headless() -> None:
     module = load_example("examples/navigation/02_reactive_obstacle_avoidance.py")
 
