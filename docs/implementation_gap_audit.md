@@ -1,162 +1,146 @@
 # Implementation Gap Audit
 
-This audit ranks the most useful next implementation work after the initial
-repository push, CI verification, Gymnasium adapter expansion, trace summaries,
-and trace replay example.
+This audit ranks the most useful next implementation work after the original
+20-example learning-path roadmap, the Priority 4 example tier, the
+continuous-control Gymnasium adapter, and the curiosity exploration example.
 
 ## Current Stable Surface
 
-- 22 runnable examples
-- 59 smoke and regression tests
+- 32 runnable examples
+- 21 numbered learning-path examples plus 11 extras
+- 31 generated README GIFs with nonblank checks
+- 80 smoke, adapter, and regression tests
 - CI green on Python 3.10, 3.11, and 3.12
-- 21 generated README GIFs with nonblank checks
-- Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`, and
-  `Tabletop2D`
+- Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
+  `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`
 - `Trace.summary()` and `examples/runtime/26_trace_replay.py`
+- Trace contract docs in `docs/trace.md`
+- Bridge strategy docs for ROS2 and simulators
+
+## Already Closed Since Last Audit
+
+| Closed | Notes |
+| --- | --- |
+| `docs/trace.md` | Trace contract is now documented and referenced from `examples/runtime/26_trace_replay.py`. |
+| `BlockedPathWorld` Gymnasium adapter | Lives in `pir/adapters/gymnasium_adapter.py`. Tests cover reset, decode, terminated, truncated, and recoverable-failure paths. |
+| `10_localization_uncertainty_recovery.py` | Information action then resume to goal. Smoke test asserts `info_gain_step_count >= 1`. |
+| `08_belief_grasp_selection.py` | Belief over three pose hypotheses, Bayes update on miss, retries with a different grasp. |
+| `09_active_viewpoint_for_grasp.py` | Viewpoint selection by expected reliability under pose belief. |
+| `21_object_permanence_toy.py` | Memory persists across an occluder. |
+| `22_where_did_i_see_it.py` | Multi-object memory keyed by name, queried after exploration. |
+| `23_model_error_recovery.py` | Regime shift detection then short system-identification probe. |
+| `24_information_gain_navigation.py` | Active scout to reveal a gate before A* with full info. |
+| `25_clear_path_before_pick.py` | Precondition failure recovery by clearing an obstacle. |
+| `27_multi_agent_avoidance.py` | A* over predicted-next cells of two goal-seeking agents. |
+| `MovingObstacleWorld` extraction | Moved from the example file into `pir/worlds/moving_obstacle.py`, with `MovingObstacleWorldGymnasiumAdapter` and five adapter tests. |
+| `28_curiosity_grid_exploration.py` | Visit-count-driven novelty target selection with A* commitment. |
 
 ## Ranked Next Work
 
 | Rank | Candidate | Impact | Effort | Risk | Recommendation |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `docs/trace.md` | high | low | low | Do next |
-| 2 | `BlockedPathWorld` Gymnasium adapter | medium | low-medium | medium | Do after trace docs |
-| 3 | `examples/navigation/10_localization_uncertainty_recovery.py` | high | medium-high | medium | Best next major example |
-| 4 | `MovingObstacleWorld` continuous-control adapter | medium | medium | medium | Good RL bridge follow-up |
-| 5 | `examples/manipulation/08_belief_grasp_selection.py` | high | medium | medium | Good after navigation example |
+| 1 | Tighten `docs/example_authoring.md` | medium | low | low | Do next; surface stability matters more than new examples now. |
+| 2 | Trace summary helpers for failure tables | medium | low-medium | low | Small win for `docs/trace.md` readers. |
+| 3 | Embodied-AI controlled-language Gymnasium adapter | medium | medium | medium | Useful RL bridge for language-conditioned policies. |
+| 4 | `CuriosityGridWorld` Gymnasium adapter | medium | medium | low | Lets RL users compare extrinsic vs intrinsic reward. |
+| 5 | One more failure-recovery example (e.g., recovery from wrong skill choice) | high | medium | medium | Only after consolidation is solid. |
 
-## 1. Trace Documentation
+## 1. Tighten Example Authoring Docs
 
 Why it matters:
 
-- Trace summaries and replay now exist, but their contract is only explained in
-  scattered README snippets.
-- A short dedicated document would make headless inspection discoverable.
-- It finishes the remaining Priority 5 documentation task.
+- New contributors should not need to read three examples to learn the
+  "What this teaches / Run / Key loop / Simplifications / Things to try"
+  pattern.
+- Some category READMEs use slightly different headings.
+- `docs/example_authoring.md` is the single contract for new examples.
 
 Suggested scope:
 
-- Add `docs/trace.md`.
-- Explain `observations`, `actions`, `rewards`, and `infos`.
-- Explain `info["failure"]` and `Failure`.
-- Show `trace.failures()` and `trace.summary()` examples.
-- Mention that replay tooling is intentionally small and not a logging
-  framework.
+- Pin the section headings every example README block must use.
+- Note that the docstring header should declare success and failure conditions.
+- Add a checklist for the `Failure` kinds an example introduces.
 
 Acceptance checks:
 
 - `python scripts/run_all_smoke_tests.py --check-gifs`
 - Markdown asset checks remain green.
 
-## 2. `BlockedPathWorld` Gymnasium Adapter
+## 2. Trace Summary Helpers For Failure Tables
 
 Why it matters:
 
-- It is already listed as the next Gymnasium candidate.
-- `BlockedPathWorld` has a clean `reset()` / `step()` world boundary.
-- The action mapping can reuse `GRID_ACTIONS`.
-- The observation is compact: time, robot, goal, known map, dynamic blocker,
-  last blocked cell.
+- `Trace.summary()` already collects failures and counters.
+- A small helper that prints a Markdown failure table from a trace would make
+  README captions and `docs/trace.md` examples concrete and copyable.
 
-Implementation note:
+Suggested scope:
 
-- `BlockedPathWorld` currently lives inside
-  `examples/navigation/09_blocked_path_recovery.py`, not `pir/worlds/`.
-- Importing an example module from `pir/adapters` would blur the package
-  boundary.
-- Before adding the adapter, move only `BlockedPathWorld` into `pir/worlds/` or
-  create a small wrapper module that does not pull in example-agent code.
+- Add `summary.failure_table()` returning a list of `(kind, count, recoverable)`.
+- Add an example block in `docs/trace.md`.
+- Optional: surface the table in `examples/runtime/26_trace_replay.py`.
 
-Suggested tests:
+Risks:
 
-- reset shape
-- discrete action decoding
-- success termination
-- timeout truncation
-- recoverable `blocked_path` failure remains nonterminal
-- `info["raw_obs"]` preserves the original observation
+- Keep this small. It is documentation glue, not a logging framework.
 
-## 3. `10_localization_uncertainty_recovery.py`
+## 3. Controlled-language Gymnasium Adapter
 
 Why it matters:
 
-- It is the top next-tier example in `docs/plan.md`.
-- The existing navigation set already has belief-based navigation and active
-  SLAM, but not a focused recovery loop for ambiguous localization.
-- It would teach "I am not sure where I am, so I should take an information
-  action before acting toward the goal."
-
-Suggested loop:
-
-```text
-ambiguous pose belief -> detect high uncertainty -> move to landmark view ->
-belief collapses -> resume goal navigation
-```
-
-Keep it small:
-
-- reuse the style of `06_belief_based_navigation.py`
-- use a fixed grid and a few landmarks
-- force an initial ambiguous belief
-- make recovery visible through entropy and a `localization_recovery_count`
-
-Required updates:
-
-- `examples/README.md`
-- `examples/navigation/README.md`
-- `tests/test_examples_smoke.py`
-- `docs/status.md`
-- optional GIF only if it becomes a major visible example
-
-## 4. Continuous-Control Gymnasium Adapter
-
-Why it matters:
-
-- `MovingObstacleWorld` in `08_interactive_mpc.py` is the clearest continuous
-  action-space candidate.
-- It would demonstrate that optional RL compatibility is not limited to grid
-  worlds.
+- The four worlds with adapters cover navigation, manipulation, and dynamic
+  obstacles. Language-conditioned goals are still example-only.
+- A thin wrapper around `examples/embodied_ai/01_goal_command_pick.py` or
+  `examples/embodied_ai/18_goal_conditioned_minikitchen.py` would let RL users
+  experiment with goal-conditioned reward shaping.
 
 Risk:
 
-- `MovingObstacleWorld.step()` returns a tuple, not `StepResult`.
-- The observation and action spaces need Gymnasium `Box` spaces.
-- Like `BlockedPathWorld`, the world currently lives inside an example module.
+- The action space mixes discrete skills with continuous coordinates.
+- The goal string itself is part of the observation, which Gymnasium spaces do
+  not represent naturally.
+- Likely needs a small `Text` or `Discrete(goal_id)` projection rather than
+  the raw string.
 
-Recommendation:
-
-- Do this after the blocked-path adapter, using the same package-boundary
-  decision.
-
-## 5. Manipulation Belief Grasp Selection
+## 4. `CuriosityGridWorld` Gymnasium Adapter
 
 Why it matters:
 
-- The manipulation examples cover retry, visual servoing, IK, search, pushing,
-  and suction sorting.
-- A focused belief-to-grasp-choice example would fill a clear concept gap:
-  multiple possible object poses leading to different grasp choices and failure
-  updates.
-
-Suggested loop:
-
-```text
-pose belief -> choose grasp with best expected success -> fail -> update belief
--> choose different grasp
-```
+- The grid is small and discrete.
+- Action and observation spaces map cleanly to existing grid adapter helpers.
+- It would let RL users compare extrinsic reward (reaching a goal cell) with
+  intrinsic reward (visit-count novelty) on the same world.
 
 Recommendation:
 
-- Good next example after navigation localization recovery, unless the project
-  wants manipulation growth first.
+- Do this after the controlled-language adapter so a clear pattern is in place
+  for novelty-shaped observations.
+
+## 5. One More Failure-Recovery Example
+
+Why it matters:
+
+- The current set covers blocked path, push-then-grasp, precondition failure,
+  model error recovery, localization recovery, and information-gain detour.
+- A "wrong-skill choice" recovery (try skill A → fails for a recoverable
+  reason → switch to skill B) is still missing from the manipulation or
+  embodied-AI categories.
+
+Constraint:
+
+- Only worth doing if it is meaningfully different from the existing failure
+  examples. If it ends up restating `01_pick_and_retry.py`, drop it.
 
 ## Recommended Sequence
 
-1. Add `docs/trace.md`.
-2. Extract or package `BlockedPathWorld` cleanly, then add its Gymnasium
-   adapter.
-3. Add `examples/navigation/10_localization_uncertainty_recovery.py`.
-4. Decide whether the next expansion should be continuous-control RL adapter or
-   manipulation belief-grasp example.
+1. Tighten `docs/example_authoring.md` so new examples land with consistent
+   docstring headers and category README blocks.
+2. Add a small failure-table helper on `TraceSummary`.
+3. Add the controlled-language Gymnasium adapter, then the
+   `CuriosityGridWorld` adapter, in that order.
+4. Decide whether the next example should be a new failure-recovery loop or
+   should wait for a clear interaction-concept gap.
 
-This order keeps the current surface stable, finishes a mostly complete trace
-story, then returns to the plan's highest-value new example work.
+This order keeps the educational surface stable, finishes the documentation
+and adapter expansion that was already in progress, and defers new examples
+until they fill a clear gap rather than incrementing a counter.
