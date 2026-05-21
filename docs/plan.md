@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 35 runnable examples
+- 36 runnable examples
 - 20 numbered learning-path examples
-- 15 extra examples outside the original learning-path roadmap
-- 34 generated README GIFs
-- 86 smoke and regression tests
+- 16 extra examples outside the original learning-path roadmap
+- 35 generated README GIFs
+- 88 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,

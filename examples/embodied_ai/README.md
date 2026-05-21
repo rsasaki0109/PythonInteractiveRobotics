@@ -30,6 +30,10 @@ physical action.
 | --- | --- |
 | ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](../../docs/assets/gifs/curiosity_grid_exploration.gif) | ![A grid robot precomputes k-step empowerment per cell, plans both a baseline and an empowerment-shaped A* path, and follows the shaped path that prefers open cells with many reachable successors.](../../docs/assets/gifs/empowerment_navigation.gif) |
 
+| Inverse reward from demo |  |
+| --- | --- |
+| ![A grid robot observes a demo trajectory that detours through hidden scenic zones, contrasts the demo feature expectation against a uniform-walk baseline to learn linear reward weights, and then plans to a brand new goal whose shaped A* path also passes through scenic.](../../docs/assets/gifs/inverse_reward_from_demo.gif) |  |
+
 ## `01_goal_command_pick.py`
 
 ### What this teaches
@@ -318,3 +322,66 @@ precompute E_k(s) -> A* baseline cost=1 -> A* shaped cost=1+lambda*(E_max-E_k)
   redistributes.
 - Compare `low_empowerment_step_count` between the shaped and
   baseline paths on a few different grids.
+
+## `33_inverse_reward_from_demo.py`
+
+### What this teaches
+
+A reward function can be *learned from a single demonstration*
+instead of being hand-designed. The demonstrator walks from a start
+cell to a goal cell through hidden "scenic" zones the engineer never
+told the agent about. The agent extracts a per-cell feature vector
+(scenic membership, wall adjacency, interior), computes the feature
+expectation of the demo path, contrasts it against the feature
+expectation of a uniform random walk over walkable cells, and clips
+the difference to get linear reward weights. It then plans to a
+*different* goal in the same world with a shaped A* whose edge cost
+is `1 - lambda * (w . phi(target_cell))`.
+
+This is structurally different from `28_curiosity_grid_exploration.py`
+and `32_empowerment_navigation.py`, where the intrinsic signal is
+hand-designed (visit count, reachable-set size). Here the agent has
+*no* hard-coded preference for scenic zones - it has to *infer* that
+preference from the demo trajectory.
+
+Success: learned-reward A* path reaches the new goal and visits at
+least one scenic cell.
+Failure: timeout (terminal), no_demo_path (recoverable - the demo
+trajectory cannot be synthesized), no_learned_path (terminal -
+shaped A* could not reach the new goal).
+
+### Run
+
+```bash
+python examples/embodied_ai/33_inverse_reward_from_demo.py
+```
+
+### Key loop
+
+```text
+build phi(s) -> synthesize demo -> mu_demo, mu_uniform ->
+w = clip(mu_demo - mu_uniform) -> shaped A* on new (start, goal) ->
+follow shaped path -> compare scenic visits across demo, baseline, learned
+```
+
+### Simplifications
+
+- 12x10 closed grid with two small interior wall blocks
+- two scenic anchor cells; "scenic" means within Manhattan distance 1
+- a three-dimensional feature vector (scenic, wall-adjacent, interior)
+- the demo is synthesized by chaining A* through the scenic anchors
+- IRL reduces to one subtraction and a clip, not a full
+  maximum-entropy or projection algorithm
+- a brand new (start, goal) pair stresses generalization, but the
+  features are the same
+
+### Things to try
+
+- Move the scenic anchors and watch `learned_scenic_step_count`
+  follow them.
+- Add a fourth feature (for example "distance to demo start") and
+  see if its weight is small.
+- Drop `shaping_lambda` to `0.0` and check that the learned path
+  collapses to the baseline path.
+- Provide a second demo trajectory and average the two feature
+  expectations before subtracting the uniform baseline.
