@@ -35,6 +35,10 @@ state.
 | --- | --- |
 | ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](../../docs/assets/gifs/localization_uncertainty_recovery.gif) | ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](../../docs/assets/gifs/information_gain_navigation.gif) |
 
+| Multi-agent avoidance |
+| --- |
+| ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](../../docs/assets/gifs/multi_agent_avoidance.gif) |
+
 ## `02_reactive_obstacle_avoidance.py`
 
 ### What this teaches
@@ -387,3 +391,47 @@ unknown gate -> scout to observation point -> lidar reveals gate -> A* with full
 - Move `observation_point` further from the gate and watch the scout cost rise.
 - Lower `lidar_range` so the gate cannot be revealed from the scout point.
 - Add a second candidate gate elsewhere and observe which one is scouted first.
+
+## `27_multi_agent_avoidance.py`
+
+### What this teaches
+
+When the world has more than one moving body, the robot has to think about
+several predicted next positions at once. Each other agent here has its own
+goal and walks toward it greedily. The robot observes their positions, runs a
+one-step prediction for each, and plans A* over a map that treats both current
+and predicted-next cells as occupied.
+
+Compare to `03_dynamic_obstacle_avoidance.py`, which avoids a single
+random-walking obstacle with a one-step lookahead, and to
+`08_interactive_mpc.py`, which replans a short continuous trajectory around
+one moving body. Here the obstacles are goal-directed and there are several
+of them.
+
+### Run
+
+```bash
+python examples/navigation/27_multi_agent_avoidance.py
+```
+
+### Key loop
+
+```text
+observe other agents -> predict each one's next step -> A* around predicted cells -> step -> replan
+```
+
+### Simplifications
+
+- 13x13 grid
+- two scripted other agents with their own goals
+- greedy cardinal movement with row-first tie-break
+- one-step prediction only (no longer horizon)
+- agents wait if the predicted cell is occupied
+- no inter-agent reciprocal avoidance
+
+### Things to try
+
+- Swap the agents' start and goal cells and watch the avoidance pattern flip.
+- Add a third other agent crossing the robot's middle row.
+- Reduce the prediction horizon to zero and watch the robot collide-then-wait.
+- Make one agent move twice per step and observe the replan cadence.
