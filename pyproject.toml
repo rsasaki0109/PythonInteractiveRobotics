@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-interactive-robotics"
+version = "0.1.0"
+description = "Interactive robotics and embodied intelligence with minimal Python examples."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "PythonInteractiveRobotics contributors" }
+]
+keywords = [
+  "robotics",
+  "embodied-ai",
+  "active-perception",
+  "manipulation",
+  "navigation",
+  "education"
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Education",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering"
+]
+dependencies = [
+  "numpy>=1.23",
+  "matplotlib>=3.7"
+]
+
+[project.optional-dependencies]
+viz = ["imageio>=2.31"]
+pygame = ["pygame>=2.5"]
+scipy = ["scipy>=1.10"]
+rl = ["gymnasium>=0.29"]
+mujoco = ["mujoco>=3.0"]
+pybullet = ["pybullet>=3.2"]
+ros2 = []
+dev = [
+  "imageio>=2.31",
+  "pytest>=7.4"
+]
+
+[tool.setuptools.packages.find]
+include = ["pir*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
