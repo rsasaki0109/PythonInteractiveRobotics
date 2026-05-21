@@ -5,10 +5,10 @@ see what exists, what is verified, and what should come next.
 
 ## Snapshot
 
-- Runnable examples: 32
+- Runnable examples: 33
 - Learning-path roadmap examples: 20
-- README GIFs: 31
-- Smoke and regression tests: 80
+- README GIFs: 32
+- Smoke and regression tests: 82
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`
 - CI: Python 3.10, 3.11, 3.12
@@ -30,7 +30,7 @@ goal-command example. The numbered 20-example roadmap is tracked in
 | --- | ---: | --- |
 | Runtime | 2 | smallest observe-act-observe loop, trace replay |
 | Navigation | 12 | reactive avoidance, dynamic obstacles, replanning, exploration, belief, active SLAM, MPC, recovery, localization recovery, information-gain detour, multi-agent avoidance, CBF safety filter |
-| Manipulation | 10 | retry, reactive grasping, IK servo, moving target reaching, search, push recovery, suction sorting, belief grasp selection, active viewpoint grasp, clear path before pick |
+| Manipulation | 11 | retry, reactive grasping, IK servo, moving target reaching, search, push recovery, suction sorting, belief grasp selection, active viewpoint grasp, clear path before pick, conformal ask-for-help |
 | Embodied AI | 6 | controlled goals, memory, POMDP search, tiny VLA loop, object permanence, curiosity exploration |
 | World models | 2 | action-conditioned dynamics, prediction error, model update, replanning, regime-shift detection, system identification |
 

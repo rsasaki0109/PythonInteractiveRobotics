@@ -43,6 +43,7 @@ Run any example headless with its `--no-render` flag when available.
 | `manipulation/08_belief_grasp_selection.py` | `python examples/manipulation/08_belief_grasp_selection.py` | pose belief -> grasp choice -> miss -> update -> retry |
 | `manipulation/09_active_viewpoint_for_grasp.py` | `python examples/manipulation/09_active_viewpoint_for_grasp.py` | choose view -> reduce occlusion -> grasp |
 | `manipulation/25_clear_path_before_pick.py` | `python examples/manipulation/25_clear_path_before_pick.py` | try pick -> precondition fails -> clear obstacle -> retry |
+| `manipulation/30_conformal_ask_for_help.py` | `python examples/manipulation/30_conformal_ask_for_help.py` | conformal calibration -> prediction set -> ask oracle when ambiguous |
 
 ## Embodied AI
 

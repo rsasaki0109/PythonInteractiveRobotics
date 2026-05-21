@@ -360,6 +360,47 @@ def test_curiosity_grid_exploration_runs_headless() -> None:
     assert not trace.failures()
 
 
+def test_conformal_ask_for_help_runs_headless() -> None:
+    module = load_example("examples/manipulation/30_conformal_ask_for_help.py")
+
+    trace = module.run(seed=0, render=False, max_steps=40)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    # all test-stream items are sorted
+    assert final["sorted_count"] == 16
+    # the conformal threshold is non-trivial - calibration produced a real q_hat
+    assert 0.3 <= final["q_hat"] <= 0.8
+    # ambiguous items in the test stream trigger ask-for-help
+    assert final["help_request_count"] >= 1
+    # the toy oracle is perfect, so help leads to correct placement
+    assert final["correct_after_help_count"] == final["help_request_count"]
+    # on seed=0 the calibration is tight enough to avoid silent wrong sorts
+    assert final["wrong_sort_count"] == 0
+    assert final["coverage_violation_count"] == 0
+    assert not trace.failures()
+    # the agent must have actually issued an "ask" action (action == 2)
+    assert any(action == 2 for action in trace.actions)
+    assert any(info.get("asked") for info in trace.infos)
+    # at least one item had its prediction set narrowed to a singleton
+    assert any(len(info.get("prediction_set", ())) == 1 for info in trace.infos)
+    # at least one prediction set was non-singleton (triggered the ask)
+    assert any(len(info.get("prediction_set", ())) != 1 for info in trace.infos)
+
+
+def test_conformal_calibration_threshold() -> None:
+    module = load_example("examples/manipulation/30_conformal_ask_for_help.py")
+
+    env = module.ConformalSortingWorld(seed=0)
+    q_hat = module.conformal_calibrate(env.calibration_items, alpha=0.10)
+    # 1-alpha empirical coverage on the calibration set must hold by construction
+    covered = sum(
+        item.true_label in module.prediction_set(item.scores, q_hat)
+        for item in env.calibration_items
+    )
+    assert covered >= int(0.9 * len(env.calibration_items))
+
+
 def test_safety_filter_cbf_runs_headless() -> None:
     module = load_example("examples/navigation/29_safety_filter_cbf.py")
 

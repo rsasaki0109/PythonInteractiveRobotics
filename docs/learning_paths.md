@@ -19,6 +19,7 @@
 7. `examples/navigation/10_localization_uncertainty_recovery.py`
 8. `examples/navigation/24_information_gain_navigation.py`
 9. `examples/navigation/27_multi_agent_avoidance.py`
+10. `examples/navigation/29_safety_filter_cbf.py`
 
 ## Manipulation Intelligence
 
@@ -32,6 +33,7 @@
 8. `examples/manipulation/08_belief_grasp_selection.py`
 9. `examples/manipulation/09_active_viewpoint_for_grasp.py`
 10. `examples/manipulation/25_clear_path_before_pick.py`
+11. `examples/manipulation/30_conformal_ask_for_help.py`
 
 ## Embodied AI
 

@@ -6,10 +6,10 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 
 ## Current Stable Surface
 
-- 32 runnable examples
-- 20 numbered learning-path examples plus 12 extras
-- 31 generated README GIFs with nonblank checks
-- 80 smoke, adapter, and regression tests
+- 33 runnable examples
+- 20 numbered learning-path examples plus 13 extras
+- 32 generated README GIFs with nonblank checks
+- 82 smoke, adapter, and regression tests
 - CI green on Python 3.10, 3.11, and 3.12
 - Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
   `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`
@@ -35,6 +35,8 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 | `27_multi_agent_avoidance.py` | A* over predicted-next cells of two goal-seeking agents. |
 | `MovingObstacleWorld` extraction | Moved from the example file into `pir/worlds/moving_obstacle.py`, with `MovingObstacleWorldGymnasiumAdapter` and five adapter tests. |
 | `28_curiosity_grid_exploration.py` | Visit-count-driven novelty target selection with A* commitment. |
+| `29_safety_filter_cbf.py` | Runtime CBF safety filter on a nominal go-to-goal policy; `dh/dt >= -alpha * h` projection per obstacle. |
+| `30_conformal_ask_for_help.py` | Offline conformal calibration; place when the prediction set is a singleton, defer to a toy oracle when not. Counters: `q_hat`, `help_request_count`, `coverage_violation_count`. |
 
 ## Ranked Next Work
 

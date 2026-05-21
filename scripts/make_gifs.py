@@ -959,6 +959,35 @@ def make_safety_filter_cbf() -> Path:
     return save_gif("safety_filter_cbf.gif", frames)
 
 
+def make_conformal_ask_for_help() -> Path:
+    module = load_example("examples/manipulation/30_conformal_ask_for_help.py")
+    env = module.ConformalSortingWorld(seed=0, max_steps=40)
+    agent = module.ConformalAskForHelpAgent(env)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(6.4, 4.6), dpi=80)
+        module._draw_scene(ax, env, agent, info or {})
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({"scores": env.test_items[0].scores})
+    for _ in range(40):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("conformal_ask_for_help.gif", frames)
+
+
 def make_curiosity_grid_exploration() -> Path:
     module = load_example("examples/embodied_ai/28_curiosity_grid_exploration.py")
     env = module.CuriosityGridWorld(max_steps=120)
@@ -1296,6 +1325,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "belief_grasp": make_belief_grasp_selection,
     "active_viewpoint": make_active_viewpoint_for_grasp,
     "clear_path": make_clear_path_before_pick,
+    "conformal": make_conformal_ask_for_help,
     "reactive": make_reactive_obstacle,
     "dynamic": make_dynamic_obstacle,
     "replanning": make_online_replanning,
