@@ -20,6 +20,7 @@ from pir.worlds.grid_world import (
     DynamicObstacleGridWorld,
     GridWorld2D,
 )
+from pir.worlds.moving_obstacle import MovingObstacleWorld
 from pir.worlds.tabletop_2d import Tabletop2D
 
 try:  # pragma: no cover - exercised only when the optional extra is installed.
@@ -463,6 +464,140 @@ class Tabletop2DGymnasiumAdapter(_GymEnv):
         gym_info["detections"] = raw_obs.get("detections", [])
         gym_info["gripper"] = raw_obs.get("gripper", {})
         return gym_info
+
+
+class MovingObstacleWorldGymnasiumAdapter(_GymEnv):
+    """Expose `MovingObstacleWorld` through the Gymnasium continuous-control API."""
+
+    metadata = {"render_modes": ["human"]}
+
+    def __init__(
+        self,
+        env: MovingObstacleWorld | None = None,
+        *,
+        render_mode: str | None = None,
+        **world_kwargs: Any,
+    ) -> None:
+        self.env = env if env is not None else MovingObstacleWorld(**world_kwargs)
+        self.render_mode = render_mode
+        self.action_space = self._make_action_space()
+        self.observation_space = self._make_observation_space()
+
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+        del options
+        raw_obs = self.env.reset(seed=seed)
+        return self._encode_observation(raw_obs), self._make_info(raw_obs)
+
+    def step(
+        self,
+        action: np.ndarray | list[float] | tuple[float, float],
+    ) -> tuple[dict[str, np.ndarray], float, bool, bool, dict[str, Any]]:
+        decoded_action = decode_continuous_action(action)
+        result = self.env.step(decoded_action)
+        raw_obs, reward, done, info = result.as_tuple()
+        terminated, truncated = split_done(done, info)
+        gym_info = self._make_info(raw_obs, info)
+        gym_info["gymnasium_action"] = action
+        gym_info["decoded_action"] = decoded_action
+        return self._encode_observation(raw_obs), reward, terminated, truncated, gym_info
+
+    def render(self) -> None:
+        self.env.render()
+
+    def close(self) -> None:
+        figure = getattr(self.env, "_figure", None)
+        if figure is None:
+            return
+        import matplotlib.pyplot as plt
+
+        plt.close(figure)
+        self.env._figure = None
+        if hasattr(self.env, "_axis"):
+            self.env._axis = None
+
+    @property
+    def unwrapped(self) -> MovingObstacleWorld:
+        return self.env
+
+    def _make_action_space(self) -> Any | None:
+        if spaces is None:
+            return None
+        speed = float(self.env.config.speed)
+        return spaces.Box(
+            low=-speed,
+            high=speed,
+            shape=(2,),
+            dtype=np.float32,
+        )
+
+    def _make_observation_space(self) -> Any | None:
+        if spaces is None:
+            return None
+        cfg = self.env.config
+        low = float(cfg.world_min)
+        high = float(cfg.world_max)
+        speed = float(cfg.speed) * 2.0
+        return spaces.Dict(
+            {
+                "time": spaces.Box(
+                    low=0,
+                    high=self.env.max_steps,
+                    shape=(1,),
+                    dtype=np.int64,
+                ),
+                "robot": spaces.Box(low=low, high=high, shape=(2,), dtype=np.float32),
+                "goal": spaces.Box(low=low, high=high, shape=(2,), dtype=np.float32),
+                "obstacle": spaces.Box(low=low, high=high, shape=(2,), dtype=np.float32),
+                "obstacle_velocity": spaces.Box(
+                    low=-speed,
+                    high=speed,
+                    shape=(2,),
+                    dtype=np.float32,
+                ),
+            }
+        )
+
+    def _encode_observation(self, raw_obs: dict[str, Any]) -> dict[str, np.ndarray]:
+        return {
+            "time": np.asarray([raw_obs["step"]], dtype=np.int64),
+            "robot": np.asarray(raw_obs["robot"], dtype=np.float32),
+            "goal": np.asarray(raw_obs["goal"], dtype=np.float32),
+            "obstacle": np.asarray(raw_obs["obstacle"], dtype=np.float32),
+            "obstacle_velocity": np.asarray(raw_obs["obstacle_velocity"], dtype=np.float32),
+        }
+
+    def _make_info(
+        self,
+        raw_obs: dict[str, Any],
+        info: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        gym_info = {} if info is None else dict(info)
+        gym_info["raw_obs"] = raw_obs
+        gym_info["obstacle"] = raw_obs.get("obstacle")
+        gym_info["obstacle_velocity"] = raw_obs.get("obstacle_velocity")
+        return gym_info
+
+
+def decode_continuous_action(
+    action: np.ndarray | list[float] | tuple[float, float] | dict[str, Any],
+) -> np.ndarray:
+    """Decode a Gymnasium continuous action into the world's velocity vector."""
+
+    if isinstance(action, dict):
+        if "velocity" in action:
+            return np.asarray(action["velocity"], dtype=float)
+        if "control" in action:
+            return np.asarray(action["control"], dtype=float)
+        raise ValueError("continuous action dict must contain 'velocity' or 'control'")
+    array = np.asarray(action, dtype=float)
+    if array.shape != (2,):
+        raise ValueError(f"continuous action must have shape (2,), got {array.shape}")
+    return array
 
 
 def decode_grid_action(action: int | np.integer[Any] | str | dict[str, Any]) -> str | dict[str, Any]:
