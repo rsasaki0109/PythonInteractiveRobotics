@@ -325,6 +325,25 @@ def test_information_gain_navigation_closed_gate() -> None:
     assert final["info_gain_step_count"] >= 1
 
 
+def test_multi_agent_avoidance_runs_headless() -> None:
+    module = load_example("examples/navigation/27_multi_agent_avoidance.py")
+
+    trace = module.run(seed=0, render=False, max_steps=80)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["replan_count"] >= 2
+    assert final["avoidance_count"] >= 1
+    assert not trace.failures()
+    assert any("predicted_next" in info for info in trace.infos)
+    # both other agents should be predicted at some step
+    seen_predictions = set()
+    for info in trace.infos:
+        for aid in info.get("predicted_next", {}):
+            seen_predictions.add(aid)
+    assert seen_predictions == {"A", "B"}
+
+
 def test_localization_uncertainty_recovery_runs_headless() -> None:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
 

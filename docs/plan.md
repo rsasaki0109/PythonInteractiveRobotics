@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 30 runnable examples
+- 31 runnable examples
 - 20 numbered learning-path examples
-- 10 extra examples outside the original learning-path roadmap
-- 29 generated README GIFs
-- 73 smoke and regression tests
+- 11 extra examples outside the original learning-path roadmap
+- 30 generated README GIFs
+- 74 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -116,6 +116,10 @@ Recent completed work:
   agent tries to pick the target, hits a `precondition_blocked` failure,
   picks the obstacle, places it in a known clear zone, and retries the
   original pick. GIF and smoke test cover the loop.
+- `examples/navigation/27_multi_agent_avoidance.py` was added. The robot
+  shares the grid with two goal-seeking other agents, predicts each
+  agent's next step, and runs A* over a map that treats current and
+  predicted-next cells as occupied. GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
@@ -282,12 +286,13 @@ Already done from the previous tier:
   gate -> reveal candidate state -> A* with full information.
 - `examples/manipulation/25_clear_path_before_pick.py` — try target ->
   precondition fails -> pick obstacle -> place in clear zone -> retry.
+- `examples/navigation/27_multi_agent_avoidance.py` — observe agents ->
+  predict next -> A* around predictions.
 
-Recommended next examples:
-
-| Priority | Example | Area | Loop |
-| --- | --- | --- | --- |
-| 1 | `examples/navigation/27_multi_agent_avoidance.py` | navigation | observe agents -> avoid -> replan |
+The original "Priority 4: Add The Next Example Tier" target of growing toward
+30 examples has been met. New examples should now come from new interaction
+concepts rather than from the original table, and consolidation work
+(documentation, adapter coverage, gap audit) should be considered first.
 
 Selection rule:
 
