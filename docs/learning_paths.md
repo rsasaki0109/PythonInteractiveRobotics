@@ -39,6 +39,7 @@
 5. `examples/embodied_ai/21_object_permanence_toy.py`
 6. `examples/embodied_ai/22_where_did_i_see_it.py`
 7. `examples/world_models/20_tiny_world_model_planning.py`
+8. `examples/world_models/23_model_error_recovery.py`
 
 ## Future Embodied AI Extensions
 

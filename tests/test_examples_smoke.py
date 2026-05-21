@@ -399,3 +399,22 @@ def test_tiny_world_model_planning_runs_headless() -> None:
     assert trace.infos[-1]["model_update_count"] >= len(trace.actions)
     assert trace.infos[-1]["learned_residual_norm"] > 0.02
     assert any(failure.kind == "model_error" for failure in trace.failures())
+
+
+def test_model_error_recovery_runs_headless() -> None:
+    module = load_example("examples/world_models/23_model_error_recovery.py")
+
+    trace = module.run(seed=0, render=False, max_steps=50)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["model_error_count"] >= 1
+    assert final["model_update_count"] >= 1
+    assert final["recovery_count"] >= 1
+    learned = final["learned_offset"]
+    assert abs(learned[0]) > 0.01
+    assert abs(learned[1]) > 0.01
+    assert any(failure.kind == "model_drift" for failure in trace.failures())
+    assert any(info.get("action_type") == "probe" for info in trace.infos)
+    assert any(info.get("agent_state") == "system_id" for info in trace.infos)
+    assert any(info.get("agent_state") == "go_to_goal" for info in trace.infos)

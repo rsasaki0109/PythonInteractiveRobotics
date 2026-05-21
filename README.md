@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 27 runnable examples
+- 28 runnable examples
 - 20 learning-path roadmap examples
-- 26 README GIFs generated from runnable examples
-- 69 smoke and regression tests
+- 27 README GIFs generated from runnable examples
+- 70 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -142,9 +142,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 
 ### World models
 
-| Tiny world-model planning |
-| --- |
-| ![A point robot predicts action-conditioned dynamics, observes drift model error, updates a residual model, and replans to the goal.](docs/assets/gifs/tiny_world_model_planning.gif) |
+| Tiny world-model planning | Model error recovery |
+| --- | --- |
+| ![A point robot predicts action-conditioned dynamics, observes drift model error, updates a residual model, and replans to the goal.](docs/assets/gifs/tiny_world_model_planning.gif) | ![A point robot detects a sudden dynamics shift, switches to a short system-identification probe phase, updates the learned offset, and resumes goal navigation.](docs/assets/gifs/model_error_recovery.gif) |
 
 Regenerate them with:
 
