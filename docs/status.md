@@ -8,7 +8,7 @@ see what exists, what is verified, and what should come next.
 - Runnable examples: 36
 - Learning-path roadmap examples: 20
 - README GIFs: 35
-- Smoke and regression tests: 88
+- Smoke and regression tests: 101 (88 example/adapter + 13 planning)
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`
 - CI: Python 3.10, 3.11, 3.12
@@ -19,6 +19,9 @@ see what exists, what is verified, and what should come next.
 - Optional adapters: `GridWorldGymnasiumAdapter`,
   `DynamicObstacleGridWorldGymnasiumAdapter`, `Tabletop2DGymnasiumAdapter`,
   `BlockedPathWorldGymnasiumAdapter`, `MovingObstacleWorldGymnasiumAdapter`
+- Shared grid-planning module: `pir.planning.astar`,
+  `pir.planning.bfs_reachable_count`, `pir.planning.manhattan` -
+  imported by ten examples (04, 05, 06, 09, 10, 24, 27, 28, 32, 33)
 
 `examples/embodied_ai/01_goal_command_pick.py` is an extra flagship
 goal-command example. The numbered 20-example roadmap is tracked in

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import heapq
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pir.core.types import Failure, Trace
+from pir.planning import astar as grid_astar
 from pir.sensors.fake_lidar import DIRECTIONS
 from pir.worlds.grid_world import FREE, OCCUPIED, UNKNOWN, GridWorld2D
 
@@ -134,27 +134,7 @@ def astar_known_free(
     start: tuple[int, int],
     goal: tuple[int, int],
 ) -> list[tuple[int, int]]:
-    frontier: list[tuple[int, int, tuple[int, int]]] = []
-    heapq.heappush(frontier, (heuristic(start, goal), 0, start))
-    came_from: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
-    cost_so_far: dict[tuple[int, int], int] = {start: 0}
-
-    while frontier:
-        _, cost, current = heapq.heappop(frontier)
-        if current == goal:
-            return reconstruct_path(came_from, current)
-
-        for neighbor in grid_neighbors(known_map, current):
-            if known_map[neighbor] != FREE:
-                continue
-            new_cost = cost + 1
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                priority = new_cost + heuristic(neighbor, goal)
-                heapq.heappush(frontier, (priority, new_cost, neighbor))
-                came_from[neighbor] = current
-
-    return []
+    return grid_astar(known_map == FREE, start, goal)
 
 
 def grid_neighbors(
@@ -169,18 +149,6 @@ def grid_neighbors(
         if 0 <= row < height and 0 <= col < width:
             result.append(neighbor)
     return result
-
-
-def reconstruct_path(
-    came_from: dict[tuple[int, int], tuple[int, int] | None],
-    current: tuple[int, int],
-) -> list[tuple[int, int]]:
-    path = [current]
-    while came_from[current] is not None:
-        current = came_from[current]
-        path.append(current)
-    path.reverse()
-    return path
 
 
 def heuristic(cell: tuple[int, int], goal: tuple[int, int]) -> int:

@@ -15,7 +15,6 @@ predicted next positions at once.
 from __future__ import annotations
 
 import argparse
-import heapq
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,6 +27,7 @@ if str(ROOT) not in sys.path:
 
 from pir.core.random import make_rng
 from pir.core.types import Failure, StepResult, Trace
+from pir.planning import astar as grid_astar
 
 
 UNKNOWN = -1
@@ -187,47 +187,12 @@ class MultiAgentNavigationWorld:
         plt.pause(0.1)
 
 
-def _heuristic(a: tuple[int, int], b: tuple[int, int]) -> int:
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-
 def astar(
     occupancy: np.ndarray,
     start: tuple[int, int],
     goal: tuple[int, int],
 ) -> list[tuple[int, int]]:
-    height, width = occupancy.shape
-    frontier: list[tuple[int, int, tuple[int, int]]] = []
-    heapq.heappush(frontier, (_heuristic(start, goal), 0, start))
-    came_from: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
-    cost_so_far: dict[tuple[int, int], int] = {start: 0}
-
-    while frontier:
-        _, cost, current = heapq.heappop(frontier)
-        if current == goal:
-            break
-        for dr, dc in DIRECTIONS.values():
-            neighbor = (current[0] + dr, current[1] + dc)
-            if not (0 <= neighbor[0] < height and 0 <= neighbor[1] < width):
-                continue
-            if occupancy[neighbor] == OCCUPIED:
-                continue
-            new_cost = cost + 1
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                priority = new_cost + _heuristic(neighbor, goal)
-                heapq.heappush(frontier, (priority, new_cost, neighbor))
-                came_from[neighbor] = current
-
-    if goal not in came_from:
-        return []
-    path: list[tuple[int, int]] = []
-    cur: tuple[int, int] | None = goal
-    while cur is not None:
-        path.append(cur)
-        cur = came_from[cur]
-    path.reverse()
-    return path
+    return grid_astar(occupancy != OCCUPIED, start, goal)
 
 
 def _direction_to(start: tuple[int, int], end: tuple[int, int]) -> str:

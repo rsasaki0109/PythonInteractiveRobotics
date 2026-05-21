@@ -9,7 +9,6 @@ goal navigation once the belief collapses.
 from __future__ import annotations
 
 import argparse
-import heapq
 import sys
 from pathlib import Path
 from typing import Any
@@ -22,6 +21,7 @@ if str(ROOT) not in sys.path:
 
 from pir.core.random import make_rng
 from pir.core.types import Failure, StepResult, Trace
+from pir.planning import astar as grid_astar
 from pir.sensors.fake_lidar import DIRECTIONS
 from pir.worlds.grid_world import FREE, OCCUPIED
 
@@ -291,41 +291,7 @@ def _perpendicular_directions(direction: str) -> list[str]:
 
 
 def astar_free(grid: np.ndarray, start: Cell, goal: Cell) -> list[Cell]:
-    frontier: list[tuple[int, int, Cell]] = []
-    heapq.heappush(frontier, (manhattan(start, goal), 0, start))
-    came_from: dict[Cell, Cell | None] = {start: None}
-    cost_so_far: dict[Cell, int] = {start: 0}
-
-    while frontier:
-        _, cost, current = heapq.heappop(frontier)
-        if current == goal:
-            return reconstruct_path(came_from, current)
-        for neighbor in free_neighbors(grid, current):
-            new_cost = cost + 1
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                priority = new_cost + manhattan(neighbor, goal)
-                heapq.heappush(frontier, (priority, new_cost, neighbor))
-                came_from[neighbor] = current
-    return []
-
-
-def free_neighbors(grid: np.ndarray, cell: Cell) -> list[Cell]:
-    result: list[Cell] = []
-    for direction in DIRECTIONS:
-        next_cell = move_cell(cell, direction)
-        if is_free(grid, next_cell):
-            result.append(next_cell)
-    return result
-
-
-def reconstruct_path(came_from: dict[Cell, Cell | None], current: Cell) -> list[Cell]:
-    path = [current]
-    while came_from[current] is not None:
-        current = came_from[current]
-        path.append(current)
-    path.reverse()
-    return path
+    return grid_astar(grid == 0, start, goal)
 
 
 def move_cell(cell: Cell, direction: str) -> Cell:

@@ -14,7 +14,7 @@ robotics loops rather than standalone algorithms.
 - 36 runnable examples
 - 20 learning-path roadmap examples
 - 35 README GIFs generated from runnable examples
-- 88 smoke and regression tests
+- 101 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for

@@ -12,7 +12,7 @@ The repository currently has:
 - 20 numbered learning-path examples
 - 16 extra examples outside the original learning-path roadmap
 - 35 generated README GIFs
-- 88 smoke and regression tests
+- 101 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,

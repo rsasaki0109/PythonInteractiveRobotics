@@ -27,9 +27,7 @@ unreachable from the start under the walkable map).
 from __future__ import annotations
 
 import argparse
-import heapq
 import sys
-from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -41,11 +39,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pir.core.types import Failure, StepResult, Trace
+from pir.planning import astar, bfs_reachable_count
 
 
 FREE = 0
 OCCUPIED = 1
-DIRECTIONS: tuple[tuple[int, int], ...] = ((-1, 0), (1, 0), (0, -1), (0, 1))
 
 
 @dataclass(frozen=True)
@@ -79,71 +77,9 @@ def compute_empowerment(walkable: np.ndarray, k: int) -> np.ndarray:
             if not walkable[r, c]:
                 continue
             empowerment[r, c] = np.log2(
-                _reachable_in_k(walkable, (r, c), k)
+                bfs_reachable_count(walkable, (r, c), k)
             )
     return empowerment
-
-
-def _reachable_in_k(
-    walkable: np.ndarray, start: tuple[int, int], k: int
-) -> int:
-    height, width = walkable.shape
-    seen = {start}
-    frontier: deque[tuple[tuple[int, int], int]] = deque([(start, 0)])
-    while frontier:
-        (r, c), depth = frontier.popleft()
-        if depth == k:
-            continue
-        for dr, dc in DIRECTIONS:
-            nr, nc = r + dr, c + dc
-            if not (0 <= nr < height and 0 <= nc < width):
-                continue
-            if not walkable[nr, nc]:
-                continue
-            if (nr, nc) in seen:
-                continue
-            seen.add((nr, nc))
-            frontier.append(((nr, nc), depth + 1))
-    return len(seen)
-
-
-def astar(
-    walkable: np.ndarray,
-    start: tuple[int, int],
-    goal: tuple[int, int],
-    edge_cost: np.ndarray | None = None,
-) -> list[tuple[int, int]]:
-    """A* with optional per-target-cell edge cost. Returns [] if no path."""
-
-    height, width = walkable.shape
-    if not walkable[start] or not walkable[goal]:
-        return []
-    cost: dict[tuple[int, int], float] = {start: 0.0}
-    parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
-    heap: list[tuple[float, tuple[int, int]]] = [(0.0, start)]
-    while heap:
-        _, current = heapq.heappop(heap)
-        if current == goal:
-            break
-        for dr, dc in DIRECTIONS:
-            nr, nc = current[0] + dr, current[1] + dc
-            if not (0 <= nr < height and 0 <= nc < width):
-                continue
-            if not walkable[nr, nc]:
-                continue
-            step = 1.0 if edge_cost is None else float(edge_cost[nr, nc])
-            new_cost = cost[current] + step
-            if (nr, nc) not in cost or new_cost < cost[(nr, nc)]:
-                cost[(nr, nc)] = new_cost
-                parent[(nr, nc)] = current
-                h = abs(nr - goal[0]) + abs(nc - goal[1])
-                heapq.heappush(heap, (new_cost + h, (nr, nc)))
-    if goal not in parent:
-        return []
-    path: list[tuple[int, int]] = [goal]
-    while parent[path[-1]] is not None:
-        path.append(parent[path[-1]])  # type: ignore[arg-type]
-    return list(reversed(path))
 
 
 def empowerment_edge_cost(
