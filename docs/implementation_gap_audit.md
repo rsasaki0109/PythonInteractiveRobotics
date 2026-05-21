@@ -6,10 +6,10 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 
 ## Current Stable Surface
 
-- 32 runnable examples
-- 21 numbered learning-path examples plus 11 extras
-- 31 generated README GIFs with nonblank checks
-- 80 smoke, adapter, and regression tests
+- 31 runnable examples
+- 20 numbered learning-path examples plus 11 extras
+- 30 generated README GIFs with nonblank checks
+- 79 smoke, adapter, and regression tests
 - CI green on Python 3.10, 3.11, and 3.12
 - Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
   `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`
@@ -27,7 +27,7 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 | `08_belief_grasp_selection.py` | Belief over three pose hypotheses, Bayes update on miss, retries with a different grasp. |
 | `09_active_viewpoint_for_grasp.py` | Viewpoint selection by expected reliability under pose belief. |
 | `21_object_permanence_toy.py` | Memory persists across an occluder. |
-| `22_where_did_i_see_it.py` | Multi-object memory keyed by name, queried after exploration. |
+| `22_where_did_i_see_it.py` (removed) | The "explore -> memorize -> query -> revisit" loop overlapped `21_object_permanence_toy.py` without adding a different lesson; removed after a GPT Pro curriculum review. |
 | `23_model_error_recovery.py` | Regime shift detection then short system-identification probe. |
 | `24_information_gain_navigation.py` | Active scout to reveal a gate before A* with full info. |
 | `25_clear_path_before_pick.py` | Precondition failure recovery by clearing an obstacle. |

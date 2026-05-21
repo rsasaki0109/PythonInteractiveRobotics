@@ -449,24 +449,6 @@ def test_object_permanence_toy_runs_headless() -> None:
     assert any(info.get("action_type") == "move" for info in trace.infos)
 
 
-def test_where_did_i_see_it_runs_headless() -> None:
-    module = load_example("examples/embodied_ai/22_where_did_i_see_it.py")
-
-    trace = module.run(seed=0, render=False, max_steps=30, target_name="mug")
-
-    final = trace.infos[-1]
-    assert final["success"] is True
-    assert final["observation_count"] == 3
-    assert final["memory_size"] == 3
-    assert final["memory_query_count"] >= 1
-    assert final["target_in_memory"] is True
-    assert not trace.failures()
-    assert any(info.get("action_type") == "interact" for info in trace.infos)
-    assert any(info.get("action_type") == "move" for info in trace.infos)
-    assert any(info.get("agent_state") == "revisit" for info in trace.infos)
-    assert any(info.get("agent_state") == "succeeded" for info in trace.infos)
-
-
 def test_tiny_world_model_planning_runs_headless() -> None:
     module = load_example("examples/world_models/20_tiny_world_model_planning.py")
 
