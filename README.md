@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 29 runnable examples
+- 30 runnable examples
 - 20 learning-path roadmap examples
-- 28 README GIFs generated from runnable examples
-- 72 smoke and regression tests
+- 29 README GIFs generated from runnable examples
+- 73 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -103,6 +103,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | Belief-guided grasp selection | Active viewpoint for grasp |
 | --- | --- |
 | ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](docs/assets/gifs/belief_grasp_selection.gif) | ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](docs/assets/gifs/active_viewpoint_for_grasp.gif) |
+
+| Clear path before pick |
+| --- |
+| ![A tabletop agent tries to pick the target, gets a precondition failure because an obstacle blocks the gripper path, picks the obstacle, places it in the clear zone, and retries the original pick.](docs/assets/gifs/clear_path_before_pick.gif) |
 
 ### Navigation and recovery
 

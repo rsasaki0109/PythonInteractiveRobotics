@@ -820,6 +820,35 @@ def make_belief_grasp_selection() -> Path:
     return save_gif("belief_grasp_selection.gif", frames)
 
 
+def make_clear_path_before_pick() -> Path:
+    module = load_example("examples/manipulation/25_clear_path_before_pick.py")
+    env = module.ClearPathBeforePickWorld(seed=0, max_steps=15)
+    agent = module.ClearPathBeforePickAgent()
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 5.0), dpi=80)
+        module.draw_clear_path_before_pick_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(15):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("clear_path_before_pick.gif", frames)
+
+
 def make_active_viewpoint_for_grasp() -> Path:
     module = load_example("examples/manipulation/09_active_viewpoint_for_grasp.py")
     env = module.ActiveViewpointGraspWorld(seed=4, true_pose=2)
@@ -1134,6 +1163,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "suction": make_probabilistic_suction_sorting,
     "belief_grasp": make_belief_grasp_selection,
     "active_viewpoint": make_active_viewpoint_for_grasp,
+    "clear_path": make_clear_path_before_pick,
     "reactive": make_reactive_obstacle,
     "dynamic": make_dynamic_obstacle,
     "replanning": make_online_replanning,

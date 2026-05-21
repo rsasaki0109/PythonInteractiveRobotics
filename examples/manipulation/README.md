@@ -30,9 +30,9 @@ search, push, or prepare before trying again.
 | --- | --- |
 | ![A suction sorter estimates per-object success probabilities, recovers from a suction miss, prepares the seal, retries, and sorts into bins.](../../docs/assets/gifs/probabilistic_suction_sorting.gif) | ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](../../docs/assets/gifs/belief_grasp_selection.gif) |
 
-| Active viewpoint for grasp |
-| --- |
-| ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](../../docs/assets/gifs/active_viewpoint_for_grasp.gif) |
+| Active viewpoint for grasp | Clear path before pick |
+| --- | --- |
+| ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](../../docs/assets/gifs/active_viewpoint_for_grasp.gif) | ![A tabletop agent tries to pick the target, gets a precondition failure because an obstacle blocks the gripper path, picks the obstacle, places it in the clear zone, and retries the original pick.](../../docs/assets/gifs/clear_path_before_pick.gif) |
 
 ## `01_pick_and_retry.py`
 
@@ -357,3 +357,46 @@ pose belief -> expected reliability per view -> argmax view -> observe -> Bayes 
 - Increase occlusion across all viewpoints and watch entropy stay high.
 - Lower `belief_threshold` and watch the agent grasp earlier.
 - Add a fourth viewpoint that is uniformly mediocre and see it never get picked.
+
+## `25_clear_path_before_pick.py`
+
+### What this teaches
+
+A pick can fail because of a precondition violation, not a grasp slip. Here a
+separate obstacle sits on the gripper path to the target. The agent's first
+pick attempt returns a `precondition_blocked` failure, and recovery means
+picking the obstacle, placing it in a known clear zone, and then retrying the
+original pick.
+
+This is different from `06_push_then_grasp.py`, where the target itself is
+nudged into a graspable configuration. Here the target stays put and a second
+object is moved aside.
+
+### Run
+
+```bash
+python examples/manipulation/25_clear_path_before_pick.py
+```
+
+### Key loop
+
+```text
+try target -> precondition fails -> pick obstacle -> place in clear zone -> retry target
+```
+
+### Simplifications
+
+- 2D tabletop
+- one target and one obstacle
+- precondition reduces to "obstacle still in workspace"
+- clear zone is a single known disc
+- place outside the clear zone returns a structured failure
+- no contact, friction, or full path planning
+
+### Things to try
+
+- Move the obstacle out of the gripper line at start and watch the
+  precondition never trigger.
+- Shrink the `clear_zone_radius` and watch `place_out_of_clear_zone` fire.
+- Add a second obstacle and require both to be cleared before the pick.
+- Replace the fixed clear zone with a free-cell search.
