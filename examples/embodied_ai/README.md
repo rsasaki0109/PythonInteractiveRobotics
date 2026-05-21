@@ -26,6 +26,10 @@ physical action.
 | --- | --- |
 | ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) | ![An embodied agent explores three waypoints, memorizes every object it sees, queries the memory for the target object, walks back to the remembered position, and interacts there.](../../docs/assets/gifs/where_did_i_see_it.gif) |
 
+| Curiosity grid exploration |
+| --- |
+| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](../../docs/assets/gifs/curiosity_grid_exploration.gif) |
+
 ## `01_goal_command_pick.py`
 
 ### What this teaches
@@ -247,3 +251,50 @@ explore waypoints -> observe and memorize -> query memory for target -> revisit 
 - Add a fourth object the agent does not need.
 - Change `target_name` to a different object and see the revisit path change.
 - Skip a waypoint and observe `target_in_memory` flip to False.
+
+## `28_curiosity_grid_exploration.py`
+
+### What this teaches
+
+A curiosity-driven agent commits to the most novel reachable cell using a
+visit-count map, plans an A* path there, and repeats. This shows a different
+exploration signal than frontier exploration (`05_frontier_exploration.py`),
+which only cares about the boundary between known and unknown space.
+Curiosity instead keeps an intrinsic novelty score even on cells that have
+already been observed, so the agent revisits structurally interesting areas.
+
+Success: visited coverage of free cells crosses `coverage_threshold`.
+Failure: timeout (terminal) or no reachable novel cell (recoverable).
+
+### Run
+
+```bash
+python examples/embodied_ai/28_curiosity_grid_exploration.py
+```
+
+### Key loop
+
+```text
+update visit count -> compute novelty -> pick most novel reachable cell ->
+A* path -> walk until reached or stale -> repeat
+```
+
+### Simplifications
+
+- closed grid with a few interior walls
+- single agent, no dynamic obstacles
+- novelty = 1 / (1 + visit_count) with a small decay each step
+- target commitment uses `max_target_age` plus a coverage check
+- A* is rebuilt only when the target changes
+- coverage threshold is the only termination signal besides timeout
+
+### Things to try
+
+- Lower `coverage_threshold` and watch the loop finish earlier with patchier
+  coverage.
+- Disable `novelty_decay` (set to 1.0) and watch the agent over-commit to
+  the first cell it ever visited.
+- Increase `max_target_age` and observe the agent ignoring better targets it
+  sees mid-path.
+- Replace the score with `novelty - 0.5 * distance` and watch it collapse
+  back to nearest-cell behaviour.

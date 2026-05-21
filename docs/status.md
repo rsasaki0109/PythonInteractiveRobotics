@@ -5,10 +5,10 @@ see what exists, what is verified, and what should come next.
 
 ## Snapshot
 
-- Runnable examples: 31
-- Learning-path roadmap examples: 20
-- README GIFs: 30
-- Smoke and regression tests: 74
+- Runnable examples: 32
+- Learning-path roadmap examples: 21
+- README GIFs: 31
+- Smoke and regression tests: 80
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`
 - CI: Python 3.10, 3.11, 3.12
@@ -18,7 +18,7 @@ see what exists, what is verified, and what should come next.
   `docs/simulator_integration_strategy.md`
 - Optional adapters: `GridWorldGymnasiumAdapter`,
   `DynamicObstacleGridWorldGymnasiumAdapter`, `Tabletop2DGymnasiumAdapter`,
-  `BlockedPathWorldGymnasiumAdapter`
+  `BlockedPathWorldGymnasiumAdapter`, `MovingObstacleWorldGymnasiumAdapter`
 
 `examples/embodied_ai/01_goal_command_pick.py` is an extra flagship
 goal-command example. The numbered 20-example roadmap is tracked in
@@ -31,7 +31,7 @@ goal-command example. The numbered 20-example roadmap is tracked in
 | Runtime | 2 | smallest observe-act-observe loop, trace replay |
 | Navigation | 11 | reactive avoidance, dynamic obstacles, replanning, exploration, belief, active SLAM, MPC, recovery, localization recovery, information-gain detour, multi-agent avoidance |
 | Manipulation | 10 | retry, reactive grasping, IK servo, moving target reaching, search, push recovery, suction sorting, belief grasp selection, active viewpoint grasp, clear path before pick |
-| Embodied AI | 6 | controlled goals, memory, POMDP search, tiny VLA loop, object permanence, memory query revisit |
+| Embodied AI | 7 | controlled goals, memory, POMDP search, tiny VLA loop, object permanence, memory query revisit, curiosity exploration |
 | World models | 2 | action-conditioned dynamics, prediction error, model update, replanning, regime-shift detection, system identification |
 
 ## Verification

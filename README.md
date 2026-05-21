@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 31 runnable examples
-- 20 learning-path roadmap examples
-- 30 README GIFs generated from runnable examples
-- 74 smoke and regression tests
+- 32 runnable examples
+- 21 learning-path roadmap examples
+- 31 README GIFs generated from runnable examples
+- 80 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -148,6 +148,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](docs/assets/gifs/object_permanence_toy.gif) | ![An embodied agent explores three waypoints, memorizes every object it sees, queries the memory for the target object, walks back to the remembered position, and interacts there.](docs/assets/gifs/where_did_i_see_it.gif) |
 
+| Curiosity grid exploration |
+| --- |
+| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](docs/assets/gifs/curiosity_grid_exploration.gif) |
+
 ### World models
 
 | Tiny world-model planning | Model error recovery |
@@ -256,14 +260,18 @@ pip install -e ".[pybullet]"
 
 ROS2 and simulator integrations are optional bridges, not core dependencies.
 
-`GridWorld2D`, `DynamicObstacleGridWorld`, `BlockedPathWorld`, and `Tabletop2D`
-also have lightweight Gymnasium-style adapters:
+`GridWorld2D`, `DynamicObstacleGridWorld`, `BlockedPathWorld`,
+`MovingObstacleWorld`, and `Tabletop2D` also have lightweight Gymnasium-style
+adapters:
 
 ```python
+import numpy as np
+
 from pir.adapters import (
     BlockedPathWorldGymnasiumAdapter,
     DynamicObstacleGridWorldGymnasiumAdapter,
     GridWorldGymnasiumAdapter,
+    MovingObstacleWorldGymnasiumAdapter,
     Tabletop2DGymnasiumAdapter,
 )
 
@@ -278,6 +286,12 @@ obs, reward, terminated, truncated, info = dynamic.step(2)  # east
 blocked = BlockedPathWorldGymnasiumAdapter()
 obs, info = blocked.reset(seed=0)
 obs, reward, terminated, truncated, info = blocked.step(2)  # east
+
+moving = MovingObstacleWorldGymnasiumAdapter(seed=0)
+obs, info = moving.reset(seed=0)
+obs, reward, terminated, truncated, info = moving.step(
+    np.asarray([0.30, 0.10], dtype=np.float32)
+)  # continuous velocity
 
 tabletop = Tabletop2DGymnasiumAdapter(seed=0)
 obs, info = tabletop.reset(seed=0)

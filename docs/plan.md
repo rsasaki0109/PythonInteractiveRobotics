@@ -8,15 +8,16 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 31 runnable examples
-- 20 numbered learning-path examples
+- 32 runnable examples
+- 21 numbered learning-path examples
 - 11 extra examples outside the original learning-path roadmap
-- 30 generated README GIFs
-- 74 smoke and regression tests
+- 31 generated README GIFs
+- 80 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
-  `DynamicObstacleGridWorld`, `Tabletop2D`, and `BlockedPathWorld`
+  `DynamicObstacleGridWorld`, `Tabletop2D`, `BlockedPathWorld`, and
+  `MovingObstacleWorld`
 - bridge strategy docs for ROS2 and simulators
 - trace inspection docs for headless run analysis
 
@@ -120,20 +121,34 @@ Recent completed work:
   shares the grid with two goal-seeking other agents, predicts each
   agent's next step, and runs A* over a map that treats current and
   predicted-next cells as occupied. GIF and smoke test cover the loop.
+- `MovingObstacleWorld` was extracted from `examples/navigation/08_interactive_mpc.py`
+  into `pir/worlds/moving_obstacle.py`, and `MovingObstacleWorldGymnasiumAdapter`
+  was added in `pir/adapters/gymnasium_adapter.py`. The adapter exposes a
+  continuous-control `Box(2,)` action space, splits `terminated` vs
+  `truncated`, and preserves the raw observation in `info["raw_obs"]`. Five
+  adapter tests were added.
+- `examples/embodied_ai/28_curiosity_grid_exploration.py` was added. The agent
+  keeps a visit-count map, picks the most novel reachable free cell using a
+  novelty score, plans an A* path, commits to the path until target is reached
+  or stale, and terminates when visited coverage of free cells crosses a
+  threshold. GIF and smoke test cover the loop.
 
 The next agent should not redo those items. If any of them seem missing, first
 check the current branch and latest pulled commit.
 
 Recommended next task:
 
-1. Pick the next adapter or example from the "Next candidates" list under
-   Priority 3 and Priority 4. A continuous-control wrapper such as
-   `MovingObstacleWorld`, or a manipulation belief-grasp example
-   (`examples/manipulation/08_belief_grasp_selection.py`) are both reasonable
-   next steps.
-2. Keep the package/example boundary the same as the `BlockedPathWorld` work:
-   environment in `pir/worlds/`, agent + policy + run loop in the example.
-3. Adapter tests should be added before broadening the adapter API further.
+1. Consolidate before expanding. The original Priority 4 list (28 numbered
+   examples + extras) is complete. Strengthen `docs/example_authoring.md`,
+   tighten category READMEs, and update `docs/implementation_gap_audit.md`
+   before adding more examples.
+2. If a new example is requested, prefer concepts that fill a clear gap (for
+   example, a continuous-control manipulation primitive, a multi-step value-of-
+   information loop, or a richer language-grounded recovery).
+3. Keep the package/example boundary the same as the `BlockedPathWorld` and
+   `MovingObstacleWorld` work: environment in `pir/worlds/`, agent + policy +
+   run loop in the example.
+4. Adapter tests should be added before broadening the adapter API further.
 
 Do not start yet:
 
@@ -244,11 +259,14 @@ Already done:
 - `DynamicObstacleGridWorldGymnasiumAdapter`
 - `Tabletop2DGymnasiumAdapter`
 - `BlockedPathWorldGymnasiumAdapter`
+- `MovingObstacleWorldGymnasiumAdapter` (continuous-control)
 
 Next candidates:
 
-1. one continuous-control example such as `MovingObstacleWorld`
-2. a tiny embodied-AI wrapper for controlled language goals
+1. a tiny embodied-AI wrapper for controlled language goals
+2. an adapter for a curiosity / exploration world (e.g.
+   `CuriosityGridWorld`) so RL agents can compare extrinsic and intrinsic
+   reward signals on the same world
 
 Rules:
 
