@@ -28,6 +28,7 @@ Run any example headless with its `--no-render` flag when available.
 | `navigation/24_information_gain_navigation.py` | `python examples/navigation/24_information_gain_navigation.py` | scout observation -> reveal gate -> A* with full info |
 | `navigation/27_multi_agent_avoidance.py` | `python examples/navigation/27_multi_agent_avoidance.py` | observe agents -> predict next -> A* around predictions |
 | `navigation/29_safety_filter_cbf.py` | `python examples/navigation/29_safety_filter_cbf.py` | nominal u -> CBF projection -> safe u |
+| `navigation/31_options_with_interrupts.py` | `python examples/navigation/31_options_with_interrupts.py` | option β / interrupt -> dock_and_charge -> resume go_to_goal |
 
 ## Manipulation
 
