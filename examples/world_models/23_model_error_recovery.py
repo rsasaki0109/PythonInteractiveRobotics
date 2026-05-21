@@ -270,12 +270,25 @@ def draw_model_error_recovery_scene(
     ax.set_title("model error recovery: regime shift")
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
-    ax.add_patch(mpatches.Rectangle((0.0, 0.0), env.size, env.size, color="0.97", ec="0.7"))
+    bg_color = "0.97"
+    if env.regime_shift_active:
+        bg_color = (1.0, 0.93, 0.93)
+    ax.add_patch(mpatches.Rectangle((0.0, 0.0), env.size, env.size, color=bg_color, ec="0.7"))
 
     ax.add_patch(
         mpatches.Circle(env.goal, env.goal_radius, color="tab:green", alpha=0.25)
     )
     ax.plot(*env.goal, marker="*", color="tab:green", markersize=16)
+
+    goal_vec = env.goal - env.robot
+    goal_dist = float(np.linalg.norm(goal_vec))
+    if goal_dist > 1e-3:
+        ax.annotate(
+            "",
+            xy=tuple(env.robot + 0.15 * goal_vec / goal_dist),
+            xytext=tuple(env.robot),
+            arrowprops=dict(arrowstyle="->", color="0.55", lw=1.0, alpha=0.7),
+        )
 
     if len(env.trajectory) > 1:
         traj = np.asarray(env.trajectory)
@@ -291,6 +304,18 @@ def draw_model_error_recovery_scene(
             markersize=10,
             mew=2,
         )
+        ax.annotate(
+            "",
+            xy=tuple(env.robot),
+            xytext=tuple(env.last_predicted_pos),
+            arrowprops=dict(
+                arrowstyle="->",
+                color="tab:red",
+                lw=1.6,
+                linestyle="--",
+                alpha=0.85,
+            ),
+        )
 
     if env.regime_shift_active:
         ax.annotate(
@@ -300,7 +325,42 @@ def draw_model_error_recovery_scene(
             ha="center",
             color="tab:red",
             fontsize=9,
+            fontweight="bold",
         )
+
+    if agent is not None:
+        offset = np.asarray(agent.learned_offset, dtype=float)
+        offset_norm = float(np.linalg.norm(offset))
+        inset_origin = np.array([0.86, 0.10])
+        ax.add_patch(
+            mpatches.Rectangle(
+                (inset_origin[0] - 0.08, inset_origin[1] - 0.05),
+                0.16,
+                0.13,
+                facecolor="white",
+                edgecolor="0.6",
+                alpha=0.85,
+                lw=0.8,
+            )
+        )
+        ax.text(
+            inset_origin[0],
+            inset_origin[1] + 0.06,
+            "learned offset",
+            ha="center",
+            fontsize=7,
+            color="0.3",
+        )
+        if offset_norm > 1e-6:
+            scale = 0.05 / max(offset_norm, 1e-6)
+            ax.annotate(
+                "",
+                xy=tuple(inset_origin + offset * scale),
+                xytext=tuple(inset_origin),
+                arrowprops=dict(arrowstyle="->", color="tab:purple", lw=1.4),
+            )
+        else:
+            ax.plot(*inset_origin, marker=".", color="0.5", markersize=6)
 
     status_parts: list[str] = [
         f"step={env.time}",

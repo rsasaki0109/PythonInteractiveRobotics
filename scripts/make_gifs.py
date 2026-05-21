@@ -132,6 +132,7 @@ def render_tabletop_frame(
     info: dict[str, Any],
     *,
     title: str = "pick -> fail -> update belief -> retry",
+    extra_overlay: str | None = None,
 ) -> np.ndarray:
     fig, ax = plt.subplots(figsize=(4.6, 4.6), dpi=80)
     ax.set_title(title)
@@ -172,6 +173,18 @@ def render_tabletop_frame(
     if info.get("success"):
         status += "  success"
     ax.text(0.02, 0.97, status, transform=ax.transAxes, va="top", fontsize=9)
+    if extra_overlay is not None:
+        ax.text(
+            0.98,
+            0.97,
+            extra_overlay,
+            transform=ax.transAxes,
+            va="top",
+            ha="right",
+            fontsize=8,
+            family="monospace",
+            bbox=dict(boxstyle="round", facecolor="white", edgecolor="0.6", alpha=0.85),
+        )
     ax.tick_params(labelsize=8)
     fig.tight_layout()
     frame = fig_to_frame(fig)
@@ -605,12 +618,17 @@ def make_goal_command_pick() -> Path:
     agent = module.GoalCommandPickAgent(command)
     obs = env.reset(seed=3)
     agent.reset()
+    parse_lines = [f"command: \"{command}\"", "parsed:"]
+    for key, value in agent.goal.items():
+        parse_lines.append(f"  {key}: {value}")
+    parse_overlay = "\n".join(parse_lines)
     frames = [
         render_tabletop_frame(
             env,
             agent,
             {"agent_state": "parse_goal"},
             title="goal: find the red block and pick it",
+            extra_overlay=parse_overlay,
         )
     ]
 
@@ -628,6 +646,7 @@ def make_goal_command_pick() -> Path:
                 agent,
                 info,
                 title="goal: find the red block and pick it",
+                extra_overlay=parse_overlay,
             )
         )
         if done:
@@ -802,8 +821,10 @@ def make_belief_grasp_selection() -> Path:
     frames: list[np.ndarray] = []
 
     def append_frame(info: dict[str, Any] | None = None) -> None:
-        fig, ax = plt.subplots(figsize=(5.6, 4.0), dpi=80)
-        module.draw_belief_grasp_scene(ax, env, agent, info)
+        fig, axes = plt.subplots(
+            1, 2, figsize=(8.6, 3.6), dpi=80, gridspec_kw={"width_ratios": [3, 4]}
+        )
+        module.draw_belief_grasp_scene(axes[0], axes[1], env, agent, info)
         fig.tight_layout()
         frames.append(fig_to_frame(fig))
         plt.close(fig)

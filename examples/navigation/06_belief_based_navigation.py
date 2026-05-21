@@ -355,7 +355,7 @@ def draw_belief_scene(
 
     for name, landmark in env.landmarks.items():
         ax.plot(landmark[1], landmark[0], "s", color="tab:orange", markersize=7)
-        ax.text(landmark[1] + 0.15, landmark[0] + 0.15, name, fontsize=8)
+        ax.text(landmark[1] + 0.45, landmark[0] + 0.10, name, fontsize=10, color="tab:orange", fontweight="bold")
 
     if agent is not None and agent.estimated_cell is not None:
         row, col = agent.estimated_cell
