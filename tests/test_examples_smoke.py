@@ -344,6 +344,20 @@ def test_multi_agent_avoidance_runs_headless() -> None:
     assert seen_predictions == {"A", "B"}
 
 
+def test_curiosity_grid_exploration_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/28_curiosity_grid_exploration.py")
+
+    trace = module.run(seed=0, render=False, max_steps=120, coverage_threshold=0.70)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["coverage"] >= 0.70
+    assert final["target_switches"] >= 2
+    # commitment to paths: not switching every single step
+    assert final["target_switches"] <= len(trace.actions) // 2
+    assert not trace.failures()
+
+
 def test_localization_uncertainty_recovery_runs_headless() -> None:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
 

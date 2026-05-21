@@ -747,7 +747,7 @@ def make_interactive_mpc() -> Path:
 
     for step in range(120):
         action = agent.act(obs, env)
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, info = env.step(action).as_tuple()
         info.update(agent.info())
         if done and info.get("success"):
             info["agent_state"] = "arrived"
@@ -767,9 +767,11 @@ def make_blocked_path_recovery() -> Path:
     agent.reset()
     frames: list[np.ndarray] = []
 
+    from pir.worlds.blocked_path import draw_blocked_path_scene
+
     def append_frame(info: dict[str, Any] | None = None) -> None:
         fig, ax = plt.subplots(figsize=(5.6, 4.2), dpi=80)
-        module.draw_blocked_path_scene(ax, env, agent, info)
+        draw_blocked_path_scene(ax, env, agent, info)
         fig.tight_layout()
         frames.append(fig_to_frame(fig))
         plt.close(fig)
@@ -877,6 +879,62 @@ def make_active_viewpoint_for_grasp() -> Path:
             break
 
     return save_gif("active_viewpoint_for_grasp.gif", frames)
+
+
+def make_curiosity_grid_exploration() -> Path:
+    module = load_example("examples/embodied_ai/28_curiosity_grid_exploration.py")
+    env = module.CuriosityGridWorld(max_steps=120)
+    agent = module.CuriosityExplorationAgent(env)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 4.5), dpi=80)
+        ax.imshow(env.static_map, cmap="gray_r", origin="upper", vmin=0, vmax=1)
+        visits = agent.visit_counts.astype(float)
+        normalized = visits / (visits.max() + 1e-6)
+        ax.imshow(normalized, cmap="viridis", origin="upper", alpha=0.45, vmin=0.0, vmax=1.0)
+        rows = [cell[0] for cell in env.trajectory]
+        cols = [cell[1] for cell in env.trajectory]
+        ax.plot(cols, rows, color="tab:blue", linewidth=1.5, alpha=0.7)
+        if agent.current_target is not None:
+            ax.plot(
+                agent.current_target[1],
+                agent.current_target[0],
+                "x",
+                color="tab:red",
+                markersize=12,
+                markeredgewidth=3,
+            )
+        ax.plot(env.robot[1], env.robot[0], "o", color="tab:blue", markersize=10)
+        ax.set_title(
+            f"curiosity: step={env.time} coverage={agent.coverage:.2f}"
+            f" switches={agent.target_switches}"
+        )
+        ax.set_xticks(np.arange(-0.5, env.width, 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, env.height, 1), minor=True)
+        ax.grid(which="minor", color="0.75", linewidth=0.5)
+        ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(120):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        info.update(agent.info())
+        if agent.coverage >= agent.config.coverage_threshold:
+            info["success"] = True
+            done = True
+        agent.update(obs, reward, info)
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("curiosity_grid_exploration.gif", frames)
 
 
 def make_multi_agent_avoidance() -> Path:
@@ -1205,6 +1263,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "localization": make_localization_uncertainty_recovery,
     "info_gain": make_information_gain_navigation,
     "multi_agent": make_multi_agent_avoidance,
+    "curiosity": make_curiosity_grid_exploration,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
