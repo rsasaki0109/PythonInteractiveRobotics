@@ -360,6 +360,41 @@ def test_curiosity_grid_exploration_runs_headless() -> None:
     assert not trace.failures()
 
 
+def test_inverse_reward_from_demo_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/33_inverse_reward_from_demo.py")
+
+    trace = module.run(seed=0, render=False, max_steps=80)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    # demo and learned paths must both visit at least one scenic cell;
+    # the baseline path may or may not touch one
+    assert final["demo_scenic_step_count"] >= 2
+    assert final["learned_scenic_step_count"] >= 1
+    # the learned reward should reproduce the demo's scenic preference
+    # better than the baseline shortest path
+    assert final["learned_scenic_step_count"] > final["baseline_scenic_step_count"]
+    # scenic weight (index 0 in features) must be positive after IRL
+    weights = final["learned_weights"]
+    assert weights[0] > 0.0
+    assert not trace.failures()
+
+
+def test_inverse_reward_weights_recover_scenic_preference() -> None:
+    module = load_example("examples/embodied_ai/33_inverse_reward_from_demo.py")
+
+    env = module.InverseRewardWorld()
+    features = module.build_features(env.walkable, env.scenic_zones)
+    demo = module.synthesize_demo(env.walkable, env.demo_start, env.demo_goal, env.scenic_zones)
+    weights, mu_demo, mu_uniform = module.learn_weights_from_demo(
+        demo, env.walkable, features
+    )
+    # demo expectation on the scenic feature must exceed the uniform baseline
+    assert mu_demo[0] > mu_uniform[0]
+    # learned weight on the scenic feature must be strictly positive
+    assert weights[0] > 0.0
+
+
 def test_empowerment_navigation_runs_headless() -> None:
     module = load_example("examples/embodied_ai/32_empowerment_navigation.py")
 

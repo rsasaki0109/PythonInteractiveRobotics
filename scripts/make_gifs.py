@@ -881,6 +881,37 @@ def make_active_viewpoint_for_grasp() -> Path:
     return save_gif("active_viewpoint_for_grasp.gif", frames)
 
 
+def make_inverse_reward_from_demo() -> Path:
+    module = load_example("examples/embodied_ai/33_inverse_reward_from_demo.py")
+    env = module.InverseRewardWorld(seed=0, max_steps=80)
+    agent = module.InverseRewardAgent(env)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.6, 4.6), dpi=72)
+        module._draw_scene(ax, env, agent, info or {})
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(80):
+        action = agent.act(obs)
+        if action == (0, 0):
+            break
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("inverse_reward_from_demo.gif", frames)
+
+
 def make_empowerment_navigation() -> Path:
     module = load_example("examples/embodied_ai/32_empowerment_navigation.py")
     env = module.EmpowermentGridWorld(seed=0, max_steps=60)
@@ -1406,6 +1437,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "safety_filter": make_safety_filter_cbf,
     "options": make_options_with_interrupts,
     "empowerment": make_empowerment_navigation,
+    "irl": make_inverse_reward_from_demo,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
