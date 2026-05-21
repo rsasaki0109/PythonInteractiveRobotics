@@ -56,6 +56,7 @@ Run any example headless with its `--no-render` flag when available.
 | `embodied_ai/19_tiny_vla_loop.py` | `python examples/embodied_ai/19_tiny_vla_loop.py "place red block in blue bin"` | language -> visual tokens -> skill -> retry |
 | `embodied_ai/21_object_permanence_toy.py` | `python examples/embodied_ai/21_object_permanence_toy.py` | see object -> memory persists across occlusion -> peek |
 | `embodied_ai/28_curiosity_grid_exploration.py` | `python examples/embodied_ai/28_curiosity_grid_exploration.py` | visit counts -> novelty score -> A* to novel cell -> coverage |
+| `embodied_ai/32_empowerment_navigation.py` | `python examples/embodied_ai/32_empowerment_navigation.py` | k-step empowerment -> shaped A* -> prefer open routes |
 
 ## World Models
 

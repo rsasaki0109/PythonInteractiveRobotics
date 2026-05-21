@@ -881,6 +881,37 @@ def make_active_viewpoint_for_grasp() -> Path:
     return save_gif("active_viewpoint_for_grasp.gif", frames)
 
 
+def make_empowerment_navigation() -> Path:
+    module = load_example("examples/embodied_ai/32_empowerment_navigation.py")
+    env = module.EmpowermentGridWorld(seed=0, max_steps=60)
+    agent = module.EmpowermentNavigationAgent(env)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.6, 4.6), dpi=72)
+        module._draw_scene(ax, env, agent, info or {})
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(60):
+        action = agent.act(obs)
+        if action == (0, 0):
+            break
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("empowerment_navigation.gif", frames)
+
+
 def make_options_with_interrupts() -> Path:
     module = load_example("examples/navigation/31_options_with_interrupts.py")
     env = module.OptionsRobotWorld(seed=0, max_steps=160)
@@ -1374,6 +1405,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "curiosity": make_curiosity_grid_exploration,
     "safety_filter": make_safety_filter_cbf,
     "options": make_options_with_interrupts,
+    "empowerment": make_empowerment_navigation,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
