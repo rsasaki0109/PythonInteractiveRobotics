@@ -360,6 +360,39 @@ def test_curiosity_grid_exploration_runs_headless() -> None:
     assert not trace.failures()
 
 
+def test_empowerment_navigation_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/32_empowerment_navigation.py")
+
+    trace = module.run(seed=0, render=False, max_steps=60)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    # the two paths have the same Manhattan length on this grid
+    assert final["baseline_path_length"] == final["shaped_path_length"]
+    # shaping must actually improve mean empowerment of the chosen route
+    assert final["shaped_mean_empowerment"] > final["baseline_mean_empowerment"]
+    # the shaped policy should detour off the baseline route on many steps
+    assert final["detour_step_count"] >= 5
+    # at most a few cells on the shaped path are below the low-empowerment line
+    assert final["low_empowerment_step_count"] <= 3
+    assert not trace.failures()
+
+
+def test_empowerment_field_geometry() -> None:
+    module = load_example("examples/embodied_ai/32_empowerment_navigation.py")
+
+    env = module.EmpowermentGridWorld()
+    field = module.compute_empowerment(env.walkable, k=3)
+    # interior open cells should have strictly higher empowerment than corner cells
+    assert field[4, 3] > field[0, 0]
+    assert field[4, 3] > field[9, 11]
+    # walls have zero empowerment
+    occupied_cells = np.argwhere(env.static_map == 1)
+    if len(occupied_cells):
+        r, c = occupied_cells[0]
+        assert field[r, c] == 0.0
+
+
 def test_options_with_interrupts_runs_headless() -> None:
     module = load_example("examples/navigation/31_options_with_interrupts.py")
 

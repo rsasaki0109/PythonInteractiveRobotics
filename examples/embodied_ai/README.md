@@ -26,9 +26,9 @@ physical action.
 | --- |
 | ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) |
 
-| Curiosity grid exploration |
-| --- |
-| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](../../docs/assets/gifs/curiosity_grid_exploration.gif) |
+| Curiosity grid exploration | Empowerment navigation |
+| --- | --- |
+| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](../../docs/assets/gifs/curiosity_grid_exploration.gif) | ![A grid robot precomputes k-step empowerment per cell, plans both a baseline and an empowerment-shaped A* path, and follows the shaped path that prefers open cells with many reachable successors.](../../docs/assets/gifs/empowerment_navigation.gif) |
 
 ## `01_goal_command_pick.py`
 
@@ -259,3 +259,62 @@ A* path -> walk until reached or stale -> repeat
   sees mid-path.
 - Replace the score with `novelty - 0.5 * distance` and watch it collapse
   back to nearest-cell behaviour.
+
+## `32_empowerment_navigation.py`
+
+### What this teaches
+
+Empowerment measures how much the agent's actions can influence its
+future state. For a deterministic grid with cardinal actions, the
+k-step empowerment of a cell `s` is approximated by
+`E_k(s) = log2(|reachable_in_k_steps(s)|)`. Open cells have many
+successors and high `E_k`; corridor and corner cells have few.
+
+Adding `E_k` as a shaping signal to A*'s edge cost lets the agent
+prefer routes that keep options open. The example computes two paths
+on the same grid - a baseline Manhattan A* path and an
+empowerment-shaped A* path - and lets the robot follow the shaped one.
+On a grid where both paths have the same length, the shaped path goes
+through the open interior while the baseline hugs the wall.
+
+This is structurally different from `28_curiosity_grid_exploration.py`,
+where the intrinsic signal is *experience-dependent* (visit counts
+that decay over time). Empowerment is a property of the *world
+geometry alone* and can be computed once before the agent ever moves.
+
+Success: robot reaches the goal cell.
+Failure: timeout (terminal), no_path (terminal - the goal is
+unreachable from the start under the walkable map).
+
+### Run
+
+```bash
+python examples/embodied_ai/32_empowerment_navigation.py
+```
+
+### Key loop
+
+```text
+precompute E_k(s) -> A* baseline cost=1 -> A* shaped cost=1+lambda*(E_max-E_k)
+-> follow shaped path -> compare mean E along path
+```
+
+### Simplifications
+
+- 12x10 closed grid with a single rectangular wall block
+- four cardinal actions, no diagonals
+- empowerment is computed exactly by BFS, not estimated by sampling
+- the shaping cost is precomputed once at agent construction
+- baseline path uses pure Manhattan A* for comparison
+- no dynamic obstacles, no agent uncertainty about the map
+
+### Things to try
+
+- Raise `shaping_lambda` from `0.45` to `1.5` and watch the shaped
+  path lengthen further to stay in open space.
+- Drop `empowerment_horizon` from `3` to `1` and observe the
+  empowerment field collapse toward just-counting-neighbors.
+- Add a third wall block at row 5 columns 8-10 and see how the field
+  redistributes.
+- Compare `low_empowerment_step_count` between the shaped and
+  baseline paths on a few different grids.
