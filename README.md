@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 31 runnable examples
+- 32 runnable examples
 - 20 learning-path roadmap examples
-- 30 README GIFs generated from runnable examples
-- 79 smoke and regression tests
+- 31 README GIFs generated from runnable examples
+- 80 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -133,6 +133,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | Information-gain navigation | Multi-agent avoidance |
 | --- | --- |
 | ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](docs/assets/gifs/information_gain_navigation.gif) | ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](docs/assets/gifs/multi_agent_avoidance.gif) |
+
+| Safety filter (CBF) |
+| --- |
+| ![A point robot's naive go-to-goal nominal velocity is projected at each step onto a control-barrier-function half-space for each obstacle, sliding around them without the policy itself ever knowing they exist.](docs/assets/gifs/safety_filter_cbf.gif) |
 
 ### Embodied AI
 

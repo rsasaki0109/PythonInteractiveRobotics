@@ -451,3 +451,56 @@ observe other agents -> predict each one's next step -> A* around predicted cell
 - Add a third other agent crossing the robot's middle row.
 - Reduce the prediction horizon to zero and watch the robot collide-then-wait.
 - Make one agent move twice per step and observe the replan cadence.
+
+## `29_safety_filter_cbf.py`
+
+### What this teaches
+
+Safety can live in a layer separate from the policy. The nominal policy is a
+naive go-to-goal controller that does not know obstacles exist. At every step
+a control-barrier-function safety filter checks each obstacle's barrier
+condition `dh/dt >= -alpha * h` and projects the nominal velocity onto the
+closest safe half-space when the condition would be violated. Otherwise it
+passes the nominal velocity through unchanged.
+
+Success: robot reaches the goal radius before max_steps.
+Failure: safety_filter_stuck (recoverable - the projected velocity fell
+below the stuck threshold for one step), collision (terminal - the filter
+let the robot reach a barrier-violating state), timeout (terminal).
+
+Compare to `02_reactive_obstacle_avoidance.py`, where the policy itself
+avoids obstacles, and to `08_interactive_mpc.py`, where avoidance is folded
+into the rollout cost of an MPC controller. Here the policy stays naive on
+purpose; the filter is what keeps the robot safe.
+
+### Run
+
+```bash
+python examples/navigation/29_safety_filter_cbf.py
+```
+
+### Key loop
+
+```text
+nominal go-to-goal u -> per-obstacle barrier h_i -> project onto safe
+half-space if violated -> apply u_safe -> observe -> repeat
+```
+
+### Simplifications
+
+- 10x10 continuous square world
+- two static circular obstacles
+- single-integrator dynamics (`x' = u`) with a speed cap
+- discrete-time CBF condition with a fixed `alpha`
+- projection is iterative half-space projection, not a QP solver
+- no obstacle motion or replanning
+
+### Things to try
+
+- Increase `alpha` and watch the robot graze the safety margin tighter.
+- Add a third obstacle that traps the nominal path and observe the
+  `safety_filter_stuck` failure.
+- Replace the nominal go-to-goal policy with a random walker and check that
+  the safety filter still prevents collisions.
+- Print the per-step `info["u_nominal"]` and `info["u_safe"]` to see when
+  and how the filter clips the policy.
