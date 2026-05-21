@@ -22,9 +22,9 @@ physical action.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](../../docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](../../docs/assets/gifs/tiny_vla_loop.gif) |
 
-| Object permanence toy |
-| --- |
-| ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) |
+| Object permanence toy | Where did I see it |
+| --- | --- |
+| ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) | ![An embodied agent explores three waypoints, memorizes every object it sees, queries the memory for the target object, walks back to the remembered position, and interacts there.](../../docs/assets/gifs/where_did_i_see_it.gif) |
 
 ## `01_goal_command_pick.py`
 
@@ -208,3 +208,42 @@ see object -> store memory -> object goes behind occluder -> persist memory -> w
 - Disable memory storage in the agent and watch the agent never reach the
   object.
 - Add a second object the agent should ignore.
+
+## `22_where_did_i_see_it.py`
+
+### What this teaches
+
+Embodied memory is more than seeing an object once. The agent should be able to
+explore several places, store every sighting indexed by object name, and later
+answer "where did I see X?" by querying that memory. The action phase relies on
+the recall, not on a live observation - the agent has already moved past the
+target by the time the query runs.
+
+### Run
+
+```bash
+python examples/embodied_ai/22_where_did_i_see_it.py
+```
+
+### Key loop
+
+```text
+explore waypoints -> observe and memorize -> query memory for target -> revisit remembered place -> interact
+```
+
+### Simplifications
+
+- 1x1 2D table
+- three named objects, one of which is the target
+- waypoints are fixed and visited in order
+- FOV is a fixed-radius circle around the agent
+- interact is a close-range deterministic check
+- no distractor categories or duplicates
+
+### Things to try
+
+- Move the target object after the agent leaves the waypoint and watch
+  `memory_stale` trigger on interact.
+- Add a fourth object the agent does not need.
+- Change `target_name` to a different object and see the revisit path change.
+- Skip a waypoint and observe `target_in_memory` flip to False.
