@@ -360,6 +360,58 @@ def test_curiosity_grid_exploration_runs_headless() -> None:
     assert not trace.failures()
 
 
+def test_options_with_interrupts_runs_headless() -> None:
+    module = load_example("examples/navigation/31_options_with_interrupts.py")
+
+    trace = module.run(seed=0, render=False, max_steps=160)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    # initial go_to_goal -> interrupted by battery -> dock_and_charge ->
+    # terminated -> go_to_goal again. Three option starts.
+    assert final["option_start_count"] >= 3
+    # exactly one interrupt because of the low battery, plus one β termination
+    assert final["option_interrupt_count"] >= 1
+    assert final["interrupts_due_to_battery_count"] >= 1
+    assert final["option_termination_count"] >= 1
+    # the dock option must have engaged and the robot must have recharged
+    assert final["dock_count"] >= 1
+    assert final["recharge_step_count"] >= 1
+    # the agent must have driven battery back above the low threshold
+    assert final["battery"] > 0.0
+    # both option names should appear in the trajectory annotation
+    seen = set()
+    for info in trace.infos:
+        option = info.get("current_option")
+        if option:
+            seen.add(option)
+    assert "go_to_goal" in seen
+    assert "dock_and_charge" in seen
+    assert not trace.failures()
+
+
+def test_options_dock_option_initiation_set() -> None:
+    module = load_example("examples/navigation/31_options_with_interrupts.py")
+
+    env = module.OptionsRobotWorld(seed=0)
+    obs = env.reset(seed=0)
+    dock = module.DockAndChargeOption()
+    go_to_goal = module.GoToGoalOption()
+    # at full battery, dock should not be initiated
+    obs_full = dict(obs)
+    obs_full["battery"] = 1.0
+    assert dock.can_initiate(obs_full) is False
+    assert go_to_goal.can_initiate(obs_full) is True
+    # at low battery, dock initiates and termination depends on battery_full
+    obs_low = dict(obs)
+    obs_low["battery"] = 0.10
+    assert dock.can_initiate(obs_low) is True
+    assert dock.beta(obs_low, env.config) is False
+    obs_charged = dict(obs)
+    obs_charged["battery"] = 0.98
+    assert dock.beta(obs_charged, env.config) is True
+
+
 def test_conformal_ask_for_help_runs_headless() -> None:
     module = load_example("examples/manipulation/30_conformal_ask_for_help.py")
 

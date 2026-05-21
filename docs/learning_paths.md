@@ -20,6 +20,7 @@
 8. `examples/navigation/24_information_gain_navigation.py`
 9. `examples/navigation/27_multi_agent_avoidance.py`
 10. `examples/navigation/29_safety_filter_cbf.py`
+11. `examples/navigation/31_options_with_interrupts.py`
 
 ## Manipulation Intelligence
 

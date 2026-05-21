@@ -881,6 +881,39 @@ def make_active_viewpoint_for_grasp() -> Path:
     return save_gif("active_viewpoint_for_grasp.gif", frames)
 
 
+def make_options_with_interrupts() -> Path:
+    module = load_example("examples/navigation/31_options_with_interrupts.py")
+    env = module.OptionsRobotWorld(seed=0, max_steps=160)
+    agent = module.OptionsMetaPolicy(env.config)
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(4.6, 4.6), dpi=72)
+        module._draw_scene(ax, env, agent, info or {})
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    prev_option: str | None = None
+    for step in range(160):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        option_switched = info.get("current_option") != prev_option
+        prev_option = info.get("current_option")
+        if step % 3 == 0 or done or option_switched:
+            append_frame(info)
+        if done:
+            break
+
+    return save_gif("options_with_interrupts.gif", frames)
+
+
 def make_safety_filter_cbf() -> Path:
     module = load_example("examples/navigation/29_safety_filter_cbf.py")
     env = module.SafetyFilterWorld(seed=0, max_steps=120)
@@ -1340,6 +1373,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "multi_agent": make_multi_agent_avoidance,
     "curiosity": make_curiosity_grid_exploration,
     "safety_filter": make_safety_filter_cbf,
+    "options": make_options_with_interrupts,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,

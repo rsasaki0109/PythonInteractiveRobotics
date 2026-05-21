@@ -6,10 +6,10 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 
 ## Current Stable Surface
 
-- 33 runnable examples
-- 20 numbered learning-path examples plus 13 extras
-- 32 generated README GIFs with nonblank checks
-- 82 smoke, adapter, and regression tests
+- 34 runnable examples
+- 20 numbered learning-path examples plus 14 extras
+- 33 generated README GIFs with nonblank checks
+- 84 smoke, adapter, and regression tests
 - CI green on Python 3.10, 3.11, and 3.12
 - Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
   `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`
@@ -37,6 +37,7 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 | `28_curiosity_grid_exploration.py` | Visit-count-driven novelty target selection with A* commitment. |
 | `29_safety_filter_cbf.py` | Runtime CBF safety filter on a nominal go-to-goal policy; `dh/dt >= -alpha * h` projection per obstacle. |
 | `30_conformal_ask_for_help.py` | Offline conformal calibration; place when the prediction set is a singleton, defer to a toy oracle when not. Counters: `q_hat`, `help_request_count`, `coverage_violation_count`. |
+| `31_options_with_interrupts.py` | Sutton-style options framework on a battery-aware navigation task; `go_to_goal` and `dock_and_charge` options with explicit `β` and a meta-policy interrupt rule. Counters: `option_start_count`, `option_interrupt_count`, `interrupts_due_to_battery_count`, `dock_count`, `recharge_step_count`. |
 
 ## Ranked Next Work
 

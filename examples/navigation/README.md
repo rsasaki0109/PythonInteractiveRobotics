@@ -35,9 +35,13 @@ state.
 | --- | --- |
 | ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](../../docs/assets/gifs/localization_uncertainty_recovery.gif) | ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](../../docs/assets/gifs/information_gain_navigation.gif) |
 
-| Multi-agent avoidance |
-| --- |
-| ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](../../docs/assets/gifs/multi_agent_avoidance.gif) |
+| Multi-agent avoidance | Safety filter (CBF) |
+| --- | --- |
+| ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](../../docs/assets/gifs/multi_agent_avoidance.gif) | ![A point robot drives a naive go-to-goal policy while a separate CBF safety filter projects each nominal velocity onto a barrier-respecting half-space whenever an obstacle would be violated.](../../docs/assets/gifs/safety_filter_cbf.gif) |
+
+| Options with interrupts |  |
+| --- | --- |
+| ![A point robot starts a go-to-goal option, the meta-policy interrupts it when the battery drops below a threshold and switches to a dock-and-charge option, then after the charger fills the battery the meta-policy restarts go-to-goal and the robot reaches its goal.](../../docs/assets/gifs/options_with_interrupts.gif) |  |
 
 ## `02_reactive_obstacle_avoidance.py`
 
@@ -504,3 +508,62 @@ half-space if violated -> apply u_safe -> observe -> repeat
   the safety filter still prevents collisions.
 - Print the per-step `info["u_nominal"]` and `info["u_safe"]` to see when
   and how the filter clips the policy.
+
+## `31_options_with_interrupts.py`
+
+### What this teaches
+
+Skills can be modeled as *options*: each option is a triple of an
+initiation set, an intra-option policy, and a termination function
+`β`. A meta-policy chooses among options and is allowed to *interrupt*
+a still-running option when a better option becomes available.
+
+Here a `GoToGoalOption` and a `DockAndChargeOption` share a 2D
+continuous world with a battery. The meta-policy starts go-to-goal,
+then interrupts it when the battery drops below `battery_low` to
+switch to dock-and-charge. After β fires on the dock option, the
+meta-policy resumes go-to-goal.
+
+Compare to `08_interactive_mpc.py`, where a single policy folds
+avoidance into the cost, and to `25_clear_path_before_pick.py`, where
+recovery is triggered by a *precondition failure* on a single skill.
+Here the interrupt is a *runtime preference change* between two
+equally valid sub-policies, driven by a state-derived signal (battery
+level), not a failure.
+
+Success: robot reaches the goal radius with positive battery.
+Failure: battery_drained (terminal), option_not_initiated
+(recoverable), timeout (terminal).
+
+### Run
+
+```bash
+python examples/navigation/31_options_with_interrupts.py
+```
+
+### Key loop
+
+```text
+observe -> check β -> check interrupt -> pick option -> intra-policy u
+-> step -> battery drain or recharge -> observe -> repeat
+```
+
+### Simplifications
+
+- 10x10 continuous square world
+- one goal, one charger, one robot, one battery
+- single-integrator dynamics with a speed cap
+- battery drains only when moving and recharges only at the charger
+- the meta-policy uses a single hand-tuned interrupt rule
+- two options total; no option scheduler or option discovery
+
+### Things to try
+
+- Raise `battery_low` from `0.50` to `0.65` and watch the dock option
+  start earlier.
+- Lower `battery_drain_per_move` and watch the meta-policy run
+  `go_to_goal` straight through with no interrupt.
+- Add a third option (for example a `wander` option whose initiation
+  set is "battery > 0.80") and decide where it fits in the meta-policy.
+- Swap the interrupt rule for "interrupt only if also closer to the
+  charger than to the goal" and compare `interrupts_due_to_battery_count`.
