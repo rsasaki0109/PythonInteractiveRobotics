@@ -28,6 +28,7 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 | `09_active_viewpoint_for_grasp.py` | Viewpoint selection by expected reliability under pose belief. |
 | `21_object_permanence_toy.py` | Memory persists across an occluder. |
 | `22_where_did_i_see_it.py` (removed) | The "explore -> memorize -> query -> revisit" loop overlapped `21_object_permanence_toy.py` without adding a different lesson; removed after a GPT Pro curriculum review. |
+| `04_online_replanning_astar.py` (kept) | GPT Pro suggested merging into 09. After review, kept because the trigger for replanning is *passive observation* of an unknown wall, while 09's trigger is *execution failure*. Both docstrings and READMEs were updated to make the distinction explicit. |
 | `23_model_error_recovery.py` | Regime shift detection then short system-identification probe. |
 | `24_information_gain_navigation.py` | Active scout to reveal a gate before A* with full info. |
 | `25_clear_path_before_pick.py` | Precondition failure recovery by clearing an obstacle. |

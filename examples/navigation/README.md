@@ -114,8 +114,15 @@ observe moving obstacle -> predict next cell -> choose safe move -> observe agai
 ### What this teaches
 
 A plan is only valid relative to the robot's current map. The agent plans
-through unknown cells, observes a hidden wall, invalidates the path, and runs
-A* again.
+optimistically through unknown cells, observes a hidden wall through the
+lidar, invalidates the path, and runs A* again. The trigger for replanning
+is *passive observation*, not action failure.
+
+Success: robot reaches the goal cell.
+Failure: timeout (terminal).
+
+Compare to `09_blocked_path_recovery.py`, where the trigger is execution
+failure rather than observation.
 
 ### Run
 
@@ -287,7 +294,16 @@ observe obstacle -> roll out candidate controls -> choose lowest cost -> act -> 
 ### What this teaches
 
 Failure is part of the API. A path can become blocked during execution, and the
-robot should detect that failure, update memory, recover, and replan.
+robot should detect that failure, update memory, recover, and replan. The
+trigger for replanning is *execution failure* (`Failure(kind="blocked_path")`),
+not observation.
+
+Success: robot reaches the goal cell.
+Failure: blocked_path (recoverable), collision (recoverable), timeout
+(terminal).
+
+Compare to `04_online_replanning_astar.py`, where the trigger is observation
+of a previously unknown wall before the agent ever touches it.
 
 ### Run
 
