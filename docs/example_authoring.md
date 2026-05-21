@@ -272,9 +272,28 @@ Keep logic local to the example first. Move code into `pir/` only when:
 - the shared code makes examples easier to read
 - the abstraction does not hide the interaction loop
 
-Small duplication is acceptable when it keeps examples readable. Three
-examples that each inline an A* routine is fine; refactoring them into a
-shared planner that hides the heuristic is not.
+Small duplication is acceptable when it keeps examples readable. Two
+examples that each inline the same helper are fine. By the time a third
+or fourth example wants the same thing, extract.
+
+The repo's first cross-cutting extraction is `pir/planning/`. Ten
+examples shared a grid A* and a small `bfs_reachable_count` skeleton,
+so they were lifted into `pir.planning.astar` and
+`pir.planning.bfs_reachable_count`. The new examples should import
+those rather than re-implement them:
+
+```python
+from pir.planning import astar, bfs_reachable_count
+
+walkable = known_map != OCCUPIED   # bool 2D array per the example's own conventions
+path = astar(walkable, start, goal)
+```
+
+The shared `astar` accepts an optional `edge_cost` (per-target-cell
+shaping cost, useful for empowerment / IRL examples) and an optional
+`blocked` set (extra cells to avoid even when walkable, useful for the
+blocked-path recovery example). Stick to the canonical signature when
+you write a new shaped planner instead of inventing a new variant.
 
 ## Contributor Checklist
 

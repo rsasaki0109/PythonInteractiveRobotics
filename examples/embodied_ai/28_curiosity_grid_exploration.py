@@ -20,7 +20,6 @@ expected information gain (recoverable, ends the loop early).
 from __future__ import annotations
 
 import argparse
-import heapq
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +32,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pir.core.types import Failure, StepResult, Trace
+from pir.planning import astar as grid_astar
 
 FREE = 0
 OCCUPIED = 1
@@ -208,7 +208,7 @@ class CuriosityExplorationAgent:
                 self.current_path = []
                 return "stay"
             self.current_target = target
-            self.current_path = astar(static_map, robot, target)
+            self.current_path = grid_astar(static_map == FREE, robot, target)
             self.target_age = 0
             self.target_switches += 1
             self.state = "explore"
@@ -282,41 +282,6 @@ class CuriosityExplorationAgent:
         return best
 
 
-def astar(
-    grid: np.ndarray,
-    start: tuple[int, int],
-    goal: tuple[int, int],
-) -> list[tuple[int, int]]:
-    if start == goal:
-        return [start]
-    height, width = grid.shape
-    open_set: list[tuple[float, tuple[int, int]]] = []
-    heapq.heappush(open_set, (0.0, start))
-    came_from: dict[tuple[int, int], tuple[int, int]] = {}
-    g_score: dict[tuple[int, int], float] = {start: 0.0}
-    while open_set:
-        _, current = heapq.heappop(open_set)
-        if current == goal:
-            path = [current]
-            while current in came_from:
-                current = came_from[current]
-                path.append(current)
-            path.reverse()
-            return path
-        for dr, dc in DIRECTIONS.values():
-            neighbour = (current[0] + dr, current[1] + dc)
-            r, c = neighbour
-            if r < 0 or r >= height or c < 0 or c >= width:
-                continue
-            if grid[r, c] != FREE:
-                continue
-            tentative = g_score[current] + 1.0
-            if tentative < g_score.get(neighbour, float("inf")):
-                g_score[neighbour] = tentative
-                came_from[neighbour] = current
-                priority = tentative + abs(goal[0] - r) + abs(goal[1] - c)
-                heapq.heappush(open_set, (priority, neighbour))
-    return []
 
 
 def direction_to(start: tuple[int, int], goal: tuple[int, int]) -> str:

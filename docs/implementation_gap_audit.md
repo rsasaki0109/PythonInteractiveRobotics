@@ -9,7 +9,9 @@ continuous-control Gymnasium adapter, and the curiosity exploration example.
 - 36 runnable examples
 - 20 numbered learning-path examples plus 16 extras
 - 35 generated README GIFs with nonblank checks
-- 88 smoke, adapter, and regression tests
+- 101 smoke, adapter, and regression tests (88 example/adapter + 13 planning)
+- Shared grid planner at `pir.planning.astar`, used by 10 examples
+  (04, 05, 06, 09, 10, 24, 27, 28, 32, 33)
 - CI green on Python 3.10, 3.11, and 3.12
 - Gymnasium-style adapters for `GridWorld2D`, `DynamicObstacleGridWorld`,
   `BlockedPathWorld`, `MovingObstacleWorld`, and `Tabletop2D`
