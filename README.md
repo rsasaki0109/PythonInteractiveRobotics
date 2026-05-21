@@ -172,7 +172,7 @@ The goal is not photorealism.
 The goal is to understand the perception-action loop.
 
 Every example returns a `Trace`, so headless runs can be inspected without
-rendering:
+rendering. See `docs/trace.md` for the full trace contract.
 
 ```python
 trace = run(seed=0, render=False)
@@ -200,6 +200,7 @@ This is a lightweight educational bridge toward them.
 Bridge direction is documented separately:
 
 - `docs/plan.md`
+- `docs/trace.md`
 - `docs/ros2_bridge_strategy.md`
 - `docs/simulator_integration_strategy.md`
 

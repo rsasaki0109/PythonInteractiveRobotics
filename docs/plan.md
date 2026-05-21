@@ -18,6 +18,7 @@ The repository currently has:
 - optional Gymnasium-style adapters for `GridWorld2D`,
   `DynamicObstacleGridWorld`, and `Tabletop2D`
 - bridge strategy docs for ROS2 and simulators
+- trace inspection docs for headless run analysis
 
 The root first-run command must remain:
 
@@ -184,11 +185,11 @@ Already done:
   loop-counter summary fields
 - `examples/runtime/26_trace_replay.py`
 - smoke test for headless trace replay
+- `docs/trace.md`
 
 Tasks:
 
-1. Document how a trace records observations, actions, rewards, and infos.
-2. Keep trace tooling small enough that it does not become a logging framework.
+1. Keep trace tooling small enough that it does not become a logging framework.
 
 Acceptance criteria:
 
@@ -252,9 +253,11 @@ Keep these documents distinct:
 | `README.md` | first impression, install, GIF gallery, first run |
 | `docs/status.md` | current implementation snapshot |
 | `docs/plan.md` | execution plan and priorities |
+| `docs/trace.md` | trace fields, failures, summaries, and replay |
 | `docs/example_roadmap.md` | numbered first 20 examples |
 | `docs/learning_paths.md` | learner-facing paths through examples |
 | `docs/example_authoring.md` | rules for adding examples |
+| `docs/implementation_gap_audit.md` | ranked next implementation candidates |
 | `docs/toy_worlds.md` | toy world roles and coverage |
 | `docs/ros2_bridge_strategy.md` | optional ROS2 bridge direction |
 | `docs/simulator_integration_strategy.md` | optional simulator bridge direction |
