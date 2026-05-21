@@ -11,10 +11,10 @@ robotics loops rather than standalone algorithms.
 
 ## Current Status
 
-- 22 runnable examples
+- 23 runnable examples
 - 20 learning-path roadmap examples
-- 21 README GIFs generated from runnable examples
-- 59 smoke and regression tests
+- 22 README GIFs generated from runnable examples
+- 65 smoke and regression tests
 - Core dependencies only: `numpy` and `matplotlib`
 
 See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
@@ -118,9 +118,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A grid robot reduces pose and map uncertainty with active sensing.](docs/assets/gifs/active_slam_toy.gif) | ![A point robot repeatedly replans short-horizon controls around a moving obstacle.](docs/assets/gifs/interactive_mpc.gif) |
 
-| Blocked path recovery |
-| --- |
-| ![A grid robot detects a newly blocked path, steps back, marks the blocked cell, and replans.](docs/assets/gifs/blocked_path_recovery.gif) |
+| Blocked path recovery | Localization uncertainty recovery |
+| --- | --- |
+| ![A grid robot detects a newly blocked path, steps back, marks the blocked cell, and replans.](docs/assets/gifs/blocked_path_recovery.gif) | ![A grid robot starts with a bimodal pose belief, drives toward a landmark to break the symmetry, then navigates to the goal.](docs/assets/gifs/localization_uncertainty_recovery.gif) |
 
 ### Embodied AI
 

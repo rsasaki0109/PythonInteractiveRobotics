@@ -791,6 +791,39 @@ def make_blocked_path_recovery() -> Path:
     return save_gif("blocked_path_recovery.gif", frames)
 
 
+def make_localization_uncertainty_recovery() -> Path:
+    module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
+    env = module.LocalizationRecoveryWorld(seed=0, max_steps=60)
+    agent = module.LocalizationRecoveryAgent()
+    obs = env.reset(seed=0)
+    agent.reset()
+    agent.initialize(obs)
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.6, 4.2), dpi=80)
+        module.draw_localization_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for step in range(60):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        info["entropy"] = agent.entropy
+        info["localization_recovery_count"] = agent.localization_recovery_count
+        if step % 1 == 0 or done:
+            append_frame(info)
+        if done:
+            break
+
+    return save_gif("localization_uncertainty_recovery.gif", frames)
+
+
 def make_goal_conditioned_minikitchen() -> Path:
     module = load_example("examples/embodied_ai/18_goal_conditioned_minikitchen.py")
     command = "bring mug to table"
@@ -928,6 +961,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "slam": make_active_slam,
     "mpc": make_interactive_mpc,
     "blocked": make_blocked_path_recovery,
+    "localization": make_localization_uncertainty_recovery,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
