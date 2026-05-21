@@ -22,6 +22,10 @@ physical action.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](../../docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](../../docs/assets/gifs/tiny_vla_loop.gif) |
 
+| Object permanence toy |
+| --- |
+| ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) |
+
 ## `01_goal_command_pick.py`
 
 ### What this teaches
@@ -164,3 +168,43 @@ language goal -> visual tokens -> pick/place skill -> observe failure -> change 
 - Add a distractor block with a similar color.
 - Remove the close-view retry and compare failures.
 - Add a new discrete skill and route a goal to it.
+
+## `21_object_permanence_toy.py`
+
+### What this teaches
+
+An embodied agent should not forget an object the moment it leaves the field of
+view. The agent sees the object once, an occluder slides over it, and the
+observation channel reports the object as gone. The agent persists the last
+known position in memory, walks to it, and uses a short-range peek action to
+recover the object behind the occluder.
+
+### Run
+
+```bash
+python examples/embodied_ai/21_object_permanence_toy.py
+```
+
+### Key loop
+
+```text
+see object -> store memory -> object goes behind occluder -> persist memory -> walk to remembered position -> peek -> recover
+```
+
+### Simplifications
+
+- 1x1 2D table
+- one object and one rectangular occluder
+- FOV is a fixed-radius circle around the agent
+- observation either returns the true position or nothing
+- peek is a close-range deterministic check
+- no distractor objects
+
+### Things to try
+
+- Set `short_range_radius` above zero and watch the agent see through the
+  occluder when very close.
+- Move the object after the occluder activates and watch the peek miss.
+- Disable memory storage in the agent and watch the agent never reach the
+  object.
+- Add a second object the agent should ignore.

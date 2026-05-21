@@ -356,6 +356,21 @@ def test_tiny_vla_loop_runs_headless() -> None:
     assert any(failure.kind == "visual_pose_uncertain" for failure in trace.failures())
 
 
+def test_object_permanence_toy_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/21_object_permanence_toy.py")
+
+    trace = module.run(seed=0, render=False, max_steps=30)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["observation_count"] >= 1
+    assert final["memory_persistence_count"] >= 1
+    assert final["has_memory"] is True
+    assert not trace.failures()
+    assert any(info.get("action_type") == "peek" for info in trace.infos)
+    assert any(info.get("action_type") == "move" for info in trace.infos)
+
+
 def test_tiny_world_model_planning_runs_headless() -> None:
     module = load_example("examples/world_models/20_tiny_world_model_planning.py")
 
