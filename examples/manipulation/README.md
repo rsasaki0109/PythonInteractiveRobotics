@@ -3,7 +3,8 @@
 ## Learning Order
 
 Start with grasp retry, then move to reactive visual correction, arm servoing,
-object search, world-changing recovery, and probabilistic sorting.
+object search, world-changing recovery, probabilistic sorting, and finally
+calibrated ask-for-help.
 
 ## What This Teaches
 
@@ -33,6 +34,10 @@ search, push, or prepare before trying again.
 | Active viewpoint for grasp | Clear path before pick |
 | --- | --- |
 | ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](../../docs/assets/gifs/active_viewpoint_for_grasp.gif) | ![A tabletop agent tries to pick the target, gets a precondition failure because an obstacle blocks the gripper path, picks the obstacle, places it in the clear zone, and retries the original pick.](../../docs/assets/gifs/clear_path_before_pick.gif) |
+
+| Conformal ask for help |  |
+| --- | --- |
+| ![A conveyor sorter calibrates a conformal threshold offline, then for each item computes a prediction set; singleton sets are placed directly while non-singletons trigger a request to a toy oracle whose label is used to place.](../../docs/assets/gifs/conformal_ask_for_help.gif) |  |
 
 ## `01_pick_and_retry.py`
 
@@ -400,3 +405,47 @@ try target -> precondition fails -> pick obstacle -> place in clear zone -> retr
 - Shrink the `clear_zone_radius` and watch `place_out_of_clear_zone` fire.
 - Add a second obstacle and require both to be cleared before the pick.
 - Replace the fixed clear zone with a free-cell search.
+
+## `30_conformal_ask_for_help.py`
+
+### What this teaches
+
+Calibrated uncertainty is a runtime signal, not a hyperparameter. A
+toy classifier emits noisy 2-class scores. Offline conformal calibration
+turns those scores into prediction sets with a marginal coverage
+guarantee. The agent commits when the set is a singleton and defers to
+a (toy) human oracle when it is not. This is structurally different
+from `08_belief_grasp_selection.py` and `09_active_viewpoint_for_grasp.py`,
+where uncertainty is reduced by *acting in the world*; here it is
+reduced by *asking for help*.
+
+### Run
+
+```bash
+python examples/manipulation/30_conformal_ask_for_help.py
+```
+
+### Key loop
+
+```text
+calibrate q_hat -> observe scores -> prediction set -> singleton ? place : ask -> place from oracle
+```
+
+### Simplifications
+
+- 2 classes only
+- scores are sampled directly, not produced by a real classifier
+- the oracle returns the true label with zero noise
+- calibration and test items are drawn from the same generator,
+  so the marginal coverage guarantee holds
+- action space is `{0=place_A, 1=place_B, 2=ask}`
+
+### Things to try
+
+- Lower `alpha` from `0.10` toward `0.01` and watch `help_request_count`
+  grow as the threshold tightens.
+- Raise `ambiguous_ratio` from `0.25` toward `0.5` and watch
+  the ask rate track ambiguity.
+- Remove the ask branch (always commit) and watch
+  `wrong_sort_count` and `coverage_violation_count` rise on harder seeds.
+- Shrink `calibration_size` to `8` and watch `q_hat` swing seed-to-seed.
