@@ -17,6 +17,7 @@
 5. `examples/navigation/07_active_slam_toy.py`
 6. `examples/navigation/08_interactive_mpc.py`
 7. `examples/navigation/10_localization_uncertainty_recovery.py`
+8. `examples/navigation/24_information_gain_navigation.py`
 
 ## Manipulation Intelligence
 

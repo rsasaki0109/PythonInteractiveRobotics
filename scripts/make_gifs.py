@@ -850,6 +850,36 @@ def make_active_viewpoint_for_grasp() -> Path:
     return save_gif("active_viewpoint_for_grasp.gif", frames)
 
 
+def make_information_gain_navigation() -> Path:
+    module = load_example("examples/navigation/24_information_gain_navigation.py")
+    env = module.InformationGainNavigationWorld(seed=0, max_steps=100, candidate_open=True)
+    agent = module.InformationGainNavigationAgent()
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.0, 5.0), dpi=80)
+        module.draw_information_gain_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for step in range(100):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        if step % 2 == 0 or done or agent.state == "navigate" and agent.observed_candidate:
+            append_frame(info)
+        if done:
+            break
+
+    return save_gif("information_gain_navigation.gif", frames)
+
+
 def make_localization_uncertainty_recovery() -> Path:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
     env = module.LocalizationRecoveryWorld(seed=0, max_steps=60)
@@ -1114,6 +1144,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "mpc": make_interactive_mpc,
     "blocked": make_blocked_path_recovery,
     "localization": make_localization_uncertainty_recovery,
+    "info_gain": make_information_gain_navigation,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "world_model": make_tiny_world_model_planning,
