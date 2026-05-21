@@ -52,7 +52,6 @@ Run any example headless with its `--no-render` flag when available.
 | `embodied_ai/18_goal_conditioned_minikitchen.py` | `python examples/embodied_ai/18_goal_conditioned_minikitchen.py "bring mug to table"` | goal -> container search -> pick -> place |
 | `embodied_ai/19_tiny_vla_loop.py` | `python examples/embodied_ai/19_tiny_vla_loop.py "place red block in blue bin"` | language -> visual tokens -> skill -> retry |
 | `embodied_ai/21_object_permanence_toy.py` | `python examples/embodied_ai/21_object_permanence_toy.py` | see object -> memory persists across occlusion -> peek |
-| `embodied_ai/22_where_did_i_see_it.py` | `python examples/embodied_ai/22_where_did_i_see_it.py` | explore -> memorize -> query memory -> revisit -> interact |
 | `embodied_ai/28_curiosity_grid_exploration.py` | `python examples/embodied_ai/28_curiosity_grid_exploration.py` | visit counts -> novelty score -> A* to novel cell -> coverage |
 
 ## World Models

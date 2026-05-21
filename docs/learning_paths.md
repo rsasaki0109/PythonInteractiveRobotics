@@ -40,9 +40,8 @@
 3. `examples/embodied_ai/18_goal_conditioned_minikitchen.py`
 4. `examples/embodied_ai/19_tiny_vla_loop.py`
 5. `examples/embodied_ai/21_object_permanence_toy.py`
-6. `examples/embodied_ai/22_where_did_i_see_it.py`
-7. `examples/embodied_ai/28_curiosity_grid_exploration.py`
-8. `examples/world_models/20_tiny_world_model_planning.py`
-9. `examples/world_models/23_model_error_recovery.py`
+6. `examples/embodied_ai/28_curiosity_grid_exploration.py`
+7. `examples/world_models/20_tiny_world_model_planning.py`
+8. `examples/world_models/23_model_error_recovery.py`
 
 See `docs/goal_commands.md` for the first controlled-language command set.

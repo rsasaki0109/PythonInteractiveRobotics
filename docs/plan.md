@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 32 runnable examples
-- 21 numbered learning-path examples
+- 31 runnable examples
+- 20 numbered learning-path examples
 - 11 extra examples outside the original learning-path roadmap
-- 31 generated README GIFs
-- 80 smoke and regression tests
+- 30 generated README GIFs
+- 79 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -99,10 +99,11 @@ Recent completed work:
   sees an object once, watches it go behind an occluder, persists the last
   known position across the disappearance, walks to it, and peeks behind
   the occluder to recover the object. GIF and smoke test cover the loop.
-- `examples/embodied_ai/22_where_did_i_see_it.py` was added. The agent
-  explores several waypoints, memorizes every object it sees, queries the
-  memory for the target object, walks back to the remembered position, and
-  interacts there. GIF and smoke test cover the loop.
+- `examples/embodied_ai/22_where_did_i_see_it.py` was removed because its
+  "explore -> memorize -> query memory -> revisit" loop overlapped
+  `21_object_permanence_toy.py` without adding a clearly different lesson.
+  The remaining cognitive-robotics example for memory under loss of
+  observation is `21_object_permanence_toy.py`.
 - `examples/world_models/23_model_error_recovery.py` was added. The agent
   starts with an identity dynamics model, detects a regime shift when
   prediction error spikes, runs a short system-identification probe phase,
@@ -296,8 +297,6 @@ Already done from the previous tier:
   active viewpoint -> Bayes update -> grasp.
 - `examples/embodied_ai/21_object_permanence_toy.py` — see object ->
   memory persists across occlusion -> peek to recover.
-- `examples/embodied_ai/22_where_did_i_see_it.py` — explore -> memorize ->
-  query memory -> revisit -> interact.
 - `examples/world_models/23_model_error_recovery.py` — regime-shift
   detection -> system_id probe -> model update -> resume.
 - `examples/navigation/24_information_gain_navigation.py` — scout the
