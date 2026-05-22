@@ -290,17 +290,24 @@ def draw_world_model_scene(
             label="hidden drift region",
         )
     )
-    ax.arrow(
-        (xmin + xmax) / 2,
-        ymax - 0.08,
-        env.drift[0],
-        env.drift[1] * 2.0,
-        color="tab:cyan",
-        width=0.003,
-        head_width=0.018,
-        length_includes_head=True,
-        alpha=0.9,
-    )
+    drift_scale = 2.0
+    field_cols = 3
+    field_rows = 5
+    for col in range(field_cols):
+        for row in range(field_rows):
+            fx = xmin + (col + 0.5) * (xmax - xmin) / field_cols
+            fy = ymin + (row + 0.5) * (ymax - ymin) / field_rows
+            ax.arrow(
+                fx,
+                fy,
+                env.drift[0] * drift_scale,
+                env.drift[1] * drift_scale,
+                color="tab:cyan",
+                width=0.0025,
+                head_width=0.014,
+                length_includes_head=True,
+                alpha=0.6,
+            )
 
     trajectory = np.asarray(env.trajectory)
     ax.plot(trajectory[:, 0], trajectory[:, 1], color="tab:blue", linewidth=2, label="actual")

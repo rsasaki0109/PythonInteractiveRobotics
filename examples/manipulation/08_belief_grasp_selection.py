@@ -132,10 +132,13 @@ class BeliefGraspWorld:
 
         if self._fig is None or self._ax is None:
             plt.ion()
-            self._fig, self._ax = plt.subplots(figsize=(7, 4.5))
-        ax = self._ax
-        ax.clear()
-        draw_belief_grasp_scene(ax, self, agent, info)
+            self._fig, self._ax = plt.subplots(
+                1, 2, figsize=(11, 4.5), gridspec_kw={"width_ratios": [3, 4]}
+            )
+        ax_scene, ax_bars = self._ax
+        ax_scene.clear()
+        ax_bars.clear()
+        draw_belief_grasp_scene(ax_scene, ax_bars, self, agent, info)
         self._fig.canvas.draw_idle()
         plt.pause(0.1)
 
@@ -190,37 +193,99 @@ class BeliefGraspAgent:
             self.state = "succeeded"
 
 
+POSE_TILTS: tuple[float, ...] = (35.0, 0.0, -35.0)
+GRASP_VECTORS: tuple[tuple[float, float], ...] = (
+    (-0.32, 0.00),
+    (0.00, 0.32),
+    (0.32, 0.00),
+)
+
+
 def draw_belief_grasp_scene(
-    ax: Any,
+    ax_scene: Any,
+    ax_bars: Any,
     env: BeliefGraspWorld,
     agent: BeliefGraspAgent | None,
     info: dict[str, Any] | None,
 ) -> None:
-    bars = np.arange(len(POSE_LABELS))
+    import matplotlib.patches as mpatches
+
     belief = agent.belief if agent is not None else np.full(len(POSE_LABELS), 1.0 / len(POSE_LABELS))
     expected = (
         agent.last_expected_success
         if agent is not None
         else env.success_matrix @ np.full(len(POSE_LABELS), 1.0 / len(POSE_LABELS))
     )
+    chosen_grasp_index = int(np.argmax(expected))
+    true_index = env.true_pose
 
-    ax.bar(bars - 0.18, belief, width=0.32, color="tab:blue", label="pose belief")
-    ax.bar(bars + 0.18, expected, width=0.32, color="tab:orange", label="expected grasp success")
+    ax_scene.set_xlim(0.0, 3.0)
+    ax_scene.set_ylim(0.0, 1.0)
+    ax_scene.set_aspect("equal")
+    ax_scene.set_xticks([])
+    ax_scene.set_yticks([])
+    ax_scene.set_title("pose hypotheses + grasp candidates")
 
-    ax.set_xticks(bars)
-    ax.set_xticklabels(
+    for i, (pose_label, grasp_label, angle) in enumerate(
+        zip(POSE_LABELS, GRASP_LABELS, POSE_TILTS)
+    ):
+        cx = i + 0.5
+        cy = 0.50
+        alpha = 0.45 + 0.55 * float(belief[i])
+        rect = mpatches.Rectangle(
+            (cx - 0.18, cy - 0.10),
+            0.36,
+            0.20,
+            angle=angle,
+            rotation_point=(cx, cy),
+            facecolor="tab:red",
+            edgecolor="tab:red",
+            alpha=alpha,
+        )
+        ax_scene.add_patch(rect)
+        gx, gy = GRASP_VECTORS[i]
+        ax_scene.annotate(
+            "",
+            xy=(cx, cy),
+            xytext=(cx - gx, cy - gy),
+            arrowprops=dict(
+                arrowstyle="->",
+                color=("tab:green" if i == chosen_grasp_index else "gray"),
+                lw=(2.5 if i == chosen_grasp_index else 1.0),
+                alpha=alpha,
+            ),
+        )
+        ax_scene.text(cx, 0.90, pose_label, ha="center", fontsize=7)
+        ax_scene.text(cx, 0.82, f"grasp {grasp_label}", ha="center", fontsize=7, color="gray")
+        ax_scene.text(cx, 0.08, f"b={belief[i]:.2f}", ha="center", fontsize=7)
+
+    for v in (1.0, 2.0):
+        ax_scene.axvline(v, color="gray", lw=0.5, alpha=0.3)
+    ax_scene.text(
+        true_index + 0.5,
+        0.18,
+        "true pose",
+        ha="center",
+        fontsize=7,
+        color="tab:green",
+        fontweight="bold",
+    )
+
+    bars = np.arange(len(POSE_LABELS))
+    ax_bars.bar(bars - 0.18, belief, width=0.32, color="tab:blue", label="pose belief")
+    ax_bars.bar(bars + 0.18, expected, width=0.32, color="tab:orange", label="expected grasp success")
+    ax_bars.set_xticks(bars)
+    ax_bars.set_xticklabels(
         [
             f"{POSE_LABELS[i]}\n(grasp {GRASP_LABELS[i]})"
             for i in range(len(POSE_LABELS))
         ],
         fontsize=8,
     )
-    ax.set_ylim(0.0, 1.0)
-    ax.set_ylabel("probability")
-    ax.set_title("belief-guided grasp selection")
-
-    true_index = env.true_pose
-    ax.axvline(true_index, color="tab:green", linestyle="--", alpha=0.5, label="true pose")
+    ax_bars.set_ylim(0.0, 1.0)
+    ax_bars.set_ylabel("probability")
+    ax_bars.set_title("belief × expected grasp success")
+    ax_bars.axvline(true_index, color="tab:green", linestyle="--", alpha=0.5, label="true pose")
 
     status_parts = [
         f"attempts={env.attempts}",
@@ -235,8 +300,8 @@ def draw_belief_grasp_scene(
     if info is not None and "failure" in info:
         status_parts.append(f"failure={info['failure'].kind}")
     status = "  |  ".join(status_parts)
-    ax.text(0.02, 0.98, status, transform=ax.transAxes, va="top", fontsize=9)
-    ax.legend(loc="upper right", fontsize=8)
+    ax_bars.text(0.02, 0.98, status, transform=ax_bars.transAxes, va="top", fontsize=9)
+    ax_bars.legend(loc="upper right", fontsize=8)
 
 
 def run(seed: int = 0, render: bool = True, max_steps: int = 10, true_pose: int | None = 0) -> Trace:
