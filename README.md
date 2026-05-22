@@ -1,51 +1,52 @@
 # PythonInteractiveRobotics
 
-Interactive robotics and embodied intelligence with minimal Python examples.
+**Robots observe, act, fail, retry, update beliefs, and replan.**
+This repo shows that loop in small, readable Python — no ROS, no GPU, no
+simulator. Just `numpy + matplotlib`.
 
-PythonInteractiveRobotics is an educational open-source project for learning
-closed-loop robotics, environment interaction, active perception, manipulation,
-navigation, failure recovery, and embodied intelligence.
+| Avoiding | Reaching under occlusion | Mapping while uncertain |
+| --- | --- | --- |
+| ![A point robot's naive go-to-goal velocity is projected onto a CBF safe set at every step. The policy itself never knows the obstacles exist - a separate runtime safety filter slides it around them.](docs/assets/gifs/safety_filter_cbf.gif) | ![A 2-link arm predicts a briefly occluded moving target, keeps servoing through the occlusion, and reaches the intercept point when the target reappears.](docs/assets/gifs/moving_target_reaching.gif) | ![A toy active-SLAM agent shrinks pose belief and occupancy belief at the same time, by picking moves that maximize expected entropy drop.](docs/assets/gifs/active_slam_toy.gif) |
 
-It is inspired by the clarity of PythonRobotics, but focuses on interactive
-robotics loops rather than standalone algorithms.
+## Try it
 
-## Current Status
+```bash
+pip install -e .
+python examples/manipulation/01_pick_and_retry.py
+```
 
-- 36 runnable examples
-- 20 learning-path roadmap examples
-- 35 README GIFs generated from runnable examples
-- 101 smoke and regression tests
-- Core dependencies only: `numpy` and `matplotlib`
+A tiny tabletop robot misses a grasp, updates its belief, and retries — in
+under 5 seconds. Core dependencies are `numpy` and `matplotlib` only.
 
-See `docs/status.md` for the implementation snapshot and `docs/plan.md` for
-the working execution plan.
+For an even smaller first loop:
+
+```bash
+python examples/runtime/01_sense_act_loop.py
+```
+
+## Status
+
+36 runnable examples · 35 README GIFs · 101 smoke / regression tests ·
+5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
+
+See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
+working execution plan, and `examples/README.md` for the complete example
+index.
 
 ## Why this project?
 
 Modern robotics is not just planning a path or running a controller once.
 Robots observe, act, fail, retry, update beliefs, and replan in partially
-observable environments.
-
-This repository teaches those loops with small, readable, runnable Python
-examples.
+observable environments. This repository teaches those loops with small,
+readable, runnable Python examples.
 
 ## Design goals
 
-- Run in 5 seconds
-- Minimal dependencies
-- No ROS required
-- No Docker required
-- No GPU required
-- No heavy simulator required
-- Notebook friendly
-- Interactive
-- Closed-loop
-- Failure-aware
-- Educational
+Run in 5 seconds · minimal dependencies · no ROS / Docker / GPU / heavy
+simulator required · notebook friendly · interactive · closed-loop ·
+failure-aware · educational.
 
 ## Install
-
-Minimal local install:
 
 ```bash
 git clone <repo>
@@ -53,28 +54,7 @@ cd PythonInteractiveRobotics
 pip install -e .
 ```
 
-For contributors and GIF regeneration:
-
-```bash
-pip install -e ".[dev]"
-```
-
-## Run your first example
-
-```bash
-python examples/manipulation/01_pick_and_retry.py
-```
-
-You should see a tiny tabletop world where a robot tries to pick an object,
-fails sometimes, updates its belief, and retries with a different strategy.
-
-For a smaller first loop:
-
-```bash
-python examples/runtime/01_sense_act_loop.py
-```
-
-See `examples/README.md` for the complete runnable example index.
+For contributors and GIF regeneration: `pip install -e ".[dev]"`.
 
 ## See The Loops
 
@@ -104,9 +84,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A grasp agent keeps a belief over three pose hypotheses, picks the grasp with highest expected success, misses, runs a Bayes update, and tries a different grasp.](docs/assets/gifs/belief_grasp_selection.gif) | ![A grasp agent looks from the viewpoint that maximally reduces occlusion under its pose belief, updates the belief from each observation, then grasps with the type that maximizes expected success.](docs/assets/gifs/active_viewpoint_for_grasp.gif) |
 
-| Clear path before pick |
-| --- |
-| ![A tabletop agent tries to pick the target, gets a precondition failure because an obstacle blocks the gripper path, picks the obstacle, places it in the clear zone, and retries the original pick.](docs/assets/gifs/clear_path_before_pick.gif) |
+| Clear path before pick | Conformal ask-for-help |
+| --- | --- |
+| ![A tabletop agent tries to pick the target, gets a precondition failure because an obstacle blocks the gripper path, picks the obstacle, places it in the clear zone, and retries the original pick.](docs/assets/gifs/clear_path_before_pick.gif) | ![A sorter calibrates a conformal prediction set offline, then places items when the prediction set is a singleton and asks a toy oracle for help when it is ambiguous.](docs/assets/gifs/conformal_ask_for_help.gif) |
 
 ### Navigation and recovery
 
@@ -134,9 +114,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A grid robot scouts an observation point to reveal an unknown gate state, then runs A* with full information to either the short route or the long detour.](docs/assets/gifs/information_gain_navigation.gif) | ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](docs/assets/gifs/multi_agent_avoidance.gif) |
 
-| Safety filter (CBF) |
-| --- |
-| ![A point robot's naive go-to-goal nominal velocity is projected at each step onto a control-barrier-function half-space for each obstacle, sliding around them without the policy itself ever knowing they exist.](docs/assets/gifs/safety_filter_cbf.gif) |
+| Safety filter (CBF) | Options with interrupts |
+| --- | --- |
+| ![A point robot's naive go-to-goal nominal velocity is projected at each step onto a control-barrier-function half-space for each obstacle, sliding around them without the policy itself ever knowing they exist.](docs/assets/gifs/safety_filter_cbf.gif) | ![A battery-aware robot runs a go-to-goal option, gets interrupted mid-task when the battery drops below threshold, switches to dock-and-charge, then resumes go-to-goal once the battery is full.](docs/assets/gifs/options_with_interrupts.gif) |
 
 ### Embodied AI
 
@@ -152,9 +132,13 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- |
 | ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](docs/assets/gifs/object_permanence_toy.gif) |
 
-| Curiosity grid exploration |
+| Curiosity grid exploration | Empowerment navigation |
+| --- | --- |
+| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](docs/assets/gifs/curiosity_grid_exploration.gif) | ![A grid robot prefers cells with many reachable successors by adding a k-step empowerment shaping term to its A* edge cost, sliding around narrow corridors even when the detour is slightly longer.](docs/assets/gifs/empowerment_navigation.gif) |
+
+| Inverse reward from demo |
 | --- |
-| ![A grid robot keeps a visit-count map, picks the least-visited reachable cell as an intrinsic curiosity target, walks to it on an A* path, and repeats until the visited coverage of free cells crosses a threshold.](docs/assets/gifs/curiosity_grid_exploration.gif) |
+| ![A grid robot watches one demo trajectory that detours through hidden scenic zones, learns linear reward weights from the demo's feature expectation versus a uniform random walk, then plans to a new goal with a shaped A* that reproduces the demonstrator's scenic preference.](docs/assets/gifs/inverse_reward_from_demo.gif) |
 
 ### World models
 
