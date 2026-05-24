@@ -497,7 +497,7 @@ button:disabled {
 
 .trace-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   max-height: calc(100vh - 124px);
   padding: 16px;
 }
@@ -518,6 +518,67 @@ button:disabled {
 #stepCounter {
   color: var(--muted);
   font-weight: 800;
+}
+
+.timeline {
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  margin-bottom: 12px;
+  min-height: 40px;
+  padding: 8px;
+}
+
+.timeline-step {
+  align-items: center;
+  background: #eef3ef;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  height: 28px;
+  justify-content: center;
+  min-height: 28px;
+  min-width: 0;
+  padding: 0;
+}
+
+.timeline-step:hover {
+  transform: translateY(-1px);
+}
+
+.timeline-active {
+  box-shadow: 0 0 0 3px rgba(23, 32, 31, 0.18);
+}
+
+.timeline-ambiguous {
+  background: #805ad5;
+  border-color: #805ad5;
+  color: #ffffff;
+}
+
+.timeline-unsafe {
+  background: #f4ce82;
+  border-color: #b7791f;
+}
+
+.timeline-grasp,
+.timeline-human {
+  background: #c43d32;
+  border-color: #c43d32;
+  color: #ffffff;
+}
+
+.timeline-success {
+  background: #5c8b4a;
+  border-color: #5c8b4a;
+  color: #ffffff;
 }
 
 .trace-table {

@@ -25,6 +25,7 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "replaySlider",
         "replayValue",
         "comparePanel",
+        "timeline",
         "traceRows",
     ):
         assert f'id="{element_id}"' in html
@@ -42,9 +43,12 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "buildHouseholdCompare",
         "renderCompare",
         "renderMiniMap",
+        "renderTimeline",
+        "timelineClass",
         "clampReplayIndex",
         "snapshotForReplayIndex",
         "trace-active",
+        "timeline-active",
     ):
         assert value in js
 
@@ -54,6 +58,7 @@ def test_playground_assets_support_shareable_scenarios() -> None:
     assert ".copy-status" in css
     assert ".replay-strip" in css
     assert ".compare-panel" in css
+    assert ".timeline" in css
 
 
 def test_readme_links_to_shareable_live_trace() -> None:
