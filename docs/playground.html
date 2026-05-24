@@ -61,6 +61,10 @@
                 <option value="human_correction">human_correction</option>
               </select>
             </label>
+            <label class="toggle-label">
+              <span>Compare</span>
+              <input id="compareToggle" type="checkbox">
+            </label>
             <div class="button-row">
               <button id="resetButton" type="button">Reset</button>
               <button id="stepButton" type="button">Step</button>
@@ -97,6 +101,8 @@
             </label>
             <strong id="replayValue">initial</strong>
           </div>
+
+          <div id="comparePanel" class="compare-panel" aria-label="Policy comparison" hidden></div>
 
           <div id="scene" class="scene" role="img" aria-label="Current playground scene"></div>
         </div>

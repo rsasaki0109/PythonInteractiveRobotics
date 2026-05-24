@@ -11,7 +11,7 @@ simulator. Just `numpy + matplotlib`.
 
 [Open the example gallery](https://rsasaki0109.github.io/PythonInteractiveRobotics/),
 [try the live playground](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html), or open a
-[shareable live trace](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&autoplay=1),
+[shareable live trace](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1),
 or jump straight into the first runnable loop below. You can also run the
 flagship loops directly in Colab:
 [pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
@@ -52,7 +52,7 @@ python3 examples/runtime/01_sense_act_loop.py
 | Failure recovery | `python3 examples/manipulation/01_pick_and_retry.py` | grasp miss -> belief update -> retry |
 | Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
 | Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
-| Shareable live trace | [Try live](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&autoplay=1) | step and scrub action, reward, failure, and agent_state |
+| Shareable live trace | [Try live](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1) | compare, step, and scrub action, reward, failure, and agent_state |
 | Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
 | Language ambiguity | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb) | ambiguous command -> ask question -> answer -> act |
 | Integrated household task | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb) | clarify -> plan -> safety check -> retry -> human replan |
