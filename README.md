@@ -1,5 +1,10 @@
 # PythonInteractiveRobotics
 
+[![CI](https://github.com/rsasaki0109/PythonInteractiveRobotics/actions/workflows/ci.yml/badge.svg)](https://github.com/rsasaki0109/PythonInteractiveRobotics/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Core dependencies](https://img.shields.io/badge/core-numpy%20%2B%20matplotlib-orange)
+
 **Robots observe, act, fail, retry, update beliefs, and replan.**
 This repo shows that loop in small, readable Python — no ROS, no GPU, no
 simulator. Just `numpy + matplotlib`.
@@ -11,8 +16,10 @@ simulator. Just `numpy + matplotlib`.
 ## Try it
 
 ```bash
-pip install -e .
-python examples/manipulation/01_pick_and_retry.py
+git clone https://github.com/rsasaki0109/PythonInteractiveRobotics.git
+cd PythonInteractiveRobotics
+python3 -m pip install -e .
+python3 examples/manipulation/01_pick_and_retry.py
 ```
 
 A tiny tabletop robot misses a grasp, updates its belief, and retries — in
@@ -21,8 +28,16 @@ under 5 seconds. Core dependencies are `numpy` and `matplotlib` only.
 For an even smaller first loop:
 
 ```bash
-python examples/runtime/01_sense_act_loop.py
+python3 examples/runtime/01_sense_act_loop.py
 ```
+
+## Start Here
+
+| If you want to see | Run | What it teaches |
+| --- | --- | --- |
+| Failure recovery | `python3 examples/manipulation/01_pick_and_retry.py` | grasp miss -> belief update -> retry |
+| Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
+| Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
 
 ## Status
 
@@ -31,7 +46,7 @@ python examples/runtime/01_sense_act_loop.py
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
 working execution plan, and `examples/README.md` for the complete example
-index.
+index. See `docs/public_launch.md` for the public launch checklist.
 
 ## Why this project?
 
@@ -49,12 +64,12 @@ failure-aware · educational.
 ## Install
 
 ```bash
-git clone <repo>
+git clone https://github.com/rsasaki0109/PythonInteractiveRobotics.git
 cd PythonInteractiveRobotics
-pip install -e .
+python3 -m pip install -e .
 ```
 
-For contributors and GIF regeneration: `pip install -e ".[dev]"`.
+For contributors and GIF regeneration: `python3 -m pip install -e ".[dev]"`.
 
 ## See The Loops
 

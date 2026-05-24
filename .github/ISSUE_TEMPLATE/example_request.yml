@@ -1,0 +1,53 @@
+name: Example request
+description: Propose a new closed-loop robotics example or improvement.
+title: "[Example]: "
+labels: ["example"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Good examples are small, failure-aware, headless-testable, and teach a
+        loop that is not already covered by an existing example.
+  - type: input
+    id: loop
+    attributes:
+      label: Teaching loop
+      description: Describe the loop in one line.
+      placeholder: observe blocked grasp -> push object -> observe new state -> retry pick
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - runtime
+        - navigation
+        - manipulation
+        - embodied_ai
+        - world_models
+        - adapters
+        - docs
+    validations:
+      required: true
+  - type: textarea
+    id: existing
+    attributes:
+      label: Closest existing example
+      description: Name the closest current example and how this differs.
+      placeholder: This is closest to 01_pick_and_retry, but the recovery switches skills instead of changing a retry offset.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What should be true when this issue is done?
+      placeholder: The example has run(...), --no-render, a smoke test, and a README section.
+    validations:
+      required: true
+  - type: textarea
+    id: simplifications
+    attributes:
+      label: Simplifications
+      description: What should stay fake or simplified so the example remains readable?
