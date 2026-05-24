@@ -458,6 +458,22 @@ def test_options_with_interrupts_runs_headless() -> None:
     assert not trace.failures()
 
 
+def test_human_correction_replanning_runs_headless() -> None:
+    module = load_example("examples/navigation/34_human_correction_replanning.py")
+
+    trace = module.run(seed=0, render=False, max_steps=60)
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["baseline_crosses_correction_zone"] is True
+    assert final["correction_count"] == 1
+    assert final["replan_count"] >= 2
+    assert final["entered_correction_zone_count"] == 0
+    assert any(failure.kind == "human_correction" for failure in trace.failures())
+    assert any(info.get("agent_state") == "learn_from_correction" for info in trace.infos)
+    assert any(info.get("agent_state") == "replan_with_correction" for info in trace.infos)
+
+
 def test_options_dock_option_initiation_set() -> None:
     module = load_example("examples/navigation/31_options_with_interrupts.py")
 

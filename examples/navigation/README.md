@@ -39,9 +39,9 @@ state.
 | --- | --- |
 | ![A grid robot shares the grid with two goal-seeking other agents, predicts each agent's next step, and A* around the predicted cells to reach its own goal.](../../docs/assets/gifs/multi_agent_avoidance.gif) | ![A point robot drives a naive go-to-goal policy while a separate CBF safety filter projects each nominal velocity onto a barrier-respecting half-space whenever an obstacle would be violated.](../../docs/assets/gifs/safety_filter_cbf.gif) |
 
-| Options with interrupts |  |
+| Options with interrupts | Human correction replanning |
 | --- | --- |
-| ![A point robot starts a go-to-goal option, the meta-policy interrupts it when the battery drops below a threshold and switches to a dock-and-charge option, then after the charger fills the battery the meta-policy restarts go-to-goal and the robot reaches its goal.](../../docs/assets/gifs/options_with_interrupts.gif) |  |
+| ![A point robot starts a go-to-goal option, the meta-policy interrupts it when the battery drops below a threshold and switches to a dock-and-charge option, then after the charger fills the battery the meta-policy restarts go-to-goal and the robot reaches its goal.](../../docs/assets/gifs/options_with_interrupts.gif) | ![A grid robot starts on a shortcut, receives a human correction before entering an unwanted zone, raises that zone's cost, replans, and reaches the goal by a longer route.](../../docs/assets/gifs/human_correction_replanning.gif) |
 
 ## `02_reactive_obstacle_avoidance.py`
 
@@ -567,3 +567,48 @@ observe -> check β -> check interrupt -> pick option -> intra-policy u
   set is "battery > 0.80") and decide where it fits in the meta-policy.
 - Swap the interrupt rule for "interrupt only if also closer to the
   charger than to the goal" and compare `interrupts_due_to_battery_count`.
+
+## `34_human_correction_replanning.py`
+
+### What this teaches
+
+A planner can treat human feedback as online preference information. The robot
+first follows the shortest path, receives a correction before entering a zone
+the human dislikes, raises the traversal cost of those cells, and replans to
+the same goal through a longer route.
+
+Success: robot reaches the goal cell after incorporating the correction.
+Failure: human_correction (recoverable), collision (recoverable),
+invalid_direction (recoverable), timeout (terminal).
+
+Compare to `04_online_replanning_astar.py`, which replans after passive map
+observation, and `09_blocked_path_recovery.py`, which replans after execution
+failure. Here the trigger is explicit human preference feedback.
+
+### Run
+
+```bash
+python examples/navigation/34_human_correction_replanning.py
+```
+
+### Key loop
+
+```text
+plan shortcut -> human correction -> update cost belief -> replan -> goal
+```
+
+### Simplifications
+
+- grid world with one hand-authored correction zone
+- human feedback is simulated by the world
+- correction raises cell costs instead of learning a general reward model
+- one correction is enough to reach the goal
+- no natural language or user interface
+
+### Things to try
+
+- Increase `correction_penalty` in `HumanCorrectionAgent`.
+- Move `DEFAULT_CORRECTION_ZONE` to force a different detour.
+- Replace the hard-coded zone with a single corrected cell and spread cost to
+  neighbors.
+- Count how many planned paths still cross corrected cells after feedback.

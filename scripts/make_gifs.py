@@ -1219,6 +1219,35 @@ def make_information_gain_navigation() -> Path:
     return save_gif("information_gain_navigation.gif", frames)
 
 
+def make_human_correction_replanning() -> Path:
+    module = load_example("examples/navigation/34_human_correction_replanning.py")
+    env = module.HumanCorrectionWorld(max_steps=60)
+    agent = module.HumanCorrectionAgent()
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.8, 4.8), dpi=80)
+        module.draw_human_correction_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(60):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("human_correction_replanning.gif", frames)
+
+
 def make_localization_uncertainty_recovery() -> Path:
     module = load_example("examples/navigation/10_localization_uncertainty_recovery.py")
     env = module.LocalizationRecoveryWorld(seed=0, max_steps=60)
@@ -1453,6 +1482,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "blocked": make_blocked_path_recovery,
     "localization": make_localization_uncertainty_recovery,
     "info_gain": make_information_gain_navigation,
+    "human_correction": make_human_correction_replanning,
     "multi_agent": make_multi_agent_avoidance,
     "curiosity": make_curiosity_grid_exploration,
     "safety_filter": make_safety_filter_cbf,

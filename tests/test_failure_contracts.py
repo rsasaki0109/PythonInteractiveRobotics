@@ -58,6 +58,11 @@ FAILURE_EXAMPLES: list[tuple[str, dict[str, Any], set[str]]] = [
         {"blocked_path"},
     ),
     (
+        "examples/navigation/34_human_correction_replanning.py",
+        {"seed": 0, "render": False, "max_steps": 60},
+        {"human_correction"},
+    ),
+    (
         "examples/embodied_ai/10_door_search_pomdp.py",
         {"seed": 0, "render": False, "max_steps": 40},
         {"locked_door", "not_found"},
