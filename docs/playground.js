@@ -19,13 +19,26 @@
     household:
       "https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/36_household_task_agent.py",
   };
+  const scenarioValues = new Set(["clarifying", "household"]);
+  const answerValues = new Set(["red", "blue"]);
+  const failureValues = new Set([
+    "all",
+    "ambiguous_goal",
+    "unsafe_nominal_step",
+    "grasp_miss",
+    "human_correction",
+  ]);
 
   const elements = {
     scenario: document.getElementById("scenarioSelect"),
     answer: document.getElementById("answerSelect"),
+    failureFilter: document.getElementById("failureFilter"),
     reset: document.getElementById("resetButton"),
     step: document.getElementById("stepButton"),
     run: document.getElementById("runButton"),
+    copyLink: document.getElementById("copyLinkButton"),
+    copyTrace: document.getElementById("copyTraceButton"),
+    copyStatus: document.getElementById("copyStatus"),
     scene: document.getElementById("scene"),
     traceRows: document.getElementById("traceRows"),
     stepCounter: document.getElementById("stepCounter"),
@@ -36,22 +49,31 @@
     source: document.getElementById("sourceLink"),
   };
 
+  applyInitialParams();
   let state = buildState();
   let timer = null;
+  let copyStatusTimer = null;
 
   elements.scenario.addEventListener("change", () => {
     stopRun();
     state = buildState();
+    updateLocation(false);
     render();
   });
   elements.answer.addEventListener("change", () => {
     stopRun();
     state = buildState();
+    updateLocation(false);
+    render();
+  });
+  elements.failureFilter.addEventListener("change", () => {
+    updateLocation(false);
     render();
   });
   elements.reset.addEventListener("click", () => {
     stopRun();
     state = buildState();
+    updateLocation(false);
     render();
   });
   elements.step.addEventListener("click", () => {
@@ -62,15 +84,19 @@
       stopRun();
       return;
     }
-    timer = window.setInterval(() => {
-      if (!stepOnce()) {
-        stopRun();
-      }
-    }, 760);
-    elements.run.textContent = "Stop";
+    startRun();
+  });
+  elements.copyLink.addEventListener("click", () => {
+    copyText(getShareUrl(true), "Share link copied");
+  });
+  elements.copyTrace.addEventListener("click", () => {
+    copyText(formatTraceText(), "Trace copied");
   });
 
   render();
+  if (readAutoplayParam()) {
+    window.setTimeout(startRun, 180);
+  }
 
   function buildState() {
     const scenario = elements.scenario.value;
@@ -106,6 +132,23 @@
       timer = null;
     }
     elements.run.textContent = "Run";
+  }
+
+  function startRun() {
+    if (state.index >= state.config.steps.length) {
+      render();
+      return;
+    }
+    elements.run.textContent = "Stop";
+    if (!stepOnce()) {
+      stopRun();
+      return;
+    }
+    timer = window.setInterval(() => {
+      if (!stepOnce()) {
+        stopRun();
+      }
+    }, 760);
   }
 
   function buildClarifyingScenario(answer) {
@@ -450,6 +493,7 @@
     elements.source.href = sourceLinks[state.scenario];
     elements.step.disabled = state.index >= state.config.steps.length;
     elements.run.disabled = state.index >= state.config.steps.length && !timer;
+    elements.copyTrace.disabled = state.trace.length === 0;
 
     renderScene(current);
     renderTrace();
@@ -613,6 +657,7 @@
 
   function renderTrace() {
     elements.traceRows.textContent = "";
+    const rows = filteredTrace();
     if (!state.trace.length) {
       const empty = document.createElement("div");
       empty.className = "empty-trace";
@@ -620,7 +665,14 @@
       elements.traceRows.appendChild(empty);
       return;
     }
-    state.trace.forEach((event, index) => {
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-trace";
+      empty.textContent = "No trace rows match the selected failure filter.";
+      elements.traceRows.appendChild(empty);
+      return;
+    }
+    rows.forEach(({ event, index }) => {
       const row = document.createElement("div");
       row.className = "trace-row";
       [
@@ -638,6 +690,122 @@
       });
       elements.traceRows.appendChild(row);
     });
+  }
+
+  function filteredTrace() {
+    const selected = elements.failureFilter.value;
+    return state.trace
+      .map((event, index) => ({ event, index }))
+      .filter(({ event }) => selected === "all" || event.failure === selected);
+  }
+
+  function applyInitialParams() {
+    const params = new URLSearchParams(window.location.search);
+    const scenario = params.get("scenario");
+    const answer = params.get("answer");
+    const failure = params.get("failure");
+    if (scenarioValues.has(scenario)) {
+      elements.scenario.value = scenario;
+    }
+    if (answerValues.has(answer)) {
+      elements.answer.value = answer;
+    }
+    if (failureValues.has(failure)) {
+      elements.failureFilter.value = failure;
+    }
+  }
+
+  function readAutoplayParam() {
+    const raw = new URLSearchParams(window.location.search).get("autoplay");
+    return ["1", "true", "yes"].includes(String(raw).toLowerCase());
+  }
+
+  function updateLocation(includeAutoplay) {
+    if (!window.history || !window.history.replaceState) {
+      return;
+    }
+    window.history.replaceState(null, "", getShareUrl(includeAutoplay));
+  }
+
+  function getShareUrl(includeAutoplay) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("scenario", elements.scenario.value);
+    url.searchParams.set("answer", elements.answer.value);
+    if (elements.failureFilter.value === "all") {
+      url.searchParams.delete("failure");
+    } else {
+      url.searchParams.set("failure", elements.failureFilter.value);
+    }
+    if (includeAutoplay) {
+      url.searchParams.set("autoplay", "1");
+    } else {
+      url.searchParams.delete("autoplay");
+    }
+    return url.toString();
+  }
+
+  function formatTraceText() {
+    const rows = filteredTrace();
+    const filter = elements.failureFilter.value;
+    const lines = [
+      "PythonInteractiveRobotics live trace",
+      "scenario=" + state.scenario,
+      "answer=" + state.answer,
+      "command=" + state.config.command,
+      "filter=" + filter,
+      "",
+      "#\taction\treward\tfailure\tagent_state",
+    ];
+    rows.forEach(({ event, index }) => {
+      lines.push(
+        [
+          index + 1,
+          event.action,
+          formatReward(event.reward),
+          event.failure || (event.agentState === "done" ? "success" : "-"),
+          event.agentState,
+        ].join("\t")
+      );
+    });
+    if (!rows.length) {
+      lines.push("(no matching rows)");
+    }
+    return lines.join("\n");
+  }
+
+  function copyText(text, message) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => showCopyStatus(message))
+        .catch(() => fallbackCopyText(text, message));
+      return;
+    }
+    fallbackCopyText(text, message);
+  }
+
+  function fallbackCopyText(text, message) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    showCopyStatus(message);
+  }
+
+  function showCopyStatus(message) {
+    elements.copyStatus.textContent = message;
+    if (copyStatusTimer) {
+      window.clearTimeout(copyStatusTimer);
+    }
+    copyStatusTimer = window.setTimeout(() => {
+      elements.copyStatus.textContent = "";
+      copyStatusTimer = null;
+    }, 2200);
   }
 
   function createSvg(tag, attributes) {

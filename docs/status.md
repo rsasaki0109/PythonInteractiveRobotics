@@ -8,7 +8,7 @@ see what exists, what is verified, and what should come next.
 - Runnable examples: 39
 - Learning-path roadmap examples: 20
 - README GIFs: 38
-- Smoke and regression tests: 109 (96 example/adapter + 13 planning)
+- Smoke and regression tests: 111 (98 example/adapter/static + 13 planning)
 - Colab notebooks: 5
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`
