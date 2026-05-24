@@ -1341,6 +1341,35 @@ def make_tiny_vla_loop() -> Path:
     return save_gif("tiny_vla_loop.gif", frames)
 
 
+def make_clarifying_question() -> Path:
+    module = load_example("examples/embodied_ai/35_clarifying_question.py")
+    env = module.ClarifyingQuestionWorld(command="pick the block", answer="red", max_steps=12)
+    agent = module.ClarifyingQuestionAgent("pick the block")
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(5.3, 4.8), dpi=80)
+        module.draw_clarifying_question_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for _ in range(12):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info["agent_state"] = agent.state
+        append_frame(info)
+        if done:
+            break
+
+    return save_gif("clarifying_question.gif", frames)
+
+
 def make_tiny_world_model_planning() -> Path:
     module = load_example("examples/world_models/20_tiny_world_model_planning.py")
     env = module.TinyWorldModelWorld(seed=0, max_steps=80)
@@ -1491,6 +1520,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "irl": make_inverse_reward_from_demo,
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
+    "clarifying": make_clarifying_question,
     "world_model": make_tiny_world_model_planning,
     "door": make_door_search_pomdp,
     "permanence": make_object_permanence_toy,

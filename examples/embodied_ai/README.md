@@ -22,6 +22,10 @@ physical action.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](../../docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](../../docs/assets/gifs/tiny_vla_loop.gif) |
 
+| Clarifying question |
+| --- |
+| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](../../docs/assets/gifs/clarifying_question.gif) |
+
 | Object permanence toy |
 | --- |
 | ![An embodied agent sees an object, watches it go behind an occluder, persists its memory, walks to the remembered position, and peeks behind the occluder to recover the object.](../../docs/assets/gifs/object_permanence_toy.gif) |
@@ -216,6 +220,51 @@ see object -> store memory -> object goes behind occluder -> persist memory -> w
 - Disable memory storage in the agent and watch the agent never reach the
   object.
 - Add a second object the agent should ignore.
+
+## `35_clarifying_question.py`
+
+### What this teaches
+
+An embodied agent should not act on an ambiguous command when the world contains
+multiple matching objects. The command `pick the block` matches both a red block
+and a blue block, so the agent asks a clarifying question, receives a simulated
+answer, updates the structured goal, confirms the target visually, and then
+picks the requested block.
+
+Success: the requested color block is picked after clarification.
+Failure: ambiguous_goal (recoverable), unsupported_goal (terminal),
+invalid_target (recoverable), grasp_miss (recoverable), timeout (terminal).
+
+Compare to `01_goal_command_pick.py`, where the command is already specific,
+and to `19_tiny_vla_loop.py`, where the recovery comes from visual uncertainty
+rather than language ambiguity.
+
+### Run
+
+```bash
+python examples/embodied_ai/35_clarifying_question.py "pick the block" --answer red
+```
+
+### Key loop
+
+```text
+ambiguous command -> ask question -> receive answer -> update goal -> act
+```
+
+### Simplifications
+
+- controlled language
+- simulated human answer
+- two visible blocks
+- color is the only ambiguous slot
+- no LLM, speech recognition, or dialog manager
+
+### Things to try
+
+- Change `--answer red` to `--answer blue`.
+- Run `python examples/embodied_ai/35_clarifying_question.py "pick the red block"` and confirm it skips the question.
+- Add another color to the tabletop and check that the question choices update.
+- Make the answer invalid and decide whether the agent should ask again or fail.
 
 ## `28_curiosity_grid_exploration.py`
 

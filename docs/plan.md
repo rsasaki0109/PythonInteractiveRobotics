@@ -8,12 +8,12 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 37 runnable examples
+- 38 runnable examples
 - 20 numbered learning-path examples
-- 17 extra examples outside the original learning-path roadmap
-- 36 generated README GIFs
-- 104 smoke and regression tests
-- 3 Colab notebooks for browser-first demos
+- 18 extra examples outside the original learning-path roadmap
+- 37 generated README GIFs
+- 107 smoke and regression tests
+- 4 Colab notebooks for browser-first demos
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -143,6 +143,11 @@ Recent completed work:
   package, run the real example headless, print `Trace.summary()`, and display
   the generated GIF. A notebook contract test validates the notebook JSON and
   example references.
+- `examples/embodied_ai/35_clarifying_question.py` was added. The agent gets
+  the ambiguous command `pick the block`, asks which color, receives a
+  simulated answer, updates its structured goal, confirms the target visually,
+  and picks the requested block. GIF, smoke tests, failure contract test, and a
+  Colab notebook cover the loop.
 - `MovingObstacleWorld` was extracted from `examples/navigation/08_interactive_mpc.py`
   into `pir/worlds/moving_obstacle.py`, and `MovingObstacleWorldGymnasiumAdapter`
   was added in `pir/adapters/gymnasium_adapter.py`. The adapter exposes a

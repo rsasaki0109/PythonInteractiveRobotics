@@ -262,6 +262,47 @@ def test_goal_command_parser_rejects_unknown_command() -> None:
     assert parsed["message"] == "unsupported command"
 
 
+def test_clarifying_question_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/35_clarifying_question.py")
+
+    trace = module.run(
+        command="pick the block",
+        answer="red",
+        seed=0,
+        render=False,
+        max_steps=12,
+    )
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["picked_color"] == "red"
+    assert final["parsed_goal"]["ambiguous"] is True
+    assert final["resolved_goal"]["color"] == "red"
+    assert final["question_count"] == 1
+    assert final["clarification_count"] == 1
+    assert final["memory_colors"] == ("blue", "red")
+    assert any(failure.kind == "ambiguous_goal" for failure in trace.failures())
+    assert any(action.get("type") == "ask" for action in trace.actions)
+
+
+def test_clarifying_question_skips_question_when_color_is_explicit() -> None:
+    module = load_example("examples/embodied_ai/35_clarifying_question.py")
+
+    trace = module.run(
+        command="pick the blue block",
+        answer="red",
+        seed=0,
+        render=False,
+        max_steps=12,
+    )
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["picked_color"] == "blue"
+    assert final["question_count"] == 0
+    assert not trace.failures()
+
+
 def test_active_slam_toy_runs_headless() -> None:
     module = load_example("examples/navigation/07_active_slam_toy.py")
 
