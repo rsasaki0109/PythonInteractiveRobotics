@@ -47,8 +47,8 @@ Use this longer description when space allows:
       ([#3](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/3)).
 - [ ] Enable GitHub Pages with the GitHub Actions source after the deployment
       workflow is on `main`.
-- [ ] Add three Colab notebooks:
-      `pick_and_retry`, `safety_filter_cbf`, and `active_slam_toy`
+- [x] Add three Colab notebooks:
+      `pick_and_retry`, `safety_filter_cbf`, and `human_correction_replanning`
       ([#4](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/4)).
 - [x] Add copyable public-launch post snippets
       ([#5](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/5)).
@@ -145,6 +145,9 @@ python3 examples/navigation/34_human_correction_replanning.py
 ```
 
 GIF: `docs/assets/gifs/human_correction_replanning.gif`
+
+Colab:
+`https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb`
 
 ### Embodied AI
 

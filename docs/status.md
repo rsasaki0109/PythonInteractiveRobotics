@@ -8,7 +8,8 @@ see what exists, what is verified, and what should come next.
 - Runnable examples: 37
 - Learning-path roadmap examples: 20
 - README GIFs: 36
-- Smoke and regression tests: 103 (90 example/adapter + 13 planning)
+- Smoke and regression tests: 104 (91 example/adapter + 13 planning)
+- Colab notebooks: 3
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`
 - CI: Python 3.10, 3.11, 3.12
@@ -61,7 +62,8 @@ loop-counter extraction from headless runs.
 The Markdown asset check verifies local README image links and category GIF
 galleries.
 GitHub Actions runs the smoke suite and GIF checks on Python 3.10, 3.11, and
-3.12.
+3.12. The Colab notebook test checks that browser notebooks remain valid JSON
+and point at existing examples.
 
 ## Current Boundaries
 
