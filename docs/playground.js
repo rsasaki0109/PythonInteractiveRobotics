@@ -51,6 +51,7 @@
     copyLink: document.getElementById("copyLinkButton"),
     copyTrace: document.getElementById("copyTraceButton"),
     copyStatus: document.getElementById("copyStatus"),
+    beliefPanel: document.getElementById("beliefPanel"),
     replay: document.getElementById("replaySlider"),
     replayValue: document.getElementById("replayValue"),
     comparePanel: document.getElementById("comparePanel"),
@@ -186,6 +187,7 @@
       agentState: "parse_command",
       target: "unresolved",
       failure: "none",
+      belief: ambiguousBelief(),
       picked: null,
       pickAt: null,
       focus: null,
@@ -205,6 +207,7 @@
             target: answer,
             agentState: "update_goal_from_answer",
             failure: "ambiguous_goal",
+            belief: resolvedBelief(answer),
             question: "Which block?",
             answer,
             focus: answer,
@@ -219,6 +222,7 @@
             ...initial,
             target: answer,
             agentState: "target_confirmed",
+            belief: resolvedBelief(answer),
             focus: answer,
           },
         },
@@ -231,6 +235,7 @@
             ...initial,
             target: answer,
             agentState: "done",
+            belief: resolvedBelief(answer),
             picked: answer,
             pickAt: [targetX, 56],
             focus: answer,
@@ -310,6 +315,7 @@
       command: "put the block away",
       robot: [7, 1],
       target: "unresolved",
+      belief: ambiguousBelief(),
       held: null,
       stored: null,
       blocked: [],
@@ -325,6 +331,7 @@
       command: "put the block away",
       robot: [7, 1],
       target: "unresolved",
+      belief: ambiguousBelief(),
       held: null,
       stored: null,
       blocked: [],
@@ -343,6 +350,7 @@
       failure: "ambiguous_goal",
       agentState: "update_goal_from_answer",
       target: answer,
+      belief: resolvedBelief(answer),
       path: answer === "blue" ? blueRoute : redRoute,
     });
 
@@ -513,11 +521,46 @@
     });
   }
 
+  function ambiguousBelief() {
+    const distribution = { red: 0.5, blue: 0.5 };
+    return {
+      red: distribution.red,
+      blue: distribution.blue,
+      entropy: beliefEntropy(distribution),
+      askGain: beliefEntropy(distribution),
+      policy: "ask",
+    };
+  }
+
+  function resolvedBelief(answer) {
+    const distribution = {
+      red: answer === "red" ? 1 : 0,
+      blue: answer === "blue" ? 1 : 0,
+    };
+    return {
+      red: distribution.red,
+      blue: distribution.blue,
+      entropy: beliefEntropy(distribution),
+      askGain: 0,
+      policy: "act",
+    };
+  }
+
+  function beliefEntropy(distribution) {
+    return Object.values(distribution).reduce((total, probability) => {
+      if (probability <= 0) {
+        return total;
+      }
+      return total - probability * Math.log2(probability);
+    }, 0);
+  }
+
   function snapshotFromContext(context) {
     return {
       command: context.command,
       robot: context.robot.slice(),
       target: context.target,
+      belief: copyBelief(context.belief),
       held: context.held,
       stored: context.stored,
       blocked: context.blocked.map((cell) => cell.slice()),
@@ -527,6 +570,16 @@
       path: (context.path || []).map((cell) => cell.slice()),
       failure: context.failure || "none",
       agentState: context.agentState,
+    };
+  }
+
+  function copyBelief(belief) {
+    return {
+      red: belief.red,
+      blue: belief.blue,
+      entropy: belief.entropy,
+      askGain: belief.askGain,
+      policy: belief.policy,
     };
   }
 
@@ -577,6 +630,7 @@
     renderReplay(replayIndex);
     renderCompare();
     renderTimeline(replayIndex);
+    renderBelief(current);
     renderScene(current);
     renderTrace(replayIndex);
   }
@@ -650,6 +704,67 @@
       button.addEventListener("click", () => setReplayIndex(step));
       elements.timeline.appendChild(button);
     });
+  }
+
+  function renderBelief(snapshot) {
+    const belief = snapshot.belief;
+    elements.beliefPanel.textContent = "";
+    if (!belief) {
+      elements.beliefPanel.hidden = true;
+      return;
+    }
+    elements.beliefPanel.hidden = false;
+
+    const bars = document.createElement("div");
+    bars.className = "belief-bars";
+    [
+      ["red", belief.red],
+      ["blue", belief.blue],
+    ].forEach(([label, probability]) => {
+      bars.appendChild(renderBeliefRow(label, probability));
+    });
+
+    const metrics = document.createElement("div");
+    metrics.className = "belief-metrics";
+    [
+      ["entropy", formatBits(belief.entropy)],
+      ["ask gain", "+" + formatBits(belief.askGain)],
+      ["policy", belief.policy],
+    ].forEach(([label, value]) => {
+      const metric = document.createElement("span");
+      metric.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      metric.appendChild(strong);
+      metrics.appendChild(metric);
+    });
+
+    elements.beliefPanel.appendChild(bars);
+    elements.beliefPanel.appendChild(metrics);
+  }
+
+  function renderBeliefRow(label, probability) {
+    const row = document.createElement("div");
+    row.className = "belief-row";
+
+    const name = document.createElement("span");
+    name.textContent = label;
+    row.appendChild(name);
+
+    const track = document.createElement("div");
+    track.className = "belief-track";
+    const fill = document.createElement("div");
+    fill.className = "belief-fill belief-" + label;
+    fill.style.width = Math.round(probability * 100) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+
+    const value = document.createElement("strong");
+    value.className = "belief-value";
+    value.textContent = Math.round(probability * 100) + "%";
+    row.appendChild(value);
+
+    return row;
   }
 
   function timelineClass(event) {
@@ -1105,5 +1220,9 @@
 
   function formatReward(value) {
     return Number(value).toFixed(2);
+  }
+
+  function formatBits(value) {
+    return Number(value).toFixed(2) + " bit";
   }
 })();

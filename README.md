@@ -52,7 +52,7 @@ python3 examples/runtime/01_sense_act_loop.py
 | Failure recovery | `python3 examples/manipulation/01_pick_and_retry.py` | grasp miss -> belief update -> retry |
 | Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
 | Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
-| Shareable live trace | [Try live](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1) | compare, scrub, and jump through failure timelines |
+| Shareable live trace | [Try live](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1) | belief entropy, compare mode, and failure timeline |
 | Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
 | Language ambiguity | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb) | ambiguous command -> ask question -> answer -> act |
 | Integrated household task | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb) | clarify -> plan -> safety check -> retry -> human replan |

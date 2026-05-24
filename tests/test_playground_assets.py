@@ -22,6 +22,7 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "copyLinkButton",
         "copyTraceButton",
         "copyStatus",
+        "beliefPanel",
         "replaySlider",
         "replayValue",
         "comparePanel",
@@ -45,6 +46,10 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "renderMiniMap",
         "renderTimeline",
         "timelineClass",
+        "ambiguousBelief",
+        "resolvedBelief",
+        "beliefEntropy",
+        "renderBelief",
         "clampReplayIndex",
         "snapshotForReplayIndex",
         "trace-active",
@@ -59,6 +64,7 @@ def test_playground_assets_support_shareable_scenarios() -> None:
     assert ".replay-strip" in css
     assert ".compare-panel" in css
     assert ".timeline" in css
+    assert ".belief-panel" in css
 
 
 def test_readme_links_to_shareable_live_trace() -> None:
