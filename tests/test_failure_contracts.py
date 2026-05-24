@@ -99,6 +99,22 @@ FAILURE_EXAMPLES: list[tuple[str, dict[str, Any], set[str]]] = [
         {"ambiguous_goal"},
     ),
     (
+        "examples/embodied_ai/36_household_task_agent.py",
+        {
+            "command": "put the block away",
+            "answer": "red",
+            "seed": 0,
+            "render": False,
+            "max_steps": 80,
+        },
+        {
+            "ambiguous_goal",
+            "unsafe_nominal_step",
+            "grasp_miss",
+            "human_correction",
+        },
+    ),
+    (
         "examples/world_models/20_tiny_world_model_planning.py",
         {"seed": 0, "render": False, "max_steps": 80},
         {"model_error"},

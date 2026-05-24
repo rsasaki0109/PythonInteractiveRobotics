@@ -3,7 +3,8 @@
 ## Learning Order
 
 Start with a controlled goal command, then move to hidden-state search,
-goal-conditioned kitchen interaction, and the tiny VLA loop.
+goal-conditioned kitchen interaction, the tiny VLA loop, and the integrated
+household task agent.
 
 ## What This Teaches
 
@@ -22,9 +23,9 @@ physical action.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](../../docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](../../docs/assets/gifs/tiny_vla_loop.gif) |
 
-| Clarifying question |
-| --- |
-| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](../../docs/assets/gifs/clarifying_question.gif) |
+| Clarifying question | Household task agent |
+| --- | --- |
+| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](../../docs/assets/gifs/clarifying_question.gif) | ![A household robot asks which block to put away, plans through a room, rejects an unsafe floor step, retries a missed grasp, accepts human correction, replans, and stores the block.](../../docs/assets/gifs/household_task_agent.gif) |
 
 | Object permanence toy |
 | --- |
@@ -265,6 +266,53 @@ ambiguous command -> ask question -> receive answer -> update goal -> act
 - Run `python examples/embodied_ai/35_clarifying_question.py "pick the red block"` and confirm it skips the question.
 - Add another color to the tabletop and check that the question choices update.
 - Make the answer invalid and decide whether the agent should ask again or fail.
+
+## `36_household_task_agent.py`
+
+### What this teaches
+
+A household task is rarely a single clean policy call. The command `put the
+block away` is ambiguous, so the agent asks which block. It plans to the chosen
+block, rejects a nominal step through an unsafe floor patch, replans, misses one
+grasp, retries, then accepts a human correction during delivery and replans
+before placing the block in storage.
+
+Success: the requested color block is stored.
+Failure: ambiguous_goal (recoverable), unsafe_nominal_step (recoverable),
+grasp_miss (recoverable), human_correction (recoverable), invalid_direction
+(recoverable), invalid_target (recoverable), timeout (terminal).
+
+Compare to `35_clarifying_question.py`, `29_safety_filter_cbf.py`,
+`01_pick_and_retry.py`, and `34_human_correction_replanning.py`: this example
+keeps those ideas in one end-to-end task trace.
+
+### Run
+
+```bash
+python examples/embodied_ai/36_household_task_agent.py "put the block away" --answer red
+```
+
+### Key loop
+
+```text
+clarify -> plan -> safety check -> retry grasp -> human correction -> replan -> place
+```
+
+### Simplifications
+
+- controlled language
+- simulated human answer and correction
+- grid household map
+- deterministic first grasp miss
+- safety filter is a discrete blocked-zone check
+- no LLM, speech recognition, or physics simulator
+
+### Things to try
+
+- Change `--answer red` to `--answer blue` and compare the failure sequence.
+- Run `python examples/embodied_ai/36_household_task_agent.py "put the red block away"` and confirm it skips the question.
+- Move `DEFAULT_SAFETY_ZONE` and inspect the replanned path.
+- Expand `DEFAULT_HUMAN_ZONE` until no route remains and inspect the timeout.
 
 ## `28_curiosity_grid_exploration.py`
 

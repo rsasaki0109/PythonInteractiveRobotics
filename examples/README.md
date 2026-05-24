@@ -60,6 +60,7 @@ Run any example headless with its `--no-render` flag when available.
 | `embodied_ai/32_empowerment_navigation.py` | `python examples/embodied_ai/32_empowerment_navigation.py` | k-step empowerment -> shaped A* -> prefer open routes |
 | `embodied_ai/33_inverse_reward_from_demo.py` | `python examples/embodied_ai/33_inverse_reward_from_demo.py` | demo feature expectation -> learned weights -> shaped A* to new goal |
 | `embodied_ai/35_clarifying_question.py` | `python examples/embodied_ai/35_clarifying_question.py "pick the block" --answer red` | ambiguous command -> ask question -> answer -> act |
+| `embodied_ai/36_household_task_agent.py` | `python examples/embodied_ai/36_household_task_agent.py "put the block away" --answer red` | clarify -> plan -> safety check -> retry -> human replan |
 
 ## World Models
 

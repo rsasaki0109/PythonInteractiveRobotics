@@ -49,7 +49,8 @@ Use this longer description when space allows:
       workflow is on `main`.
 - [x] Add Colab notebooks:
       `pick_and_retry`, `safety_filter_cbf`,
-      `human_correction_replanning`, and `clarifying_question`
+      `human_correction_replanning`, `clarifying_question`, and
+      `household_task_agent`
       ([#4](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/4)).
 - [x] Add copyable public-launch post snippets
       ([#5](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/5)).
@@ -69,6 +70,7 @@ Good first posts:
 - `language goal -> visual tokens -> skill failure -> close-view retry`
 - `shortcut -> human correction -> cost update -> replan`
 - `ambiguous command -> ask question -> answer -> act`
+- `clarify -> plan -> safety check -> retry -> human replan`
 
 Target channels:
 
@@ -185,6 +187,26 @@ GIF: `docs/assets/gifs/clarifying_question.gif`
 
 Colab:
 `https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb`
+
+### Household Task Agent
+
+One small task trace combines language grounding, planning, safety, grasp
+retry, and human correction:
+
+```text
+put the block away -> Which block? -> plan -> safety check -> retry -> replan -> place
+```
+
+Run it:
+
+```bash
+python3 examples/embodied_ai/36_household_task_agent.py "put the block away" --answer red
+```
+
+GIF: `docs/assets/gifs/household_task_agent.gif`
+
+Colab:
+`https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb`
 
 ## Contributor Funnel
 

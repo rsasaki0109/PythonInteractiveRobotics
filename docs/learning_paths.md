@@ -48,7 +48,8 @@
 7. `examples/embodied_ai/32_empowerment_navigation.py`
 8. `examples/embodied_ai/33_inverse_reward_from_demo.py`
 9. `examples/embodied_ai/35_clarifying_question.py`
-10. `examples/world_models/20_tiny_world_model_planning.py`
-11. `examples/world_models/23_model_error_recovery.py`
+10. `examples/embodied_ai/36_household_task_agent.py`
+11. `examples/world_models/20_tiny_world_model_planning.py`
+12. `examples/world_models/23_model_error_recovery.py`
 
 See `docs/goal_commands.md` for the first controlled-language command set.

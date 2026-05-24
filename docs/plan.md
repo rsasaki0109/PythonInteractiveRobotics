@@ -8,12 +8,12 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 38 runnable examples
+- 39 runnable examples
 - 20 numbered learning-path examples
-- 18 extra examples outside the original learning-path roadmap
-- 37 generated README GIFs
-- 107 smoke and regression tests
-- 4 Colab notebooks for browser-first demos
+- 19 extra examples outside the original learning-path roadmap
+- 38 generated README GIFs
+- 109 smoke and regression tests
+- 5 Colab notebooks for browser-first demos
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -148,6 +148,11 @@ Recent completed work:
   simulated answer, updates its structured goal, confirms the target visually,
   and picks the requested block. GIF, smoke tests, failure contract test, and a
   Colab notebook cover the loop.
+- `examples/embodied_ai/36_household_task_agent.py` was added. The agent gets
+  the ambiguous command `put the block away`, asks which block, plans to it,
+  rejects an unsafe floor step, replans, retries a missed grasp, accepts human
+  correction during delivery, replans again, and stores the block. GIF, smoke
+  test, failure contract test, and a Colab notebook cover the loop.
 - `MovingObstacleWorld` was extracted from `examples/navigation/08_interactive_mpc.py`
   into `pir/worlds/moving_obstacle.py`, and `MovingObstacleWorldGymnasiumAdapter`
   was added in `pir/adapters/gymnasium_adapter.py`. The adapter exposes a

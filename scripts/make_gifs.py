@@ -1370,6 +1370,43 @@ def make_clarifying_question() -> Path:
     return save_gif("clarifying_question.gif", frames)
 
 
+def make_household_task_agent() -> Path:
+    module = load_example("examples/embodied_ai/36_household_task_agent.py")
+    env = module.HouseholdTaskWorld(command="put the block away", answer="red", max_steps=80)
+    agent = module.HouseholdTaskAgent("put the block away")
+    obs = env.reset(seed=0)
+    agent.reset()
+    frames: list[np.ndarray] = []
+
+    def append_frame(info: dict[str, Any] | None = None) -> None:
+        fig, ax = plt.subplots(figsize=(6.3, 4.9), dpi=76)
+        module.draw_household_task_scene(ax, env, agent, info)
+        fig.tight_layout()
+        frames.append(fig_to_frame(fig))
+        plt.close(fig)
+
+    append_frame({})
+    for step in range(80):
+        action = agent.act(obs)
+        result = env.step(action)
+        obs, reward, done, info = result.as_tuple()
+        agent.update(obs, reward, info)
+        info.update(agent.info())
+        should_capture = (
+            step % 2 == 0
+            or done
+            or "failure" in info
+            or info.get("pick_success")
+            or info.get("success")
+        )
+        if should_capture:
+            append_frame(info)
+        if done:
+            break
+
+    return save_gif("household_task_agent.gif", frames)
+
+
 def make_tiny_world_model_planning() -> Path:
     module = load_example("examples/world_models/20_tiny_world_model_planning.py")
     env = module.TinyWorldModelWorld(seed=0, max_steps=80)
@@ -1521,6 +1558,7 @@ MAKERS: dict[str, Callable[[], Path]] = {
     "kitchen": make_goal_conditioned_minikitchen,
     "vla": make_tiny_vla_loop,
     "clarifying": make_clarifying_question,
+    "household": make_household_task_agent,
     "world_model": make_tiny_world_model_planning,
     "door": make_door_search_pomdp,
     "permanence": make_object_permanence_toy,

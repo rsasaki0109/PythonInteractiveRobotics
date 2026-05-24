@@ -303,6 +303,43 @@ def test_clarifying_question_skips_question_when_color_is_explicit() -> None:
     assert not trace.failures()
 
 
+def test_household_task_agent_runs_headless() -> None:
+    module = load_example("examples/embodied_ai/36_household_task_agent.py")
+
+    trace = module.run(
+        command="put the block away",
+        answer="red",
+        seed=0,
+        render=False,
+        max_steps=80,
+    )
+
+    final = trace.infos[-1]
+    assert final["success"] is True
+    assert final["stored_color"] == "red"
+    assert final["resolved_goal"]["color"] == "red"
+    assert final["question_count"] == 1
+    assert final["clarification_count"] == 1
+    assert final["safety_filter_count"] == 1
+    assert final["retry_count"] == 1
+    assert final["human_correction_count"] == 1
+    assert final["replan_count"] >= 4
+    assert final["memory_colors"] == ("blue", "red")
+    failure_kinds = {failure.kind for failure in trace.failures()}
+    assert {
+        "ambiguous_goal",
+        "unsafe_nominal_step",
+        "grasp_miss",
+        "human_correction",
+    } <= failure_kinds
+    assert any(action.get("type") == "ask" for action in trace.actions)
+    assert any(info.get("agent_state") == "safety_filter_replan" for info in trace.infos)
+    assert any(
+        info.get("agent_state") == "learn_from_human_correction"
+        for info in trace.infos
+    )
+
+
 def test_active_slam_toy_runs_headless() -> None:
     module = load_example("examples/navigation/07_active_slam_toy.py")
 
