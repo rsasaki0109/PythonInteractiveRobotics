@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Live Playground - PythonInteractiveRobotics</title>
+    <meta
+      name="description"
+      content="Step through small robotics recovery loops directly in the browser."
+    >
+    <link rel="canonical" href="https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html">
+    <meta name="theme-color" content="#17201f">
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="playground.css">
+  </head>
+  <body class="playground-page">
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="brand" href="index.html#top">PythonInteractiveRobotics</a>
+      <div class="nav-links">
+        <a href="index.html#run">Run</a>
+        <a href="playground.html">Playground</a>
+        <a href="index.html#colab">Colab</a>
+        <a href="index.html#loops">Loops</a>
+        <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="playground-main">
+      <section class="playground-header" aria-labelledby="playground-title">
+        <div>
+          <p class="eyebrow">Live robotics trace</p>
+          <h1 id="playground-title">Playground</h1>
+        </div>
+        <a class="source-link" id="sourceLink" href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/35_clarifying_question.py">Open source</a>
+      </section>
+
+      <section class="playground-layout" aria-label="Interactive robotics playground">
+        <div class="sim-panel">
+          <div class="control-bar" aria-label="Simulation controls">
+            <label>
+              <span>Scenario</span>
+              <select id="scenarioSelect">
+                <option value="clarifying">Clarifying question</option>
+                <option value="household">Household task agent</option>
+              </select>
+            </label>
+            <label>
+              <span>Answer</span>
+              <select id="answerSelect">
+                <option value="red">red</option>
+                <option value="blue">blue</option>
+              </select>
+            </label>
+            <div class="button-row">
+              <button id="resetButton" type="button">Reset</button>
+              <button id="stepButton" type="button">Step</button>
+              <button id="runButton" type="button">Run</button>
+            </div>
+          </div>
+
+          <div class="status-strip" aria-label="Current simulation state">
+            <div>
+              <span>Command</span>
+              <strong id="commandValue">pick the block</strong>
+            </div>
+            <div>
+              <span>Target</span>
+              <strong id="targetValue">unresolved</strong>
+            </div>
+            <div>
+              <span>Agent state</span>
+              <strong id="agentStateValue">parse_command</strong>
+            </div>
+            <div>
+              <span>Failure</span>
+              <strong id="failureValue">none</strong>
+            </div>
+          </div>
+
+          <div id="scene" class="scene" role="img" aria-label="Current playground scene"></div>
+        </div>
+
+        <aside class="trace-panel" aria-labelledby="trace-title">
+          <div class="trace-heading">
+            <h2 id="trace-title">Trace</h2>
+            <span id="stepCounter">0 / 3</span>
+          </div>
+          <div class="trace-table" role="table" aria-label="Trace rows">
+            <div class="trace-row trace-head" role="row">
+              <span role="columnheader">#</span>
+              <span role="columnheader">action</span>
+              <span role="columnheader">reward</span>
+              <span role="columnheader">failure</span>
+              <span role="columnheader">agent_state</span>
+            </div>
+            <div id="traceRows"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="playground.js"></script>
+  </body>
+</html>
