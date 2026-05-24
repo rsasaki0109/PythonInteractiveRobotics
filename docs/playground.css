@@ -57,7 +57,7 @@
 .sim-panel {
   display: grid;
   gap: 14px;
-  grid-template-rows: auto auto auto minmax(420px, 1fr);
+  grid-template-rows: auto auto auto auto minmax(420px, 1fr);
   padding: 16px;
 }
 
@@ -156,6 +156,46 @@ button:disabled {
   font-size: 0.98rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.replay-strip {
+  align-items: center;
+  background: #eef3ef;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.replay-strip label {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.replay-strip span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.replay-strip input {
+  accent-color: var(--teal);
+  min-width: 0;
+  width: 100%;
+}
+
+.replay-strip strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+  min-width: 64px;
+  text-align: right;
 }
 
 .scene {
@@ -377,6 +417,15 @@ button:disabled {
   font-size: 0.88rem;
 }
 
+.trace-row:not(.trace-head):hover,
+.trace-active {
+  background: #fff8e8;
+}
+
+.trace-row:not(.trace-head) {
+  cursor: pointer;
+}
+
 .trace-row span {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -435,6 +484,15 @@ button:disabled {
 
   .status-strip {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .replay-strip,
+  .replay-strip label {
+    grid-template-columns: 1fr;
+  }
+
+  .replay-strip strong {
+    text-align: left;
   }
 
   .scene {

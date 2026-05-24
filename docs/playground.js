@@ -39,6 +39,8 @@
     copyLink: document.getElementById("copyLinkButton"),
     copyTrace: document.getElementById("copyTraceButton"),
     copyStatus: document.getElementById("copyStatus"),
+    replay: document.getElementById("replaySlider"),
+    replayValue: document.getElementById("replayValue"),
     scene: document.getElementById("scene"),
     traceRows: document.getElementById("traceRows"),
     stepCounter: document.getElementById("stepCounter"),
@@ -68,6 +70,10 @@
   });
   elements.failureFilter.addEventListener("change", () => {
     updateLocation(false);
+    render();
+  });
+  elements.replay.addEventListener("input", () => {
+    state.replayIndex = clampReplayIndex(elements.replay.value);
     render();
   });
   elements.reset.addEventListener("click", () => {
@@ -111,6 +117,7 @@
       config,
       index: 0,
       trace: [],
+      replayIndex: null,
     };
   }
 
@@ -122,6 +129,7 @@
     const event = state.config.steps[state.index];
     state.trace.push(event);
     state.index += 1;
+    state.replayIndex = null;
     render();
     return state.index < state.config.steps.length;
   }
@@ -481,10 +489,8 @@
   }
 
   function render() {
-    const current =
-      state.trace.length > 0
-        ? state.trace[state.trace.length - 1].snapshot
-        : state.config.initial;
+    const replayIndex = currentReplayIndex();
+    const current = snapshotForReplayIndex(replayIndex);
     elements.command.textContent = state.config.command;
     elements.target.textContent = current.target || "unresolved";
     elements.agentState.textContent = current.agentState || "parse_command";
@@ -495,8 +501,51 @@
     elements.run.disabled = state.index >= state.config.steps.length && !timer;
     elements.copyTrace.disabled = state.trace.length === 0;
 
+    renderReplay(replayIndex);
     renderScene(current);
-    renderTrace();
+    renderTrace(replayIndex);
+  }
+
+  function renderReplay(replayIndex) {
+    elements.replay.max = String(state.trace.length);
+    elements.replay.value = String(replayIndex);
+    elements.replay.disabled = state.trace.length === 0;
+    elements.replayValue.textContent = replayLabel(replayIndex);
+  }
+
+  function currentReplayIndex() {
+    if (state.replayIndex === null) {
+      return state.trace.length;
+    }
+    return clampReplayIndex(state.replayIndex);
+  }
+
+  function snapshotForReplayIndex(index) {
+    if (index <= 0) {
+      return state.config.initial;
+    }
+    return state.trace[index - 1].snapshot;
+  }
+
+  function clampReplayIndex(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return state.trace.length;
+    }
+    return Math.max(0, Math.min(state.trace.length, Math.round(parsed)));
+  }
+
+  function replayLabel(index) {
+    if (index === 0) {
+      return "initial";
+    }
+    if (index === state.trace.length && timer && state.index < state.config.steps.length) {
+      return "live";
+    }
+    if (index === state.trace.length) {
+      return "latest";
+    }
+    return "step " + index;
   }
 
   function renderScene(snapshot) {
@@ -655,7 +704,7 @@
     elements.scene.appendChild(wrap);
   }
 
-  function renderTrace() {
+  function renderTrace(replayIndex) {
     elements.traceRows.textContent = "";
     const rows = filteredTrace();
     if (!state.trace.length) {
@@ -675,6 +724,20 @@
     rows.forEach(({ event, index }) => {
       const row = document.createElement("div");
       row.className = "trace-row";
+      row.setAttribute("role", "row");
+      row.setAttribute("tabindex", "0");
+      row.setAttribute("aria-label", "Show step " + (index + 1));
+      if (index + 1 === replayIndex) {
+        row.classList.add("trace-active");
+        row.setAttribute("aria-current", "step");
+      }
+      row.addEventListener("click", () => setReplayIndex(index + 1));
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setReplayIndex(index + 1);
+        }
+      });
       [
         String(index + 1),
         event.action,
@@ -690,6 +753,11 @@
       });
       elements.traceRows.appendChild(row);
     });
+  }
+
+  function setReplayIndex(index) {
+    state.replayIndex = clampReplayIndex(index);
+    render();
   }
 
   function filteredTrace() {
