@@ -15,6 +15,8 @@ flagship loops directly in Colab:
 [pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
 [safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb), and
 [human correction replanning](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb).
+For language ambiguity, try
+[clarifying question](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb).
 If the project helps you teach, prototype, or explain robotics loops, a GitHub
 star helps others find it.
 
@@ -48,10 +50,11 @@ python3 examples/runtime/01_sense_act_loop.py
 | Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
 | Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
 | Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
+| Language ambiguity | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb) | ambiguous command -> ask question -> answer -> act |
 
 ## Status
 
-37 runnable examples · 36 README GIFs · 104 smoke / regression tests ·
+38 runnable examples · 37 README GIFs · 107 smoke / regression tests ·
 5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
@@ -157,6 +160,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | Goal-conditioned minikitchen | Tiny VLA loop |
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](docs/assets/gifs/tiny_vla_loop.gif) |
+
+| Clarifying question |
+| --- |
+| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](docs/assets/gifs/clarifying_question.gif) |
 
 | Object permanence toy |
 | --- |

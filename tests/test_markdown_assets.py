@@ -33,6 +33,7 @@ EXPECTED_CATEGORY_GIFS = {
         "door_search_pomdp.gif",
         "goal_conditioned_minikitchen.gif",
         "tiny_vla_loop.gif",
+        "clarifying_question.gif",
     },
 }
 

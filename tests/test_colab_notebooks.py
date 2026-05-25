@@ -12,6 +12,7 @@ NOTEBOOKS = {
     "notebooks/human_correction_replanning.ipynb": (
         "examples/navigation/34_human_correction_replanning.py"
     ),
+    "notebooks/clarifying_question.ipynb": "examples/embodied_ai/35_clarifying_question.py",
 }
 
 

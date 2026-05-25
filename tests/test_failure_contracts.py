@@ -88,6 +88,17 @@ FAILURE_EXAMPLES: list[tuple[str, dict[str, Any], set[str]]] = [
         {"visual_pose_uncertain"},
     ),
     (
+        "examples/embodied_ai/35_clarifying_question.py",
+        {
+            "command": "pick the block",
+            "answer": "red",
+            "seed": 0,
+            "render": False,
+            "max_steps": 12,
+        },
+        {"ambiguous_goal"},
+    ),
+    (
         "examples/world_models/20_tiny_world_model_planning.py",
         {"seed": 0, "render": False, "max_steps": 80},
         {"model_error"},

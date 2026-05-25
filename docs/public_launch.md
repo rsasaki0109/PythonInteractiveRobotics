@@ -47,8 +47,9 @@ Use this longer description when space allows:
       ([#3](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/3)).
 - [ ] Enable GitHub Pages with the GitHub Actions source after the deployment
       workflow is on `main`.
-- [x] Add three Colab notebooks:
-      `pick_and_retry`, `safety_filter_cbf`, and `human_correction_replanning`
+- [x] Add Colab notebooks:
+      `pick_and_retry`, `safety_filter_cbf`,
+      `human_correction_replanning`, and `clarifying_question`
       ([#4](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/4)).
 - [x] Add copyable public-launch post snippets
       ([#5](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/5)).
@@ -67,6 +68,7 @@ Good first posts:
 - `pose and map uncertainty -> active SLAM action`
 - `language goal -> visual tokens -> skill failure -> close-view retry`
 - `shortcut -> human correction -> cost update -> replan`
+- `ambiguous command -> ask question -> answer -> act`
 
 Target channels:
 
@@ -164,6 +166,25 @@ python3 examples/embodied_ai/19_tiny_vla_loop.py "place red block in blue bin"
 ```
 
 GIF: `docs/assets/gifs/tiny_vla_loop.gif`
+
+### Clarifying Question
+
+A robot should not guess when a language command matches multiple objects:
+
+```text
+pick the block -> Which block? -> red -> pick red block
+```
+
+Run it:
+
+```bash
+python3 examples/embodied_ai/35_clarifying_question.py "pick the block" --answer red
+```
+
+GIF: `docs/assets/gifs/clarifying_question.gif`
+
+Colab:
+`https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb`
 
 ## Contributor Funnel
 
