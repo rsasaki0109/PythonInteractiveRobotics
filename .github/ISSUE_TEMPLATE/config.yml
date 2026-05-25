@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Example authoring guide
+    url: https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/docs/example_authoring.md
+    about: Read this before proposing a new runnable example.
+  - name: Learning paths
+    url: https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/docs/learning_paths.md
+    about: See the existing example paths before requesting a new topic.

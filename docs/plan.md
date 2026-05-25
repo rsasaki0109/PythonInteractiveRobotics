@@ -414,6 +414,7 @@ Keep these documents distinct:
 | `docs/learning_paths.md` | learner-facing paths through examples |
 | `docs/example_authoring.md` | rules for adding examples |
 | `docs/implementation_gap_audit.md` | ranked next implementation candidates |
+| `docs/public_launch.md` | public launch, discovery, and star-growth checklist |
 | `docs/toy_worlds.md` | toy world roles and coverage |
 | `docs/ros2_bridge_strategy.md` | optional ROS2 bridge direction |
 | `docs/simulator_integration_strategy.md` | optional simulator bridge direction |

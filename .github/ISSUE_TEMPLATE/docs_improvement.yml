@@ -1,0 +1,27 @@
+name: Docs improvement
+description: Improve README, learning paths, captions, or contributor docs.
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Which file or section should change?
+      placeholder: README.md Start Here table, examples/navigation/README.md, docs/trace.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is confusing, missing, or out of date?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed change
+      description: What would make it clearer?
+    validations:
+      required: true
