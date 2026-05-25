@@ -8,11 +8,11 @@ first-run experience small, fast, and failure-aware.
 
 The repository currently has:
 
-- 36 runnable examples
+- 37 runnable examples
 - 20 numbered learning-path examples
-- 16 extra examples outside the original learning-path roadmap
-- 35 generated README GIFs
-- 101 smoke and regression tests
+- 17 extra examples outside the original learning-path roadmap
+- 36 generated README GIFs
+- 103 smoke and regression tests
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -131,6 +131,11 @@ Recent completed work:
   shares the grid with two goal-seeking other agents, predicts each
   agent's next step, and runs A* over a map that treats current and
   predicted-next cells as occupied. GIF and smoke test cover the loop.
+- `examples/navigation/34_human_correction_replanning.py` was added. The
+  robot starts on the shortest path, receives a structured human correction
+  before entering an unwanted zone, raises that zone's traversal cost, replans,
+  and reaches the same goal by a longer route. GIF, smoke test, and failure
+  contract test cover the loop.
 - `MovingObstacleWorld` was extracted from `examples/navigation/08_interactive_mpc.py`
   into `pir/worlds/moving_obstacle.py`, and `MovingObstacleWorldGymnasiumAdapter`
   was added in `pir/adapters/gymnasium_adapter.py`. The adapter exposes a

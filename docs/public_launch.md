@@ -66,6 +66,7 @@ Good first posts:
 - `nominal controller -> CBF safety filter`
 - `pose and map uncertainty -> active SLAM action`
 - `language goal -> visual tokens -> skill failure -> close-view retry`
+- `shortcut -> human correction -> cost update -> replan`
 
 Target channels:
 
@@ -127,6 +128,23 @@ python3 examples/navigation/07_active_slam_toy.py
 ```
 
 GIF: `docs/assets/gifs/active_slam_toy.gif`
+
+### Human Correction
+
+A robot starts on the shortest path. A human correction rejects an unwanted
+zone, so the agent raises that zone's traversal cost and replans:
+
+```text
+shortcut -> human correction -> cost update -> longer route
+```
+
+Run it:
+
+```bash
+python3 examples/navigation/34_human_correction_replanning.py
+```
+
+GIF: `docs/assets/gifs/human_correction_replanning.gif`
 
 ### Embodied AI
 

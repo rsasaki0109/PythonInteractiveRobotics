@@ -26,6 +26,7 @@ EXPECTED_CATEGORY_GIFS = {
         "active_slam_toy.gif",
         "interactive_mpc.gif",
         "blocked_path_recovery.gif",
+        "human_correction_replanning.gif",
     },
     "examples/embodied_ai/README.md": {
         "goal_command_pick.gif",

@@ -45,7 +45,7 @@ python3 examples/runtime/01_sense_act_loop.py
 
 ## Status
 
-36 runnable examples · 35 README GIFs · 101 smoke / regression tests ·
+37 runnable examples · 36 README GIFs · 103 smoke / regression tests ·
 5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
@@ -137,6 +137,10 @@ These GIFs are generated from the runnable examples, not separate animations.
 | Safety filter (CBF) | Options with interrupts |
 | --- | --- |
 | ![A point robot's naive go-to-goal nominal velocity is projected at each step onto a control-barrier-function half-space for each obstacle, sliding around them without the policy itself ever knowing they exist.](docs/assets/gifs/safety_filter_cbf.gif) | ![A battery-aware robot runs a go-to-goal option, gets interrupted mid-task when the battery drops below threshold, switches to dock-and-charge, then resumes go-to-goal once the battery is full.](docs/assets/gifs/options_with_interrupts.gif) |
+
+| Human correction replanning |
+| --- |
+| ![A grid robot starts on a shortcut, receives a human correction before entering an unwanted zone, raises that zone's traversal cost, replans, and reaches the goal by a longer route.](docs/assets/gifs/human_correction_replanning.gif) |
 
 ### Embodied AI
 
