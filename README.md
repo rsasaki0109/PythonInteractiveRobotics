@@ -16,7 +16,8 @@ flagship loops directly in Colab:
 [safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb), and
 [human correction replanning](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb).
 For language ambiguity, try
-[clarifying question](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb).
+[clarifying question](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb), or run the integrated
+[household task agent](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb).
 If the project helps you teach, prototype, or explain robotics loops, a GitHub
 star helps others find it.
 
@@ -51,10 +52,11 @@ python3 examples/runtime/01_sense_act_loop.py
 | Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
 | Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
 | Language ambiguity | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb) | ambiguous command -> ask question -> answer -> act |
+| Integrated household task | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb) | clarify -> plan -> safety check -> retry -> human replan |
 
 ## Status
 
-38 runnable examples · 37 README GIFs · 107 smoke / regression tests ·
+39 runnable examples · 38 README GIFs · 109 smoke / regression tests ·
 5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
@@ -161,9 +163,9 @@ These GIFs are generated from the runnable examples, not separate animations.
 | --- | --- |
 | ![A kitchen agent parses a bring goal, searches containers, handles a closed cabinet, picks a mug, and places it on the table.](docs/assets/gifs/goal_conditioned_minikitchen.gif) | ![A toy VLA loop parses a language goal, reads visual tokens, picks from low confidence, recovers with a close view, and places the block.](docs/assets/gifs/tiny_vla_loop.gif) |
 
-| Clarifying question |
-| --- |
-| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](docs/assets/gifs/clarifying_question.gif) |
+| Clarifying question | Household task agent |
+| --- | --- |
+| ![A tabletop robot receives the ambiguous command pick the block, asks which block, receives a red answer, resolves the goal, and picks the red block.](docs/assets/gifs/clarifying_question.gif) | ![A household robot asks which block to put away, plans through a room, rejects an unsafe floor step, retries a missed grasp, accepts human correction, replans, and stores the block.](docs/assets/gifs/household_task_agent.gif) |
 
 | Object permanence toy |
 | --- |

@@ -34,6 +34,7 @@ EXPECTED_CATEGORY_GIFS = {
         "goal_conditioned_minikitchen.gif",
         "tiny_vla_loop.gif",
         "clarifying_question.gif",
+        "household_task_agent.gif",
     },
 }
 
