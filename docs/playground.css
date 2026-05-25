@@ -57,7 +57,7 @@
 .sim-panel {
   display: grid;
   gap: 14px;
-  grid-template-rows: auto auto auto auto auto minmax(420px, 1fr);
+  grid-template-rows: auto auto auto auto auto auto minmax(420px, 1fr);
   padding: 16px;
 }
 
@@ -167,6 +167,81 @@ button:disabled {
   font-size: 0.98rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.belief-panel {
+  background: #fffdf7;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.65fr);
+  padding: 12px;
+}
+
+.belief-bars {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+
+.belief-row {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 42px minmax(0, 1fr) 52px;
+  min-width: 0;
+}
+
+.belief-row span,
+.belief-metrics span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.belief-track {
+  background: #eef3ef;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  height: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.belief-fill {
+  height: 100%;
+}
+
+.belief-red {
+  background: #d94b3d;
+}
+
+.belief-blue {
+  background: #2b6cb0;
+}
+
+.belief-value {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: right;
+}
+
+.belief-metrics {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.belief-metrics strong {
+  color: var(--ink);
+  display: block;
+  font-size: 0.95rem;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  text-transform: none;
 }
 
 .replay-strip {
@@ -682,6 +757,11 @@ button:disabled {
 
   .status-strip {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .belief-panel,
+  .belief-metrics {
+    grid-template-columns: 1fr;
   }
 
   .compare-panel {
