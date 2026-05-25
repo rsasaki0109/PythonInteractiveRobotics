@@ -21,6 +21,8 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "copyLinkButton",
         "copyTraceButton",
         "copyStatus",
+        "replaySlider",
+        "replayValue",
         "traceRows",
     ):
         assert f'id="{element_id}"' in html
@@ -34,6 +36,9 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "unsafe_nominal_step",
         "grasp_miss",
         "human_correction",
+        "clampReplayIndex",
+        "snapshotForReplayIndex",
+        "trace-active",
     ):
         assert value in js
 
@@ -41,6 +46,7 @@ def test_playground_assets_support_shareable_scenarios() -> None:
     assert "navigator.clipboard" in js
     assert "formatTraceText" in js
     assert ".copy-status" in css
+    assert ".replay-strip" in css
 
 
 def test_readme_links_to_shareable_live_trace() -> None:
