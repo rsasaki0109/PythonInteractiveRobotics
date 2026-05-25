@@ -18,11 +18,13 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "scenarioSelect",
         "answerSelect",
         "failureFilter",
+        "compareToggle",
         "copyLinkButton",
         "copyTraceButton",
         "copyStatus",
         "replaySlider",
         "replayValue",
+        "comparePanel",
         "traceRows",
     ):
         assert f'id="{element_id}"' in html
@@ -36,6 +38,10 @@ def test_playground_assets_support_shareable_scenarios() -> None:
         "unsafe_nominal_step",
         "grasp_miss",
         "human_correction",
+        "compare",
+        "buildHouseholdCompare",
+        "renderCompare",
+        "renderMiniMap",
         "clampReplayIndex",
         "snapshotForReplayIndex",
         "trace-active",
@@ -47,12 +53,13 @@ def test_playground_assets_support_shareable_scenarios() -> None:
     assert "formatTraceText" in js
     assert ".copy-status" in css
     assert ".replay-strip" in css
+    assert ".compare-panel" in css
 
 
 def test_readme_links_to_shareable_live_trace() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     index = (ROOT / "docs/index.html").read_text(encoding="utf-8")
-    share_url = "playground.html?scenario=household&answer=red&autoplay=1"
+    share_url = "playground.html?scenario=household&answer=red&compare=1&autoplay=1"
 
     assert "Shareable live trace" in readme
     assert share_url in readme

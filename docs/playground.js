@@ -28,11 +28,23 @@
     "grasp_miss",
     "human_correction",
   ]);
+  const unsafeCells = [
+    [5, 1],
+    [5, 2],
+    [5, 3],
+  ];
+  const humanCells = [
+    [1, 6],
+    [1, 7],
+    [2, 6],
+    [2, 7],
+  ];
 
   const elements = {
     scenario: document.getElementById("scenarioSelect"),
     answer: document.getElementById("answerSelect"),
     failureFilter: document.getElementById("failureFilter"),
+    compare: document.getElementById("compareToggle"),
     reset: document.getElementById("resetButton"),
     step: document.getElementById("stepButton"),
     run: document.getElementById("runButton"),
@@ -41,6 +53,7 @@
     copyStatus: document.getElementById("copyStatus"),
     replay: document.getElementById("replaySlider"),
     replayValue: document.getElementById("replayValue"),
+    comparePanel: document.getElementById("comparePanel"),
     scene: document.getElementById("scene"),
     traceRows: document.getElementById("traceRows"),
     stepCounter: document.getElementById("stepCounter"),
@@ -69,6 +82,10 @@
     render();
   });
   elements.failureFilter.addEventListener("change", () => {
+    updateLocation(false);
+    render();
+  });
+  elements.compare.addEventListener("change", () => {
     updateLocation(false);
     render();
   });
@@ -267,6 +284,27 @@
       [1, 10],
     ];
 
+    const nominalRoute = [
+      [7, 1],
+      [6, 1],
+      [5, 1],
+      [4, 1],
+      [3, 1],
+      [3, 2],
+      [3, 3],
+    ];
+    const targetRoute = answer === "blue" ? blueRoute : redRoute;
+    const storageRoute =
+      answer === "blue"
+        ? blueStorageRoute
+        : [
+            [3, 3],
+            [3, 4],
+            [3, 5],
+            [2, 5],
+          ].concat(correctedStorageRoute.slice(1));
+    const recoveryRoute = joinRoutes(targetRoute, storageRoute);
+
     const context = {
       command: "put the block away",
       robot: [7, 1],
@@ -279,15 +317,7 @@
       picked: [],
       failure: "none",
       agentState: "parse_command",
-      path: [
-        [7, 1],
-        [6, 1],
-        [5, 1],
-        [4, 1],
-        [3, 1],
-        [3, 2],
-        [3, 3],
-      ],
+      path: nominalRoute.map((cell) => cell.slice()),
     };
     const initial = {
       type: "household",
@@ -322,9 +352,9 @@
       failure: "unsafe_nominal_step",
       agentState: "safety_filter_replan",
       blocked: [
-        [5, 1],
-        [5, 2],
-        [5, 3],
+        unsafeCells[0],
+        unsafeCells[1],
+        unsafeCells[2],
       ],
       path: answer === "blue" ? blueRoute.slice(1) : redRoute.slice(1),
     });
@@ -403,6 +433,43 @@
       totalSteps: steps.length,
       initial,
       steps,
+      compare: buildHouseholdCompare(answer, steps, nominalRoute, recoveryRoute),
+    };
+  }
+
+  function buildHouseholdCompare(answer, steps, nominalRoute, recoveryRoute) {
+    const target = answer === "blue" ? [5, 9] : [3, 3];
+    return {
+      baseline: {
+        kind: "baseline",
+        title: "Naive shortcut",
+        outcome: "blocked",
+        detail: "enters unsafe_nominal_step before reaching the target",
+        route: nominalRoute,
+        stop: [5, 1],
+        target,
+        targetLabel: answer === "blue" ? "B" : "R",
+        storage: [1, 10],
+        steps: 3,
+        failures: 1,
+        reward: -0.2,
+      },
+      recovery: {
+        kind: "recovery",
+        title: "Interactive recovery",
+        outcome: "delivered",
+        detail:
+          answer === "red"
+            ? "clarifies, avoids unsafe cells, retries grasp, and accepts correction"
+            : "clarifies, avoids unsafe cells, retries grasp, and stores the block",
+        route: recoveryRoute,
+        target,
+        targetLabel: answer === "blue" ? "B" : "R",
+        storage: [1, 10],
+        steps: steps.length,
+        failures: steps.filter((step) => step.failure).length,
+        reward: steps.reduce((total, step) => total + step.reward, 0),
+      },
     };
   }
 
@@ -478,6 +545,10 @@
     return trail.concat([robot.slice()]);
   }
 
+  function joinRoutes(first, second) {
+    return first.concat(second.slice(1)).map((cell) => cell.slice());
+  }
+
   function directionName(start, end) {
     const dr = end[0] - start[0];
     const dc = end[1] - start[1];
@@ -500,10 +571,58 @@
     elements.step.disabled = state.index >= state.config.steps.length;
     elements.run.disabled = state.index >= state.config.steps.length && !timer;
     elements.copyTrace.disabled = state.trace.length === 0;
+    elements.compare.disabled = state.scenario !== "household";
 
     renderReplay(replayIndex);
+    renderCompare();
     renderScene(current);
     renderTrace(replayIndex);
+  }
+
+  function renderCompare() {
+    const enabled = elements.compare.checked && state.scenario === "household";
+    elements.comparePanel.hidden = !enabled;
+    elements.comparePanel.textContent = "";
+    if (!enabled || !state.config.compare) {
+      return;
+    }
+    [state.config.compare.baseline, state.config.compare.recovery].forEach((plan) => {
+      const lane = document.createElement("section");
+      lane.className = "compare-lane " + plan.kind;
+
+      const kicker = document.createElement("span");
+      kicker.className = "compare-kicker";
+      kicker.textContent = plan.title;
+      lane.appendChild(kicker);
+
+      const outcome = document.createElement("div");
+      outcome.className = "compare-outcome";
+      outcome.textContent = plan.outcome;
+      lane.appendChild(outcome);
+
+      const detail = document.createElement("p");
+      detail.className = "compare-detail";
+      detail.textContent = plan.detail;
+      lane.appendChild(detail);
+
+      const metrics = document.createElement("div");
+      metrics.className = "compare-metrics";
+      [
+        ["steps", String(plan.steps)],
+        ["failures", String(plan.failures)],
+        ["reward", formatReward(plan.reward)],
+      ].forEach(([label, value]) => {
+        const metric = document.createElement("span");
+        metric.textContent = label;
+        const strong = document.createElement("strong");
+        strong.textContent = value;
+        metric.appendChild(strong);
+        metrics.appendChild(metric);
+      });
+      lane.appendChild(metrics);
+      lane.appendChild(renderMiniMap(plan));
+      elements.comparePanel.appendChild(lane);
+    });
   }
 
   function renderReplay(replayIndex) {
@@ -641,8 +760,8 @@
     grid.style.setProperty("--rows", "9");
 
     const sets = {
-      safe: new Set(["5,1", "5,2", "5,3"]),
-      human: new Set(["1,6", "1,7", "2,6", "2,7"]),
+      safe: new Set(unsafeCells.map(key)),
+      human: new Set(humanCells.map(key)),
       blocked: new Set(snapshot.blocked.map(key)),
       corrected: new Set(snapshot.corrected.map(key)),
       planned: new Set(snapshot.path.map(key)),
@@ -702,6 +821,51 @@
     wrap.appendChild(grid);
     wrap.appendChild(legend);
     elements.scene.appendChild(wrap);
+  }
+
+  function renderMiniMap(plan) {
+    const grid = document.createElement("div");
+    grid.className = "mini-grid";
+    grid.style.setProperty("--cols", "12");
+    grid.style.setProperty("--rows", "9");
+
+    const route = new Set(plan.route.map(key));
+    const unsafe = new Set(unsafeCells.map(key));
+    const human = new Set(humanCells.map(key));
+    const stopKey = plan.stop ? key(plan.stop) : "";
+    const targetKey = key(plan.target);
+    const storageKey = key(plan.storage);
+
+    for (let row = 0; row < map.length; row += 1) {
+      for (let col = 0; col < map[row].length; col += 1) {
+        const cell = document.createElement("div");
+        const id = row + "," + col;
+        cell.className = "mini-cell";
+        if (map[row][col] === "#") cell.classList.add("mini-wall");
+        if (unsafe.has(id)) cell.classList.add("mini-unsafe");
+        if (human.has(id)) cell.classList.add("mini-human");
+        if (route.has(id)) cell.classList.add("mini-path");
+        if (sameCell([row, col], [7, 1])) {
+          setMiniMarker(cell, "mini-start", "R");
+        }
+        if (id === targetKey) {
+          setMiniMarker(cell, "mini-target", plan.targetLabel);
+        }
+        if (id === storageKey) {
+          setMiniMarker(cell, "mini-storage", "S");
+        }
+        if (id === stopKey) {
+          setMiniMarker(cell, "mini-stop", "!");
+        }
+        grid.appendChild(cell);
+      }
+    }
+    return grid;
+  }
+
+  function setMiniMarker(cell, className, label) {
+    cell.classList.add(className);
+    cell.textContent = label;
   }
 
   function renderTrace(replayIndex) {
@@ -781,6 +945,9 @@
     if (failureValues.has(failure)) {
       elements.failureFilter.value = failure;
     }
+    if (["1", "true", "yes"].includes(String(params.get("compare")).toLowerCase())) {
+      elements.compare.checked = true;
+    }
   }
 
   function readAutoplayParam() {
@@ -804,6 +971,11 @@
     } else {
       url.searchParams.set("failure", elements.failureFilter.value);
     }
+    if (elements.compare.checked && elements.scenario.value === "household") {
+      url.searchParams.set("compare", "1");
+    } else {
+      url.searchParams.delete("compare");
+    }
     if (includeAutoplay) {
       url.searchParams.set("autoplay", "1");
     } else {
@@ -820,6 +992,7 @@
       "scenario=" + state.scenario,
       "answer=" + state.answer,
       "command=" + state.config.command,
+      "compare=" + (elements.compare.checked && state.scenario === "household" ? "on" : "off"),
       "filter=" + filter,
       "",
       "#\taction\treward\tfailure\tagent_state",
