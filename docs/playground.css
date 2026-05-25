@@ -346,8 +346,8 @@ button:disabled {
 .trace-row {
   border-bottom: 1px solid var(--line);
   display: grid;
-  gap: 10px;
-  grid-template-columns: 36px minmax(110px, 1fr) 70px minmax(92px, 0.8fr) minmax(120px, 1fr);
+  gap: 8px;
+  grid-template-columns: 30px minmax(84px, 1fr) 56px minmax(76px, 0.8fr) minmax(92px, 1fr);
   padding: 9px 10px;
 }
 
