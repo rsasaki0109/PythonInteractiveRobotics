@@ -54,6 +54,7 @@
     replay: document.getElementById("replaySlider"),
     replayValue: document.getElementById("replayValue"),
     comparePanel: document.getElementById("comparePanel"),
+    timeline: document.getElementById("timeline"),
     scene: document.getElementById("scene"),
     traceRows: document.getElementById("traceRows"),
     stepCounter: document.getElementById("stepCounter"),
@@ -575,6 +576,7 @@
 
     renderReplay(replayIndex);
     renderCompare();
+    renderTimeline(replayIndex);
     renderScene(current);
     renderTrace(replayIndex);
   }
@@ -630,6 +632,42 @@
     elements.replay.value = String(replayIndex);
     elements.replay.disabled = state.trace.length === 0;
     elements.replayValue.textContent = replayLabel(replayIndex);
+  }
+
+  function renderTimeline(replayIndex) {
+    elements.timeline.textContent = "";
+    state.trace.forEach((event, index) => {
+      const step = index + 1;
+      const button = document.createElement("button");
+      button.className = "timeline-step " + timelineClass(event);
+      button.type = "button";
+      button.textContent = String(step);
+      button.setAttribute("aria-label", timelineLabel(event, step));
+      if (step === replayIndex) {
+        button.classList.add("timeline-active");
+        button.setAttribute("aria-current", "step");
+      }
+      button.addEventListener("click", () => setReplayIndex(step));
+      elements.timeline.appendChild(button);
+    });
+  }
+
+  function timelineClass(event) {
+    if (event.failure === "ambiguous_goal") return "timeline-ambiguous";
+    if (event.failure === "unsafe_nominal_step") return "timeline-unsafe";
+    if (event.failure === "grasp_miss") return "timeline-grasp";
+    if (event.failure === "human_correction") return "timeline-human";
+    if (event.agentState === "done") return "timeline-success";
+    return "timeline-neutral";
+  }
+
+  function timelineLabel(event, step) {
+    return (
+      "Step " +
+      step +
+      ": " +
+      (event.failure || (event.agentState === "done" ? "success" : event.agentState))
+    );
   }
 
   function currentReplayIndex() {
