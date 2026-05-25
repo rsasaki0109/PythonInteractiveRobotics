@@ -12,7 +12,8 @@ The repository currently has:
 - 20 numbered learning-path examples
 - 17 extra examples outside the original learning-path roadmap
 - 36 generated README GIFs
-- 103 smoke and regression tests
+- 104 smoke and regression tests
+- 3 Colab notebooks for browser-first demos
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`
 - optional Gymnasium-style adapters for `GridWorld2D`,
@@ -136,6 +137,12 @@ Recent completed work:
   before entering an unwanted zone, raises that zone's traversal cost, replans,
   and reaches the same goal by a longer route. GIF, smoke test, and failure
   contract test cover the loop.
+- `notebooks/pick_and_retry.ipynb`, `notebooks/safety_filter_cbf.ipynb`, and
+  `notebooks/human_correction_replanning.ipynb` were added as Colab-first
+  entry points. They clone the repo when needed, install the lightweight core
+  package, run the real example headless, print `Trace.summary()`, and display
+  the generated GIF. A notebook contract test validates the notebook JSON and
+  example references.
 - `MovingObstacleWorld` was extracted from `examples/navigation/08_interactive_mpc.py`
   into `pir/worlds/moving_obstacle.py`, and `MovingObstacleWorldGymnasiumAdapter`
   was added in `pir/adapters/gymnasium_adapter.py`. The adapter exposes a

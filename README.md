@@ -10,8 +10,13 @@ This repo shows that loop in small, readable Python — no ROS, no GPU, no
 simulator. Just `numpy + matplotlib`.
 
 [Open the example gallery](https://rsasaki0109.github.io/PythonInteractiveRobotics/)
-or jump straight into the first runnable loop below. If the project helps you
-teach, prototype, or explain robotics loops, a GitHub star helps others find it.
+or jump straight into the first runnable loop below. You can also run the
+flagship loops directly in Colab:
+[pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
+[safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb), and
+[human correction replanning](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb).
+If the project helps you teach, prototype, or explain robotics loops, a GitHub
+star helps others find it.
 
 | Avoiding | Reaching under occlusion | Mapping while uncertain |
 | --- | --- | --- |
@@ -42,10 +47,11 @@ python3 examples/runtime/01_sense_act_loop.py
 | Failure recovery | `python3 examples/manipulation/01_pick_and_retry.py` | grasp miss -> belief update -> retry |
 | Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
 | Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
+| Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
 
 ## Status
 
-37 runnable examples · 36 README GIFs · 103 smoke / regression tests ·
+37 runnable examples · 36 README GIFs · 104 smoke / regression tests ·
 5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
