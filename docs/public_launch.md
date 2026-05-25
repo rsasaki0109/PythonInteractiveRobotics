@@ -7,6 +7,7 @@ discover, try, share, and contribute to. It is intentionally separate from
 ## Current Baseline
 
 - Repository: `https://github.com/rsasaki0109/PythonInteractiveRobotics`
+- Gallery: `https://rsasaki0109.github.io/PythonInteractiveRobotics/`
 - Public status: public GitHub repository
 - Current package name: `python-interactive-robotics`
 - Core promise: closed-loop robotics examples with `numpy + matplotlib`
@@ -42,8 +43,10 @@ Use this longer description when space allows:
       ([#2](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/2)).
 - [ ] Replace editable-install-first messaging with PyPI install messaging
       after the package is live.
-- [ ] Add a short GitHub Pages gallery for the strongest GIFs
+- [x] Add a short GitHub Pages gallery for the strongest GIFs
       ([#3](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/3)).
+- [ ] Enable GitHub Pages with the GitHub Actions source after the deployment
+      workflow is on `main`.
 - [ ] Add three Colab notebooks:
       `pick_and_retry`, `safety_filter_cbf`, and `active_slam_toy`
       ([#4](https://github.com/rsasaki0109/PythonInteractiveRobotics/issues/4)).
@@ -53,6 +56,8 @@ Use this longer description when space allows:
 ## Discovery Channels
 
 Post one GIF and one concrete loop per post. Do not lead with the full README.
+Link to the gallery first when the channel benefits from visual scanning, then
+link to the exact example file for technical readers.
 
 Good first posts:
 

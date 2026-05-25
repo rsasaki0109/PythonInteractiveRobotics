@@ -9,6 +9,10 @@
 This repo shows that loop in small, readable Python — no ROS, no GPU, no
 simulator. Just `numpy + matplotlib`.
 
+[Open the example gallery](https://rsasaki0109.github.io/PythonInteractiveRobotics/)
+or jump straight into the first runnable loop below. If the project helps you
+teach, prototype, or explain robotics loops, a GitHub star helps others find it.
+
 | Avoiding | Reaching under occlusion | Mapping while uncertain |
 | --- | --- | --- |
 | ![A point robot's naive go-to-goal velocity is projected onto a CBF safe set at every step. The policy itself never knows the obstacles exist - a separate runtime safety filter slides it around them.](docs/assets/gifs/safety_filter_cbf.gif) | ![A 2-link arm predicts a briefly occluded moving target, keeps servoing through the occlusion, and reaches the intercept point when the target reappears.](docs/assets/gifs/moving_target_reaching.gif) | ![A toy active-SLAM agent shrinks pose belief and occupancy belief at the same time, by picking moves that maximize expected entropy drop.](docs/assets/gifs/active_slam_toy.gif) |
@@ -46,7 +50,8 @@ python3 examples/runtime/01_sense_act_loop.py
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
 working execution plan, and `examples/README.md` for the complete example
-index. See `docs/public_launch.md` for the public launch checklist.
+index. The GitHub Pages gallery is generated from `docs/index.html`, and
+`docs/public_launch.md` keeps the public launch checklist.
 
 ## Why this project?
 

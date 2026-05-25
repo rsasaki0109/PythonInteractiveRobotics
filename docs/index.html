@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PythonInteractiveRobotics</title>
+    <meta
+      name="description"
+      content="Minimal Python robotics examples for planning, manipulation, active perception, and embodied AI. No ROS, GPU, or heavy simulator."
+    >
+    <link rel="canonical" href="https://rsasaki0109.github.io/PythonInteractiveRobotics/">
+    <meta name="theme-color" content="#17201f">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PythonInteractiveRobotics">
+    <meta
+      property="og:description"
+      content="Minimal Python robotics examples for planning, manipulation, active perception, and embodied AI. No ROS, GPU, or heavy simulator."
+    >
+    <meta property="og:url" content="https://rsasaki0109.github.io/PythonInteractiveRobotics/">
+    <meta
+      property="og:image"
+      content="https://rsasaki0109.github.io/PythonInteractiveRobotics/assets/gifs/safety_filter_cbf.gif"
+    >
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PythonInteractiveRobotics">
+    <meta
+      name="twitter:description"
+      content="Closed-loop robotics examples in small, runnable Python with numpy and matplotlib."
+    >
+    <meta
+      name="twitter:image"
+      content="https://rsasaki0109.github.io/PythonInteractiveRobotics/assets/gifs/safety_filter_cbf.gif"
+    >
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="brand" href="#top">PythonInteractiveRobotics</a>
+      <div class="nav-links">
+        <a href="#run">Run</a>
+        <a href="#loops">Loops</a>
+        <a href="#paths">Paths</a>
+        <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics">GitHub</a>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-content">
+        <p class="eyebrow">Robotics loops in small, readable Python</p>
+        <h1>Python<wbr>Interactive<wbr>Robotics</h1>
+        <p>
+          Robots observe, act, fail, retry, update beliefs, and replan. This
+          gallery shows those loops with runnable examples and generated GIFs,
+          using only numpy and matplotlib in core.
+        </p>
+        <div class="hero-actions">
+          <a
+            class="action-link"
+            href="https://github.com/rsasaki0109/PythonInteractiveRobotics"
+            aria-label="Star PythonInteractiveRobotics on GitHub"
+          >Star on GitHub</a>
+          <a class="action-link" href="#run">Run the first loop</a>
+          <a class="action-link secondary" href="#loops">See the examples</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Project snapshot">
+      <div class="stats-inner">
+        <div class="stat">
+          <strong>36</strong>
+          <span>runnable examples</span>
+        </div>
+        <div class="stat">
+          <strong>35</strong>
+          <span>generated GIFs</span>
+        </div>
+        <div class="stat">
+          <strong>101</strong>
+          <span>smoke and regression tests</span>
+        </div>
+        <div class="stat">
+          <strong>0</strong>
+          <span>ROS, GPU, or simulator required</span>
+        </div>
+      </div>
+    </section>
+
+    <main>
+      <section class="section run-panel" id="run">
+        <div class="section-inner run-grid">
+          <div>
+            <h2>Run the first loop</h2>
+            <p>
+              The first example is a tiny tabletop robot that misses a grasp,
+              updates its belief, and retries differently.
+            </p>
+          </div>
+          <pre><code>git clone https://github.com/rsasaki0109/PythonInteractiveRobotics.git
+cd PythonInteractiveRobotics
+python3 -m pip install -e .
+python3 examples/manipulation/01_pick_and_retry.py</code></pre>
+        </div>
+      </section>
+
+      <section class="section" id="loops">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>Closed-loop robotics examples</h2>
+            <p>
+              Each GIF is generated from the same runnable example linked below.
+              The point is the feedback loop: observe, update state, act, and
+              recover when the world disagrees.
+            </p>
+          </div>
+
+          <div class="gallery">
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/pick_and_retry.gif"
+                alt="A tabletop robot misses grasps, updates belief, and retries."
+              >
+              <figcaption>
+                <h3>Pick and retry</h3>
+                <p>grasp miss -> belief update -> retry</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/manipulation/01_pick_and_retry.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/safety_filter_cbf.gif"
+                alt="A point robot's nominal velocity is projected onto a CBF safe set."
+              >
+              <figcaption>
+                <h3>Runtime safety filter</h3>
+                <p>nominal controller -> CBF projection -> safe motion</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/navigation/29_safety_filter_cbf.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/active_slam_toy.gif"
+                alt="An active SLAM agent reduces pose and map uncertainty."
+              >
+              <figcaption>
+                <h3>Active SLAM toy</h3>
+                <p>pose belief -> map update -> information action</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/navigation/07_active_slam_toy.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/moving_target_reaching.gif"
+                alt="A two-link arm predicts an occluded moving target and reaches it."
+              >
+              <figcaption>
+                <h3>Reaching under occlusion</h3>
+                <p>observe target -> predict through occlusion -> correct</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/manipulation/04_moving_target_reaching.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/online_replanning_astar.gif"
+                alt="A grid robot observes a hidden wall and replans with A star."
+              >
+              <figcaption>
+                <h3>Online replanning</h3>
+                <p>map update -> invalidate path -> A* replanning</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/navigation/04_online_replanning_astar.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/tiny_vla_loop.gif"
+                alt="A toy VLA loop parses a goal, reads visual tokens, fails, and retries."
+              >
+              <figcaption>
+                <h3>Tiny VLA loop</h3>
+                <p>language goal -> visual tokens -> skill retry</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/19_tiny_vla_loop.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/conformal_ask_for_help.gif"
+                alt="A sorter asks for help when the conformal prediction set is ambiguous."
+              >
+              <figcaption>
+                <h3>Conformal ask-for-help</h3>
+                <p>calibrate -> prediction set -> place or ask</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/manipulation/30_conformal_ask_for_help.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/empowerment_navigation.gif"
+                alt="A grid robot plans through high-empowerment cells."
+              >
+              <figcaption>
+                <h3>Empowerment navigation</h3>
+                <p>reachable successors -> shaped A* -> open route</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/32_empowerment_navigation.py">Open example</a>
+              </figcaption>
+            </figure>
+
+            <figure class="loop-card">
+              <img
+                src="assets/gifs/inverse_reward_from_demo.gif"
+                alt="A grid robot learns a reward from one demonstration and plans to a new goal."
+              >
+              <figcaption>
+                <h3>Inverse reward from demo</h3>
+                <p>demo features -> learned weights -> shaped planning</p>
+                <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/33_inverse_reward_from_demo.py">Open example</a>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="paths">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>Choose a path through the repo</h2>
+            <p>
+              The GitHub repo keeps the full example index, contributor guide,
+              trace contract, and bridge plans for ROS2 and simulators.
+            </p>
+          </div>
+          <div class="path-list">
+            <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics">Repository README</a>
+            <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/README.md">Complete example index</a>
+            <a href="learning_paths.md">Learning paths</a>
+            <a href="trace.md">Trace contract</a>
+            <a href="example_authoring.md">Example authoring guide</a>
+            <a href="public_launch.md">Public launch checklist</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="section-inner">
+        <span>PythonInteractiveRobotics uses MIT licensed source code.</span>
+        <div class="footer-links">
+          <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics">GitHub</a>
+          <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/issues">Issues</a>
+          <a href="https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/LICENSE">License</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
