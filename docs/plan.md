@@ -12,7 +12,7 @@ The repository currently has:
 - 20 numbered learning-path examples
 - 19 extra examples outside the original learning-path roadmap
 - 38 generated README GIFs
-- 109 smoke and regression tests
+- 111 smoke and regression tests
 - 5 Colab notebooks for browser-first demos
 - GitHub Actions CI for Python 3.10, 3.11, and 3.12
 - core dependencies limited to `numpy` and `matplotlib`

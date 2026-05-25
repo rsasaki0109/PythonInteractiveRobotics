@@ -57,7 +57,7 @@
 .sim-panel {
   display: grid;
   gap: 14px;
-  grid-template-rows: auto auto minmax(420px, 1fr);
+  grid-template-rows: auto auto auto minmax(420px, 1fr);
   padding: 16px;
 }
 
@@ -118,6 +118,13 @@ button:disabled {
   background: #d9ded9;
   color: #6f7975;
   cursor: default;
+}
+
+.copy-status {
+  color: var(--teal);
+  font-size: 0.88rem;
+  font-weight: 800;
+  min-height: 1.25rem;
 }
 
 .status-strip {

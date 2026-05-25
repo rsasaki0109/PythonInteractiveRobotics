@@ -51,12 +51,25 @@
                 <option value="blue">blue</option>
               </select>
             </label>
+            <label>
+              <span>Failure filter</span>
+              <select id="failureFilter">
+                <option value="all">all failures</option>
+                <option value="ambiguous_goal">ambiguous_goal</option>
+                <option value="unsafe_nominal_step">unsafe_nominal_step</option>
+                <option value="grasp_miss">grasp_miss</option>
+                <option value="human_correction">human_correction</option>
+              </select>
+            </label>
             <div class="button-row">
               <button id="resetButton" type="button">Reset</button>
               <button id="stepButton" type="button">Step</button>
               <button id="runButton" type="button">Run</button>
+              <button id="copyLinkButton" type="button">Copy link</button>
+              <button id="copyTraceButton" type="button">Copy trace</button>
             </div>
           </div>
+          <div id="copyStatus" class="copy-status" aria-live="polite"></div>
 
           <div class="status-strip" aria-label="Current simulation state">
             <div>
