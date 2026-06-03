@@ -22,6 +22,7 @@ OUT = ROOT / "docs" / "pyodide" / "pir_bundle.zip"
 # get a JS renderer (see docs/pyodide_playground_strategy.md).
 BUNDLED_EXAMPLES = [
     "examples/manipulation/01_pick_and_retry.py",
+    "examples/embodied_ai/35_clarifying_question.py",
 ]
 
 

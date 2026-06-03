@@ -45,6 +45,8 @@
     answer: document.getElementById("answerSelect"),
     failureFilter: document.getElementById("failureFilter"),
     compare: document.getElementById("compareToggle"),
+    realPython: document.getElementById("realPythonToggle"),
+    realStatus: document.getElementById("realStatus"),
     reset: document.getElementById("resetButton"),
     step: document.getElementById("stepButton"),
     run: document.getElementById("runButton"),
@@ -72,16 +74,13 @@
   let copyStatusTimer = null;
 
   elements.scenario.addEventListener("change", () => {
-    stopRun();
-    state = buildState();
-    updateLocation(false);
-    render();
+    if (elements.scenario.value !== "clarifying") {
+      elements.realPython.checked = false;
+    }
+    rebuild();
   });
   elements.answer.addEventListener("change", () => {
-    stopRun();
-    state = buildState();
-    updateLocation(false);
-    render();
+    rebuild();
   });
   elements.failureFilter.addEventListener("change", () => {
     updateLocation(false);
@@ -91,15 +90,15 @@
     updateLocation(false);
     render();
   });
+  elements.realPython.addEventListener("change", () => {
+    rebuild();
+  });
   elements.replay.addEventListener("input", () => {
     state.replayIndex = clampReplayIndex(elements.replay.value);
     render();
   });
   elements.reset.addEventListener("click", () => {
-    stopRun();
-    state = buildState();
-    updateLocation(false);
-    render();
+    rebuild();
   });
   elements.step.addEventListener("click", () => {
     stepOnce();
@@ -123,21 +122,125 @@
     window.setTimeout(startRun, 180);
   }
 
-  function buildState() {
+  function buildState(realConfig) {
     const scenario = elements.scenario.value;
     const answer = elements.answer.value;
-    const config =
-      scenario === "household"
-        ? buildHouseholdScenario(answer)
-        : buildClarifyingScenario(answer);
+    let config;
+    let source;
+    if (realConfig) {
+      config = realConfig;
+      source = "python";
+    } else {
+      config =
+        scenario === "household"
+          ? buildHouseholdScenario(answer)
+          : buildClarifyingScenario(answer);
+      source = "js";
+    }
     return {
       scenario,
       answer,
       config,
+      source,
       index: 0,
       trace: [],
       replayIndex: null,
     };
+  }
+
+  // Rebuild the playground state, honoring the "Run real Python" toggle. When the
+  // toggle is on (clarifying only), we lazily boot Pyodide and run the actual
+  // examples/embodied_ai/35_clarifying_question.py loop, then draw its real trace.
+  // Otherwise we use the instant JS preview so first paint never waits on Pyodide.
+  async function rebuild() {
+    stopRun();
+    const useReal =
+      elements.realPython.checked && elements.scenario.value === "clarifying";
+    if (useReal) {
+      setRealStatus("booting Pyodide + running real Python…");
+      try {
+        const config = await fetchRealClarifyingConfig(elements.answer.value);
+        state = buildState(config);
+        setRealStatus(
+          "running real Python: examples/embodied_ai/35_clarifying_question.py"
+        );
+      } catch (error) {
+        elements.realPython.checked = false;
+        state = buildState();
+        setRealStatus("Pyodide failed (" + error + ") — showing JS preview", true);
+      }
+    } else {
+      state = buildState();
+      setRealStatus("");
+    }
+    updateLocation(false);
+    render();
+  }
+
+  function setRealStatus(message, isError) {
+    if (!elements.realStatus) {
+      return;
+    }
+    elements.realStatus.textContent = message || "";
+    elements.realStatus.classList.toggle("real-error", Boolean(isError));
+  }
+
+  // --- Real Python in the browser (Pyodide), lazy-loaded on first use ---------
+  let pyodideReadyPromise = null;
+  const realConfigCache = {};
+
+  async function ensurePyodide() {
+    if (pyodideReadyPromise) {
+      return pyodideReadyPromise;
+    }
+    pyodideReadyPromise = (async () => {
+      // eslint-disable-next-line no-undef
+      const pyodide = await loadPyodide({
+        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/",
+      });
+      await pyodide.loadPackage("numpy");
+      const buffer = await (await fetch("./pyodide/pir_bundle.zip")).arrayBuffer();
+      await pyodide.unpackArchive(buffer, "zip");
+      return pyodide;
+    })();
+    return pyodideReadyPromise;
+  }
+
+  // Runs the unmodified example headless and serializes its Trace with the same
+  // pir.viz.playground_trace helper that tests/test_playground_trace.py pins.
+  // ANSWER is replaced with a JSON string literal before execution.
+  const CLARIFYING_DRIVER = [
+    "import json, os, sys, importlib.util",
+    "cwd = os.getcwd()",
+    "if cwd not in sys.path:",
+    "    sys.path.insert(0, cwd)",
+    "class _NoMatplotlib:",
+    "    def find_spec(self, name, path=None, target=None):",
+    "        if name == 'matplotlib' or name.startswith('matplotlib.'):",
+    "            raise ImportError('matplotlib is intentionally unavailable on the headless browser path')",
+    "        return None",
+    "sys.meta_path.insert(0, _NoMatplotlib())",
+    "path = os.path.join(cwd, 'examples', 'embodied_ai', '35_clarifying_question.py')",
+    "spec = importlib.util.spec_from_file_location('clarifying_question', path)",
+    "mod = importlib.util.module_from_spec(spec)",
+    "spec.loader.exec_module(mod)",
+    "from pir.viz.playground_trace import clarifying_trace_to_playground",
+    "answer = ANSWER",
+    "trace = mod.run(command='pick the block', answer=answer, render=False)",
+    "json.dumps(clarifying_trace_to_playground(trace, command='pick the block', answer=answer))",
+  ].join("\n");
+
+  async function fetchRealClarifyingConfig(answer) {
+    const cacheKey = "clarifying:" + answer;
+    if (realConfigCache[cacheKey]) {
+      return realConfigCache[cacheKey];
+    }
+    const pyodide = await ensurePyodide();
+    const code = CLARIFYING_DRIVER.replace("ANSWER", JSON.stringify(answer));
+    const json = await pyodide.runPythonAsync(code);
+    const config = JSON.parse(json);
+    realConfigCache[cacheKey] = config;
+    return config;
   }
 
   function stepOnce() {
@@ -626,6 +729,7 @@
     elements.run.disabled = state.index >= state.config.steps.length && !timer;
     elements.copyTrace.disabled = state.trace.length === 0;
     elements.compare.disabled = state.scenario !== "household";
+    elements.realPython.disabled = state.scenario !== "clarifying";
 
     renderReplay(replayIndex);
     renderCompare();

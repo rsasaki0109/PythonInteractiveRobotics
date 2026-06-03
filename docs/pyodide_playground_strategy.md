@@ -101,10 +101,33 @@ that `loadPyodide`/`unpackArchive`/`fetch` behave as expected. Open
 `docs/pyodide/poc.html` via a local server (e.g. `python3 -m http.server` from
 `docs/`) or on GitHub Pages and click “Run the real loop”.
 
-**Phase 1 — one real loop on the page (1–2 days).** Add a "Run real Python"
-toggle to the existing playground for `clarifying_question` (its renderer already
-exists). Python produces the trace; JS draws it; delete the JS dynamics for that
-scenario. This is the first honest "real Python in your browser" claim.
+**Phase 1 — one real loop on the page. ✅ built (Python path verified; needs a
+browser check).** The playground ([`docs/playground.html`](playground.html))
+has a **"Run real Python"** toggle for `clarifying_question`. When on, it lazily
+boots Pyodide, unpacks the bundle, and runs the **unmodified**
+`examples/embodied_ai/35_clarifying_question.py` `run(...)` headless; the real
+`Trace` is serialized by [`pir/viz/playground_trace.py`](../pir/viz/playground_trace.py)
+into the exact config the existing JS renderer consumes, and the page draws that.
+The JS preview stays the default first paint (Pyodide is loaded only on toggle),
+so the instant experience is preserved.
+
+The trace→render JSON is now a **pinned contract**:
+[`tests/test_playground_trace.py`](../tests/test_playground_trace.py) runs the
+real loop, serializes it, and asserts every field the renderer reads is present
+and plain-JSON (no numpy leaks) — exactly the drift guard the risk list calls for.
+
+Verified locally (CPython simulating Pyodide's unpack-into-cwd, the exact driver
+from `playground.js`): for `answer=red` the serializer returns the real
+`ask → look → pick` trace (`ambiguous_goal` then resolved belief, pick at
+`[32, 56]`), identical to the CLI loop. **Still to confirm in a real browser:**
+toggling "Run real Python" boots Pyodide, runs the loop, and the scene/belief/
+timeline redraw from the real trace.
+
+Deliberately **deferred** (not yet done): deleting the JS `buildClarifyingScenario`
+dynamics. It is kept as the no-Pyodide instant fallback so first paint never waits
+on a multi-MB download. Full deletion waits until the real path is the verified
+default — at which point the JS mock can be dropped and the contract test becomes
+the single source of truth.
 
 **Phase 2 — tabletop renderer + hero loop (1–2 days).** Add the continuous
 tabletop renderer and wire `pick_and_retry`. Now the README hero GIF has a
