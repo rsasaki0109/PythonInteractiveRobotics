@@ -152,3 +152,137 @@ def clarifying_trace_to_playground(
         "initial": _initial_snapshot(command),
         "steps": steps,
     }
+
+
+# --- pick_and_retry (continuous tabletop) -----------------------------------
+#
+# This loop has no red/blue distribution; its "belief" is a 2D position estimate
+# (mean + shrinking radius) that the JS renderer draws spatially. Scene geometry
+# (true object, occluder, initial camera) is ground truth the agent never sees,
+# so the caller passes it in from the real Tabletop2D rather than this module
+# hard-coding world constants. Everything emitted here is plain JSON.
+
+
+def _xy(point: Any) -> list[float]:
+    return [round(float(point[0]) * _SVG_SCALE, 4), round(float(point[1]) * _SVG_SCALE, 4)]
+
+
+def _pick_and_retry_state(info: dict[str, Any], has_belief: bool) -> str:
+    if info.get("success"):
+        return "done"
+    if _failure_kind(info) == "grasp_miss":
+        return "update_belief_and_retry"
+    if (info.get("action_type") or "") == "look":
+        return "scan_for_object"
+    return info.get("action_type") or "noop"
+
+
+def _pick_and_retry_policy(info: dict[str, Any], has_belief: bool) -> str:
+    if info.get("success"):
+        return "done"
+    if not has_belief:
+        return "scan"
+    if _failure_kind(info) == "grasp_miss":
+        return "retry"
+    return "act"
+
+
+def pick_and_retry_trace_to_playground(
+    trace: Any,
+    *,
+    object_xy: Any,
+    occluder: Any,
+    camera: Any,
+    command: str = "pick the block",
+) -> dict[str, Any]:
+    """Convert a pick_and_retry `Trace` into the playground's tabletop2d config.
+
+    ``object_xy`` / ``occluder`` / ``camera`` are the real Tabletop2D geometry in
+    table coordinates (0..1); they are scaled to the renderer's 0..100 canvas.
+    """
+
+    obj = _xy(object_xy)
+    occ = [round(float(v) * _SVG_SCALE, 4) for v in occluder]
+    cam0 = _xy(camera)
+
+    initial = {
+        "type": "tabletop2d",
+        "command": command,
+        "target": "block",
+        "agentState": "scan_for_object",
+        "failure": "none",
+        "object": obj,
+        "occluder": occ,
+        "camera": cam0,
+        "detection": None,
+        "pickAt": None,
+        "holding": False,
+        "belief": {"meanXY": None, "radius": None, "attempts": 0, "retries": 0, "policy": "scan"},
+    }
+
+    steps: list[dict[str, Any]] = []
+    last_detection: list[float] | None = None
+    for action, reward, info, obs in zip(
+        trace.actions, trace.rewards, trace.infos, trace.observations
+    ):
+        detections = obs.get("detections") or []
+        if detections:
+            last_detection = _xy(detections[0]["position"])
+
+        belief_mean = info.get("belief_mean")
+        mean_xy = None if belief_mean is None else _xy(belief_mean)
+        belief_radius = info.get("belief_radius")
+        radius_svg = (
+            None if belief_radius is None else round(float(belief_radius) * _SVG_SCALE, 3)
+        )
+        pick_position = info.get("pick_position")
+        pick_at = None if pick_position is None else _xy(pick_position)
+        holding = bool((obs.get("gripper") or {}).get("holding")) or bool(info.get("success"))
+        attempts = int(info.get("attempts", 0))
+        retries = int(info.get("retry_count", 0))
+        failure = _failure_kind(info)
+        action_type = info.get("action_type") or action.get("type", "noop")
+
+        if action_type == "look":
+            label = "look(scan)"
+        elif action_type == "pick":
+            label = f"pick(attempt {attempts})"
+        else:
+            label = action_type
+
+        snapshot = {
+            "type": "tabletop2d",
+            "command": command,
+            "target": "held" if holding else "block",
+            "agentState": _pick_and_retry_state(info, mean_xy is not None),
+            "failure": failure or "none",
+            "object": obj,
+            "occluder": occ,
+            "camera": _xy(obs["camera"]) if obs.get("camera") is not None else cam0,
+            "detection": None if holding else last_detection,
+            "pickAt": pick_at,
+            "holding": holding,
+            "belief": {
+                "meanXY": mean_xy,
+                "radius": radius_svg,
+                "attempts": attempts,
+                "retries": retries,
+                "policy": _pick_and_retry_policy(info, mean_xy is not None),
+            },
+        }
+        steps.append(
+            {
+                "action": label,
+                "reward": round(float(reward), 4),
+                "failure": failure,
+                "agentState": snapshot["agentState"],
+                "snapshot": snapshot,
+            }
+        )
+
+    return {
+        "command": command,
+        "totalSteps": len(steps),
+        "initial": initial,
+        "steps": steps,
+    }
