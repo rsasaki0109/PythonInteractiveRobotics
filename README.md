@@ -5,27 +5,42 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![Core dependencies](https://img.shields.io/badge/core-numpy%20%2B%20matplotlib-orange)
 
-**Robots observe, act, fail, retry, update beliefs, and replan.**
-This repo shows that loop in small, readable Python — no ROS, no GPU, no
-simulator. Just `numpy + matplotlib`.
+### A tiny robot failure lab
 
-[Open the example gallery](https://rsasaki0109.github.io/PythonInteractiveRobotics/),
-[try the live playground](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html), or open a
-[shareable live trace](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1),
-or jump straight into the first runnable loop below. You can also run the
-flagship loops directly in Colab:
-[pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
-[safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb), and
-[human correction replanning](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb).
-For language ambiguity, try
-[clarifying question](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb), or run the integrated
-[household task agent](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb).
-If the project helps you teach, prototype, or explain robotics loops, a GitHub
-star helps others find it.
+**Robotics tutorials often assume actions succeed. This repo teaches what
+happens when they do not.**
 
-| Avoiding | Reaching under occlusion | Mapping while uncertain |
-| --- | --- | --- |
-| ![A point robot's naive go-to-goal velocity is projected onto a CBF safe set at every step. The policy itself never knows the obstacles exist - a separate runtime safety filter slides it around them.](docs/assets/gifs/safety_filter_cbf.gif) | ![A 2-link arm predicts a briefly occluded moving target, keeps servoing through the occlusion, and reaches the intercept point when the target reappears.](docs/assets/gifs/moving_target_reaching.gif) | ![A toy active-SLAM agent shrinks pose belief and occupancy belief at the same time, by picking moves that maximize expected entropy drop.](docs/assets/gifs/active_slam_toy.gif) |
+Watch a robot miss a grasp, update its belief, and recover — in pure Python.
+No ROS. No GPU. No simulator. Just `numpy + matplotlib`.
+
+![Side by side on the same tabletop task. Left, a naive picker locks onto its first guess and keeps grabbing the same empty spot until it gives up after eight misses. Right, a failure-aware agent looks from a better viewpoint, updates its belief about where the object is, and recovers the grasp in three tries.](docs/assets/gifs/naive_vs_failure_aware.gif)
+
+*Same task, same seed. Left: a naive picker that never updates its guess keeps
+missing and gives up. Right: the failure-aware agent looks, updates its belief,
+and recovers. That gap is the whole repo.*
+
+[▶ Run in your browser](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1)
+ · [Start with `01_pick_and_retry.py`](#try-it)
+ · [Take the 10-lesson tour](lessons/README.md)
+ · [Browse all loops](https://rsasaki0109.github.io/PythonInteractiveRobotics/)
+
+The whole repo is one loop, written out small enough to read:
+
+```python
+obs = env.reset(seed=0)
+agent.reset()
+
+for t in range(max_steps):
+    action = agent.act(obs)              # think
+    obs, reward, done, info = env.step(action)   # act
+    agent.update(obs, reward, info)      # observe failure, update belief
+    if done:
+        break                            # ...else replan and retry
+```
+
+`info["failure"]` is a first-class part of that loop — grasp misses, occlusion,
+localization drift, blocked paths. The interesting behaviour is what the robot
+does *after* it fails.
 
 ## Try it
 
@@ -39,23 +54,26 @@ python3 examples/manipulation/01_pick_and_retry.py
 A tiny tabletop robot misses a grasp, updates its belief, and retries — in
 under 5 seconds. Core dependencies are `numpy` and `matplotlib` only.
 
-For an even smaller first loop:
-
-```bash
-python3 examples/runtime/01_sense_act_loop.py
-```
-
-## Start Here
+## Three loops to start with
 
 | If you want to see | Run | What it teaches |
 | --- | --- | --- |
 | Failure recovery | `python3 examples/manipulation/01_pick_and_retry.py` | grasp miss -> belief update -> retry |
-| Runtime safety | `python3 examples/navigation/29_safety_filter_cbf.py` | nominal controller -> CBF projection -> safe motion |
-| Active perception | `python3 examples/navigation/07_active_slam_toy.py` | map and pose uncertainty -> information-seeking action |
-| Shareable live trace | [Try live](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1) | belief entropy, compare mode, and failure timeline |
-| Human correction | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb) | shortcut -> human correction -> cost update -> replan |
-| Language ambiguity | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb) | ambiguous command -> ask question -> answer -> act |
-| Integrated household task | [Open in Colab](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb) | clarify -> plan -> safety check -> retry -> human replan |
+| Online replanning | `python3 examples/navigation/04_online_replanning_astar.py` | plan -> hit a hidden wall -> replan |
+| Asking for help | `python3 examples/embodied_ai/35_clarifying_question.py "pick the block" --answer red` | ambiguous command -> ask -> act |
+
+Prefer the browser? Try the [live playground](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html)
+(belief entropy, compare mode, failure timeline) — every run is a
+[Shareable live trace](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1)
+you can link to — or open the flagship loops in Colab:
+[pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
+[safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb),
+[human correction replanning](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/human_correction_replanning.ipynb),
+[clarifying question](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/clarifying_question.ipynb), or the integrated
+[household task agent](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb).
+
+If the project helps you teach, prototype, or explain robotics loops, a GitHub
+star helps others find it.
 
 ## Status
 
@@ -202,24 +220,10 @@ python scripts/run_all_smoke_tests.py --gifs --check-gifs
 
 CI runs the same smoke suite and GIF checks on Python 3.10, 3.11, and 3.12.
 
-## Core idea
+## Inspecting a run
 
-```python
-obs = env.reset(seed=0)
-agent.reset()
-
-for t in range(max_steps):
-    action = agent.act(obs)
-    obs, reward, done, info = env.step(action)
-    agent.update(obs, reward, info)
-    env.render()
-
-    if done:
-        break
-```
-
-The goal is not photorealism.
-The goal is to understand the perception-action loop.
+The goal is not photorealism. It is to understand the perception-action loop
+shown at the top of this README — and to see the internal state that drives it.
 
 Every example returns a `Trace`, so headless runs can be inspected without
 rendering. See `docs/trace.md` for the full trace contract.
