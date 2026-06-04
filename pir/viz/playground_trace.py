@@ -286,3 +286,46 @@ def pick_and_retry_trace_to_playground(
         "initial": initial,
         "steps": steps,
     }
+
+
+# --- "Beat the robot" challenge scoring -------------------------------------
+#
+# An agent is scored across many seeds, not one, so a policy that overfits a
+# single lucky seed (e.g. dropping the retry schedule to grab the belief mean
+# immediately) is exposed by a low success rate. This is the whole lesson: the
+# retry/belief logic exists for robustness, not for one episode.
+
+
+def score_pick_and_retry(run_agent: Any, agent_factory: Any, *, seeds: Any) -> dict[str, Any]:
+    """Run ``agent_factory()`` over ``seeds`` and aggregate the trace summaries.
+
+    ``run_agent`` is the example's own loop (passed in to keep this module
+    decoupled from examples/); ``agent_factory`` is called once per seed for a
+    fresh agent. Returns plain-JSON aggregate stats.
+    """
+
+    seeds = list(seeds)
+    successes = 0
+    steps_total = 0.0
+    retries_total = 0.0
+    reward_total = 0.0
+    miss_total = 0.0
+    for seed in seeds:
+        summary = run_agent(agent_factory(), seed=seed, render=False).summary()
+        if summary.success:
+            successes += 1
+        steps_total += summary.steps
+        retries_total += int(summary.counters.get("retry_count", 0) or 0)
+        reward_total += summary.total_reward
+        miss_total += summary.failure_counts.get("grasp_miss", 0)
+
+    n = len(seeds) or 1
+    return {
+        "episodes": len(seeds),
+        "successes": successes,
+        "success_rate": round(successes / n, 4),
+        "mean_steps": round(steps_total / n, 3),
+        "mean_retries": round(retries_total / n, 3),
+        "mean_reward": round(reward_total / n, 3),
+        "mean_grasp_miss": round(miss_total / n, 3),
+    }

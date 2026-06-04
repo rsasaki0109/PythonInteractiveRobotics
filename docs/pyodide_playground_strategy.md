@@ -183,6 +183,17 @@ All three phases are built and Python-verified; the remaining work is a single
 browser pass over Phases 0–3 and (optionally) deleting the JS `clarifying`
 preview once the real path is the trusted default.
 
+**Bonus — "beat the robot" challenge. ✅ built (Python path verified).** A
+**Score 10 seeds** button scores the edited agent against the shipped one across
+10 seeds and shows a baseline-vs-you scoreboard (success rate, reward, steps,
+retries, grasp misses) with a win/lose verdict. Scoring across *many* seeds is
+deliberate: a single-seed score rewards overfitting (drop the retry schedule and
+seed 3 solves in 2 steps), but robustness across seeds does not — an agent that
+ignores its belief drops to a 0% success rate. `score_pick_and_retry` (pinned by
+`tests/test_playground_trace.py`) does the aggregation; verified locally the
+shipped agent scores 100% / reward 0.65 while a belief-ignoring agent scores 0% /
+reward -1.2.
+
 ## Risks / watch-list
 
 - **First-load latency.** Pyodide core is a few MB. Lazy-load it only when the
