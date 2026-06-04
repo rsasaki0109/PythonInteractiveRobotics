@@ -30,6 +30,7 @@ Run any example headless with its `--no-render` flag when available.
 | `navigation/29_safety_filter_cbf.py` | `python examples/navigation/29_safety_filter_cbf.py` | nominal u -> CBF projection -> safe u |
 | `navigation/31_options_with_interrupts.py` | `python examples/navigation/31_options_with_interrupts.py` | option β / interrupt -> dock_and_charge -> resume go_to_goal |
 | `navigation/34_human_correction_replanning.py` | `python examples/navigation/34_human_correction_replanning.py` | plan shortcut -> human correction -> cost update -> replan |
+| `navigation/38_monte_carlo_localization.py` | `python examples/navigation/38_monte_carlo_localization.py` | particle filter -> kidnapped -> inject particles -> recover |
 
 ## Manipulation
 
