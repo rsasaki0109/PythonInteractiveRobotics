@@ -138,6 +138,17 @@ button:disabled {
   min-height: 1.25rem;
 }
 
+.real-status {
+  color: var(--ink-soft, #5a6b67);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  min-height: 1.1rem;
+}
+
+.real-status.real-error {
+  color: #b5482f;
+}
+
 .status-strip {
   display: grid;
   gap: 10px;

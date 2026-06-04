@@ -1,0 +1,100 @@
+"""Pin the trace-to-playground JSON contract shared by Python and JS.
+
+docs/playground.js reads a fixed set of fields off each snapshot. If the Python
+serializer (pir/viz/playground_trace.py) stops emitting one of them, the browser
+would silently render a blank/garbled scene. These tests run the real clarifying
+loop, serialize it, and assert the renderer's contract holds — including that the
+output is plain JSON (no numpy leaks that would break json.dumps in Pyodide).
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+
+from pir.viz.playground_trace import clarifying_trace_to_playground
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# Fields docs/playground.js reads off a tabletop snapshot (renderTabletop +
+# renderBelief + the status strip). Keep in sync with the renderer.
+SNAPSHOT_FIELDS = {
+    "type",
+    "command",
+    "target",
+    "agentState",
+    "failure",
+    "belief",
+    "picked",
+    "pickAt",
+    "focus",
+    "question",
+    "answer",
+}
+BELIEF_FIELDS = {"red", "blue", "entropy", "askGain", "policy"}
+STEP_FIELDS = {"action", "reward", "failure", "agentState", "snapshot"}
+
+
+def _run(answer: str):
+    path = ROOT / "examples" / "embodied_ai" / "35_clarifying_question.py"
+    spec = importlib.util.spec_from_file_location("clarifying_question_contract", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.run(command="pick the block", answer=answer, render=False)
+
+
+def test_config_shape_matches_renderer_contract() -> None:
+    config = clarifying_trace_to_playground(_run("red"), answer="red")
+
+    assert config["command"] == "pick the block"
+    assert config["totalSteps"] == len(config["steps"]) == 3
+
+    initial = config["initial"]
+    assert set(initial) == SNAPSHOT_FIELDS
+    assert initial["type"] == "tabletop"
+    assert initial["target"] == "unresolved"
+    assert initial["belief"]["policy"] == "ask"
+    assert abs(initial["belief"]["entropy"] - 1.0) < 1e-9
+
+    for step in config["steps"]:
+        assert set(step) == STEP_FIELDS
+        snapshot = step["snapshot"]
+        assert set(snapshot) == SNAPSHOT_FIELDS
+        assert set(snapshot["belief"]) == BELIEF_FIELDS
+
+
+def test_real_loop_resolves_and_picks_red() -> None:
+    config = clarifying_trace_to_playground(_run("red"), answer="red")
+    steps = config["steps"]
+
+    # ask -> look -> pick, the real loop's three steps.
+    assert [step["action"] for step in steps] == [
+        "ask(which_block)",
+        "look(red)",
+        "pick(red)",
+    ]
+    assert steps[0]["failure"] == "ambiguous_goal"
+    assert steps[0]["snapshot"]["target"] == "red"
+    assert steps[0]["snapshot"]["belief"]["policy"] == "act"
+
+    final = steps[-1]
+    assert final["agentState"] == "done"
+    assert final["snapshot"]["picked"] == "red"
+    assert final["snapshot"]["pickAt"] == [32.0, 56.0]
+
+
+def test_answer_blue_resolves_blue() -> None:
+    config = clarifying_trace_to_playground(_run("blue"), answer="blue")
+    final = config["steps"][-1]
+    assert final["action"] == "pick(blue)"
+    assert final["snapshot"]["picked"] == "blue"
+    assert final["snapshot"]["pickAt"] == [68.0, 56.0]
+
+
+def test_config_is_plain_json() -> None:
+    # Pyodide returns this via json.dumps; a stray numpy array would raise here.
+    config = clarifying_trace_to_playground(_run("red"), answer="red")
+    reparsed = json.loads(json.dumps(config))
+    assert reparsed == config

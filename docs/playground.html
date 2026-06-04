@@ -65,6 +65,10 @@
               <span>Compare</span>
               <input id="compareToggle" type="checkbox">
             </label>
+            <label class="toggle-label">
+              <span>Run real Python</span>
+              <input id="realPythonToggle" type="checkbox">
+            </label>
             <div class="button-row">
               <button id="resetButton" type="button">Reset</button>
               <button id="stepButton" type="button">Step</button>
@@ -74,6 +78,7 @@
             </div>
           </div>
           <div id="copyStatus" class="copy-status" aria-live="polite"></div>
+          <div id="realStatus" class="real-status" aria-live="polite"></div>
 
           <div class="status-strip" aria-label="Current simulation state">
             <div>
@@ -129,6 +134,7 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
     <script src="playground.js"></script>
   </body>
 </html>
