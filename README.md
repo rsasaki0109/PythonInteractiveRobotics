@@ -13,7 +13,11 @@ happens when they do not.**
 Watch a robot miss a grasp, update its belief, and recover — in pure Python.
 No ROS. No GPU. No simulator. Just `numpy + matplotlib`.
 
-![A tabletop robot misses a grasp, updates its belief over where the object is, and retries until it succeeds.](docs/assets/gifs/pick_and_retry.gif)
+![Side by side on the same tabletop task. Left, a naive picker locks onto its first guess and keeps grabbing the same empty spot until it gives up after eight misses. Right, a failure-aware agent looks from a better viewpoint, updates its belief about where the object is, and recovers the grasp in three tries.](docs/assets/gifs/naive_vs_failure_aware.gif)
+
+*Same task, same seed. Left: a naive picker that never updates its guess keeps
+missing and gives up. Right: the failure-aware agent looks, updates its belief,
+and recovers. That gap is the whole repo.*
 
 [▶ Run in your browser](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html?scenario=household&answer=red&compare=1&autoplay=1)
  · [Start with `01_pick_and_retry.py`](#try-it)
