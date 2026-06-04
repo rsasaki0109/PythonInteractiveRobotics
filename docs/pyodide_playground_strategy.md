@@ -80,10 +80,26 @@ Two render families cover all five: **grid** (already drawn today) and
 
 ## Phased plan
 
-**Phase 0 — proof of concept (½ day).** A standalone `docs/pyodide_poc.html`
-that loads Pyodide, installs numpy, fetches `pir` + `pick_and_retry.py`, runs
-`run(seed=0, render=False)`, and `console.log`s `trace.summary()`. Goal: confirm
-load time and that the real loop runs unmodified. Decide packaging (1) vs (2).
+**Phase 0 — proof of concept. ✅ built (Python path verified; needs a browser
+check).** [`docs/pyodide/poc.html`](pyodide/poc.html) loads Pyodide, loads numpy,
+unpacks [`docs/pyodide/pir_bundle.zip`](pyodide/) (built by
+[`scripts/build_pyodide_bundle.py`](../scripts/build_pyodide_bundle.py) — the
+pure-Python `pir` package + `01_pick_and_retry.py`, ~24 KB), runs the
+**unmodified** `run(seed, render=False)`, and prints `Trace.summary()` with
+timings. It blocks `matplotlib` so the headless path can never silently pull it.
+
+Packaging decision: went with a **zip + `unpackArchive`** (option close to (1)),
+not micropip — it avoids resolving the declared matplotlib dependency and keeps
+the download tiny. `tests/test_pyodide_bundle.py` pins the zip to the source so
+it cannot drift, and `pages.yml` rebuilds it on deploy.
+
+Verified locally (CPython simulating Pyodide's unpack-into-cwd, exact driver from
+the HTML): `{"steps": 4, "success": true, "failure_counts": {"grasp_miss": 2},
+"total_reward": 0.69}` — identical to `python3 .../01_pick_and_retry.py
+--no-render`. **Still to confirm in a real browser:** Pyodide first-load time and
+that `loadPyodide`/`unpackArchive`/`fetch` behave as expected. Open
+`docs/pyodide/poc.html` via a local server (e.g. `python3 -m http.server` from
+`docs/`) or on GitHub Pages and click “Run the real loop”.
 
 **Phase 1 — one real loop on the page (1–2 days).** Add a "Run real Python"
 toggle to the existing playground for `clarifying_question` (its renderer already
