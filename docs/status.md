@@ -5,10 +5,10 @@ see what exists, what is verified, and what should come next.
 
 ## Snapshot
 
-- Runnable examples: 43
+- Runnable examples: 44
 - Learning-path roadmap examples: 20
 - README GIFs: 38
-- Smoke and regression tests: 120 (107 example/adapter/static + 13 planning)
+- Smoke and regression tests: 122 (109 example/adapter/static + 13 planning)
 - Colab notebooks: 5
 - Core dependencies: `numpy`, `matplotlib`
 - Contributor extra: `pip install -e ".[dev]"`

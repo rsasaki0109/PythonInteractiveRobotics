@@ -699,3 +699,45 @@ attractive + repulsive force -> step -> no net progress ? boundary-follow : desc
 - Move the obstacle off the start–goal line and watch the trap weaken.
 - Add a second obstacle to build a concave pocket and a deeper minimum.
 - Raise `k_rep` and watch the stagnation point sit further from the obstacle.
+
+## `41_rrt_replanning.py`
+
+### What this teaches
+
+A Rapidly-exploring Random Tree (LaValle, 1998) plans in continuous space by
+growing a tree from the start — sample a point, extend the nearest node a short
+step toward it, keep collision-free edges — until it reaches the goal. It is the
+sampling-based counterpart to the grid A* in `04_online_replanning_astar.py`.
+This runs the online-replanning loop in continuous space: the robot plans with
+the obstacles it knows, follows the path, and when it senses a hidden obstacle
+that blocks the remaining route the world reports `path_blocked`, the agent
+replans an RRT from its current position, and it continues. Plan, discover,
+replan, arrive. (RRT is randomized, so the first tree occasionally routes around
+the hidden disc and no replan is needed; the robot reaches the goal either way.)
+
+### Run
+
+```bash
+python examples/navigation/41_rrt_replanning.py
+```
+
+### Key loop
+
+```text
+RRT plan -> follow path -> sense obstacle on the route ? replan : advance -> goal
+```
+
+### Simplifications
+
+- continuous 2D point robot; circular obstacles; segment–disc collision checks
+- one obstacle is hidden until the robot is within `sensor_range` of it
+- a path is "blocked" if any remaining segment intersects a sensed disc
+- the RRT returns the first path found (not shortest); no smoothing or RRT\*
+
+### Things to try
+
+- Change the seed and watch the tree, the path, and the replan count change.
+- Enlarge `hidden` until every seed must replan; shrink it until none do.
+- Lower `sensor_range` so the robot discovers the obstacle later (and replans
+  with less room).
+- Swap in `plan_rrt` goal-bias or step size and watch path quality change.

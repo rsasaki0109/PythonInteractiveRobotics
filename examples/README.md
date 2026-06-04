@@ -32,6 +32,7 @@ Run any example headless with its `--no-render` flag when available.
 | `navigation/34_human_correction_replanning.py` | `python examples/navigation/34_human_correction_replanning.py` | plan shortcut -> human correction -> cost update -> replan |
 | `navigation/38_monte_carlo_localization.py` | `python examples/navigation/38_monte_carlo_localization.py` | particle filter -> kidnapped -> inject particles -> recover |
 | `navigation/40_potential_field_escape.py` | `python examples/navigation/40_potential_field_escape.py` | gradient descent -> local minimum -> boundary follow -> goal |
+| `navigation/41_rrt_replanning.py` | `python examples/navigation/41_rrt_replanning.py` | RRT plan -> sense hidden obstacle -> path blocked -> replan |
 
 ## Manipulation
 
