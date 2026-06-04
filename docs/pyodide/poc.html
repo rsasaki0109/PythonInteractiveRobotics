@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pyodide PoC — real pick_and_retry loop in the browser</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1b1b1b; }
+  h1 { font-size: 1.4rem; }
+  p.lede { color: #444; }
+  button { font-size: 1rem; padding: 0.5rem 1rem; border: 1px solid #888; border-radius: 6px; background: #f6f6f6; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { white-space: pre-wrap; background: #0f1419; color: #d6deeb; padding: 1rem; border-radius: 8px; margin-top: 1rem; font-family: ui-monospace, monospace; font-size: 0.85rem; min-height: 6rem; }
+  .ok { color: #9ece6a; }
+  .err { color: #f7768e; }
+  .dim { color: #7a88a0; }
+  code { background: #eee; padding: 0 0.25rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>Proof of concept: the real Python loop, in your browser</h1>
+<p class="lede">
+  This page loads <a href="https://pyodide.org">Pyodide</a> (CPython + NumPy in
+  WebAssembly), unpacks the actual <code>pir</code> package, and runs the
+  <strong>unmodified</strong>
+  <code>examples/manipulation/01_pick_and_retry.py</code> loop headless — no
+  install, no server, no matplotlib. It prints the resulting
+  <code>Trace.summary()</code>. This is Phase&nbsp;0 from
+  <code>docs/pyodide_playground_strategy.md</code>: confirm the real loop runs in
+  the browser and measure load time before wiring it into the playground UI.
+</p>
+
+<button id="run">Run the real loop</button>
+<label style="margin-left:1rem;">seed
+  <input id="seed" type="number" value="3" style="width:4rem;" />
+</label>
+
+<div id="log" class="dim">Click “Run the real loop”. First run downloads Pyodide (~a few MB); later runs are cached.</div>
+
+<script>
+const logEl = document.getElementById("log");
+const runBtn = document.getElementById("run");
+const seedEl = document.getElementById("seed");
+let pyodideReadyPromise = null;
+
+function log(msg, cls) {
+  const span = document.createElement("span");
+  if (cls) span.className = cls;
+  span.textContent = msg + "\n";
+  logEl.appendChild(span);
+}
+function clearLog() { logEl.textContent = ""; logEl.className = ""; }
+const now = () => performance.now();
+const ms = (t) => `${(now() - t).toFixed(0)} ms`;
+
+async function ensurePyodide() {
+  if (pyodideReadyPromise) return pyodideReadyPromise;
+  pyodideReadyPromise = (async () => {
+    const t = now();
+    log("loading Pyodide runtime…", "dim");
+    // eslint-disable-next-line no-undef
+    const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/" });
+    log(`  Pyodide ready (${ms(t)})`, "ok");
+
+    const tn = now();
+    log("loading numpy…", "dim");
+    await pyodide.loadPackage("numpy");
+    log(`  numpy ready (${ms(tn)})`, "ok");
+
+    const tz = now();
+    log("fetching + unpacking pir_bundle.zip…", "dim");
+    const buf = await (await fetch("./pir_bundle.zip")).arrayBuffer();
+    await pyodide.unpackArchive(buf, "zip");
+    log(`  bundle unpacked (${ms(tz)})`, "ok");
+
+    return pyodide;
+  })();
+  return pyodideReadyPromise;
+}
+
+const DRIVER = `
+import json, os, sys, time, importlib.util
+
+# unpackArchive extracts relative to the current working directory.
+cwd = os.getcwd()
+if cwd not in sys.path:
+    sys.path.insert(0, cwd)
+
+# Prove the browser path is matplotlib-free: block it so an accidental import
+# fails loudly instead of silently dragging in a multi-MB package.
+class _NoMatplotlib:
+    def find_spec(self, name, path=None, target=None):
+        if name == "matplotlib" or name.startswith("matplotlib."):
+            raise ImportError("matplotlib is intentionally unavailable on the headless browser path")
+        return None
+sys.meta_path.insert(0, _NoMatplotlib())
+
+path = os.path.join(cwd, "examples", "manipulation", "01_pick_and_retry.py")
+spec = importlib.util.spec_from_file_location("pick_and_retry", path)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+t0 = time.perf_counter()
+trace = mod.run(seed=SEED, render=False)
+elapsed_ms = (time.perf_counter() - t0) * 1000.0
+
+s = trace.summary()
+result = {
+    "steps": s.steps,
+    "success": bool(s.success),
+    "failure_counts": dict(s.failure_counts),
+    "total_reward": round(sum(trace.rewards), 3),
+    "elapsed_ms": round(elapsed_ms, 1),
+}
+json.dumps(result)
+`;
+
+async function run() {
+  runBtn.disabled = true;
+  clearLog();
+  try {
+    const pyodide = await ensurePyodide();
+    const seed = parseInt(seedEl.value, 10) || 0;
+    const tr = now();
+    log(`running pick_and_retry.run(seed=${seed}, render=False)…`, "dim");
+    const code = DRIVER.replace("SEED", String(seed));
+    const out = JSON.parse(await pyodide.runPythonAsync(code));
+    log(`  loop finished (${ms(tr)})`, "ok");
+    log("");
+    log("Trace.summary():", "ok");
+    log(`  steps          = ${out.steps}`);
+    log(`  success        = ${out.success}`);
+    log(`  failure_counts = ${JSON.stringify(out.failure_counts)}`);
+    log(`  total_reward   = ${out.total_reward}`);
+    log(`  (pure loop compute: ${out.elapsed_ms} ms)`, "dim");
+    log("");
+    log("This is the same numbers `python3 examples/manipulation/01_pick_and_retry.py --no-render` prints locally.", "dim");
+  } catch (e) {
+    log("ERROR: " + e, "err");
+    console.error(e);
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+runBtn.addEventListener("click", run);
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+</body>
+</html>
