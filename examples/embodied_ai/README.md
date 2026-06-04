@@ -482,3 +482,47 @@ follow shaped path -> compare scenic visits across demo, baseline, learned
   collapses to the baseline path.
 - Provide a second demo trajectory and average the two feature
   expectations before subtracting the uniform baseline.
+
+## `39_saycan_affordance_grounding.py`
+
+### What this teaches
+
+A language model is a good planner and a bad robot: asked to "wipe the table" it
+proposes *pick up the sponge* without knowing whether the robot is near the
+sponge. SayCan (Ahn et al., 2022) grounds it by scoring every skill twice —
+`p_LLM(skill furthers the instruction) * p_affordance(skill works now)` — and
+taking the argmax. The product is high only for a skill that is both relevant and
+executable, so the greedy choice walks out a feasible plan with no separate
+planner. Run with `--no-ground` to drop the affordance term and watch the raw LLM
+argmax command an unexecutable skill until it times out.
+
+### Run
+
+```bash
+python examples/embodied_ai/39_saycan_affordance_grounding.py
+python examples/embodied_ai/39_saycan_affordance_grounding.py --no-ground   # language only
+```
+
+### Key loop
+
+```text
+LLM score x affordance -> argmax feasible skill -> execute -> slip ? retry : advance -> goal
+```
+
+### Simplifications
+
+- a tiny two-location kitchen and five discrete skills
+- the "LLM" is a transparent hand-written scorer conditioned on the running facts
+  (held / clean), standing in for a history-conditioned language-model call
+- affordance is the skill's base success rate when its precondition holds, near
+  zero when it does not
+- skills are stochastic (an afforded pick or wipe can slip and is retried)
+
+### Things to try
+
+- Toggle `--no-ground` and compare: grounding turns the same LLM scores from an
+  `affordance_violation` loop into an executable plan.
+- Lower a skill's `base_success` and watch `skill_slip` retries grow.
+- Start the robot at the sponge (`KitchenState(location="sponge")`) and watch the
+  first grounded skill change.
+- Add a second tool whose skill the LLM ranks highly but that is never afforded.
