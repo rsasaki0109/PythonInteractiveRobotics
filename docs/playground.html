@@ -113,6 +113,17 @@
           <div id="comparePanel" class="compare-panel" aria-label="Policy comparison" hidden></div>
 
           <div id="scene" class="scene" role="img" aria-label="Current playground scene"></div>
+
+          <section id="codePanel" class="code-panel" aria-label="Editable agent" hidden>
+            <div class="code-head">
+              <span>Agent brain — edit <code>act()</code> / <code>offset_schedule</code>, then re-run the real loop in your browser</span>
+              <div class="code-actions">
+                <button id="resetCodeButton" type="button">Reset code</button>
+                <button id="runCodeButton" type="button">Run edited agent</button>
+              </div>
+            </div>
+            <textarea id="codeCell" class="code-cell" spellcheck="false" rows="20" aria-label="Agent source code"></textarea>
+          </section>
         </div>
 
         <aside class="trace-panel" aria-labelledby="trace-title">

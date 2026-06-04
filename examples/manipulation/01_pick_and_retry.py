@@ -93,9 +93,19 @@ class PickAndRetryAgent:
         self.belief_radius = max(0.035, self.belief_radius * 0.72)
 
 
-def run(seed: int = 3, render: bool = True, max_steps: int = 40) -> Trace:
+def run_agent(
+    agent: Any, *, seed: int = 3, render: bool = False, max_steps: int = 40
+) -> Trace:
+    """Run any pick-and-retry-style agent against the real Tabletop2D world.
+
+    The agent only needs ``reset()`` / ``act(obs)`` / ``update(obs, reward, info)``.
+    Belief attributes are read defensively, so a custom agent (for example one
+    edited in the browser playground) that changes or drops them still runs and
+    serializes. The agent's belief is recorded into the trace ``info`` each step
+    so it is inspectable without the live agent object.
+    """
+
     env = Tabletop2D(seed=seed)
-    agent = PickAndRetryAgent()
     obs = env.reset(seed=seed)
     agent.reset()
     trace = Trace()
@@ -105,13 +115,14 @@ def run(seed: int = 3, render: bool = True, max_steps: int = 40) -> Trace:
         result = env.step(action)
         obs, reward, done, info = result.as_tuple()
         agent.update(obs, reward, info)
-        # Record the agent's belief in the trace so it is inspectable without the
-        # live agent object (used by the browser playground and trace tooling).
+
+        belief_mean = getattr(agent, "belief_mean", None)
+        belief_radius = getattr(agent, "belief_radius", None)
         info["belief_mean"] = (
-            None if agent.belief_mean is None else agent.belief_mean.copy()
+            None if belief_mean is None else np.asarray(belief_mean, dtype=float).copy()
         )
-        info["belief_radius"] = float(agent.belief_radius)
-        info["retry_count"] = agent.retry_count
+        info["belief_radius"] = None if belief_radius is None else float(belief_radius)
+        info["retry_count"] = int(getattr(agent, "retry_count", 0) or 0)
         trace.append(obs, action, reward, info)
 
         if render:
@@ -121,6 +132,10 @@ def run(seed: int = 3, render: bool = True, max_steps: int = 40) -> Trace:
             break
 
     return trace
+
+
+def run(seed: int = 3, render: bool = True, max_steps: int = 40) -> Trace:
+    return run_agent(PickAndRetryAgent(), seed=seed, render=render, max_steps=max_steps)
 
 
 def main() -> None:

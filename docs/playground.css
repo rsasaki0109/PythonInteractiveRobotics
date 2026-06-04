@@ -149,6 +149,55 @@ button:disabled {
   color: #b5482f;
 }
 
+.code-panel {
+  border: 1px solid #d7dcd6;
+  border-radius: 10px;
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.code-head {
+  align-items: center;
+  background: #eef1ec;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 12px;
+}
+
+.code-head span {
+  color: var(--ink-soft, #5a6b67);
+  font-size: 0.82rem;
+}
+
+.code-head code {
+  background: #dfe4dd;
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+.code-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.code-cell {
+  background: #0f1419;
+  border: 0;
+  box-sizing: border-box;
+  color: #d6deeb;
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  padding: 12px;
+  resize: vertical;
+  tab-size: 4;
+  white-space: pre;
+  width: 100%;
+}
+
 .status-strip {
   display: grid;
   gap: 10px;

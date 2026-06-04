@@ -49,6 +49,10 @@
     compare: document.getElementById("compareToggle"),
     realPython: document.getElementById("realPythonToggle"),
     realStatus: document.getElementById("realStatus"),
+    codePanel: document.getElementById("codePanel"),
+    codeCell: document.getElementById("codeCell"),
+    runCode: document.getElementById("runCodeButton"),
+    resetCode: document.getElementById("resetCodeButton"),
     reset: document.getElementById("resetButton"),
     step: document.getElementById("stepButton"),
     run: document.getElementById("runButton"),
@@ -94,6 +98,12 @@
   });
   elements.realPython.addEventListener("change", () => {
     rebuild();
+  });
+  elements.runCode.addEventListener("click", () => {
+    runEditedAgent();
+  });
+  elements.resetCode.addEventListener("click", () => {
+    resetEditedAgent();
   });
   elements.replay.addEventListener("input", () => {
     state.replayIndex = clampReplayIndex(elements.replay.value);
@@ -185,6 +195,9 @@
             : await fetchRealClarifyingConfig(elements.answer.value);
         state = buildState(config);
         setRealStatus("running real Python: " + sourcePath(scenario));
+        if (scenario === "pickretry") {
+          populateDefaultAgentSource();
+        }
       } catch (error) {
         if (scenario === "pickretry") {
           state = buildState();
@@ -333,6 +346,118 @@
       belief: { meanXY: null, radius: null, attempts: 0, retries: 0, policy: "scan" },
     };
     return { command: "pick the block", totalSteps: 0, initial, steps: [] };
+  }
+
+  // --- Editable agent "brain" (Phase 3) ---------------------------------------
+  // Visitors edit the real PickAndRetryAgent and re-run it against the real
+  // Tabletop2D, entirely in their own browser (Pyodide is a client-side WASM
+  // sandbox — exec'ing the edited code is no more privileged than a local REPL).
+  let defaultAgentSource = null;
+
+  const AGENT_SOURCE_DRIVER = [
+    "import os, sys, importlib.util, inspect",
+    "cwd = os.getcwd()",
+    "if cwd not in sys.path:",
+    "    sys.path.insert(0, cwd)",
+    "path = os.path.join(cwd, 'examples', 'manipulation', '01_pick_and_retry.py')",
+    "spec = importlib.util.spec_from_file_location('pick_and_retry_src', path)",
+    "mod = importlib.util.module_from_spec(spec)",
+    "sys.modules[spec.name] = mod  # inspect.getsource needs the module registered",
+    "spec.loader.exec_module(mod)",
+    "header = 'from __future__ import annotations\\nimport numpy as np\\nfrom typing import Any\\nfrom pir.core.types import Failure\\n\\n\\n'",
+    "header + inspect.getsource(mod.PickAndRetryAgent)",
+  ].join("\n");
+
+  // Execs the user's source (which must define PickAndRetryAgent) and runs it via
+  // the example's own run_agent(), so the loop is identical to the CLI's run().
+  // USER_SRC is injected through pyodide.globals to avoid string-escaping issues.
+  const PICKRETRY_EDIT_DRIVER = [
+    "import json, os, sys, importlib.util",
+    "cwd = os.getcwd()",
+    "if cwd not in sys.path:",
+    "    sys.path.insert(0, cwd)",
+    "class _NoMatplotlib:",
+    "    def find_spec(self, name, path=None, target=None):",
+    "        if name == 'matplotlib' or name.startswith('matplotlib.'):",
+    "            raise ImportError('matplotlib is intentionally unavailable on the headless browser path')",
+    "        return None",
+    "sys.meta_path.insert(0, _NoMatplotlib())",
+    "path = os.path.join(cwd, 'examples', 'manipulation', '01_pick_and_retry.py')",
+    "spec = importlib.util.spec_from_file_location('pick_and_retry', path)",
+    "mod = importlib.util.module_from_spec(spec)",
+    "spec.loader.exec_module(mod)",
+    "from pir.viz.playground_trace import pick_and_retry_trace_to_playground",
+    "from pir.worlds.tabletop_2d import Tabletop2D",
+    "ns = {}",
+    "exec(USER_SRC, ns)",
+    "Agent = ns.get('PickAndRetryAgent')",
+    "if Agent is None:",
+    "    raise ValueError('Your code must define a class named PickAndRetryAgent')",
+    "trace = mod.run_agent(Agent(), seed=3, render=False)",
+    "geom = Tabletop2D(seed=3)",
+    "json.dumps(pick_and_retry_trace_to_playground(",
+    "    trace,",
+    "    object_xy=[float(geom.obj.position[0]), float(geom.obj.position[1])],",
+    "    occluder=[float(v) for v in geom.occluder],",
+    "    camera=[float(geom.camera_pos[0]), float(geom.camera_pos[1])],",
+    "))",
+  ].join("\n");
+
+  async function getDefaultAgentSource() {
+    if (defaultAgentSource !== null) {
+      return defaultAgentSource;
+    }
+    const pyodide = await ensurePyodide();
+    defaultAgentSource = await pyodide.runPythonAsync(AGENT_SOURCE_DRIVER);
+    return defaultAgentSource;
+  }
+
+  async function populateDefaultAgentSource() {
+    if (elements.codeCell.value.trim()) {
+      return;
+    }
+    try {
+      elements.codeCell.value = await getDefaultAgentSource();
+    } catch (error) {
+      // Non-fatal: the run already worked; leave the editor empty.
+    }
+  }
+
+  async function runEditedAgent() {
+    const code = elements.codeCell.value;
+    if (!code.trim()) {
+      setRealStatus("nothing to run — the editor is empty", true);
+      return;
+    }
+    stopRun();
+    elements.runCode.disabled = true;
+    setRealStatus("running your edited agent…");
+    try {
+      const pyodide = await ensurePyodide();
+      pyodide.globals.set("USER_SRC", code);
+      const json = await pyodide.runPythonAsync(PICKRETRY_EDIT_DRIVER);
+      state = buildState(JSON.parse(json));
+      setRealStatus("ran your edited agent — " + state.config.totalSteps + " steps");
+      render();
+    } catch (error) {
+      setRealStatus("your agent raised: " + error, true);
+    } finally {
+      elements.runCode.disabled = false;
+    }
+  }
+
+  async function resetEditedAgent() {
+    elements.codeCell.value = "";
+    setRealStatus("restoring the original agent…");
+    try {
+      elements.codeCell.value = await getDefaultAgentSource();
+      const config = await fetchRealPickRetryConfig();
+      state = buildState(config);
+      setRealStatus("running real Python: " + sourcePath("pickretry"));
+      render();
+    } catch (error) {
+      setRealStatus("reset failed: " + error, true);
+    }
   }
 
   function stepOnce() {
@@ -829,6 +954,7 @@
       elements.realPython.checked = false;
     }
     elements.answer.disabled = state.scenario === "pickretry";
+    elements.codePanel.hidden = state.scenario !== "pickretry";
 
     renderReplay(replayIndex);
     renderCompare();

@@ -123,23 +123,30 @@ TABLETOP2D_FIELDS = {
 SPATIAL_BELIEF_FIELDS = {"meanXY", "radius", "attempts", "retries", "policy"}
 
 
-def _run_pick_and_retry(seed: int = 3):
+def _load_pick_and_retry():
     path = ROOT / "examples" / "manipulation" / "01_pick_and_retry.py"
     spec = importlib.util.spec_from_file_location("pick_and_retry_contract", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.run(seed=seed, render=False)
+    return module
+
+
+def _run_pick_and_retry(seed: int = 3):
+    return _load_pick_and_retry().run(seed=seed, render=False)
+
+
+def _geom(seed: int = 3) -> dict:
+    world = Tabletop2D(seed=seed)
+    return {
+        "object_xy": list(map(float, world.obj.position)),
+        "occluder": [float(v) for v in world.occluder],
+        "camera": list(map(float, world.camera_pos)),
+    }
 
 
 def _pick_and_retry_config(seed: int = 3):
-    geom = Tabletop2D(seed=seed)
-    return pick_and_retry_trace_to_playground(
-        _run_pick_and_retry(seed),
-        object_xy=list(map(float, geom.obj.position)),
-        occluder=[float(v) for v in geom.occluder],
-        camera=list(map(float, geom.camera_pos)),
-    )
+    return pick_and_retry_trace_to_playground(_run_pick_and_retry(seed), **_geom(seed))
 
 
 def test_pick_and_retry_shape_matches_tabletop2d_contract() -> None:
@@ -179,3 +186,39 @@ def test_pick_and_retry_misses_then_picks_and_belief_appears() -> None:
 def test_pick_and_retry_config_is_plain_json() -> None:
     config = _pick_and_retry_config()
     assert json.loads(json.dumps(config)) == config
+
+
+def test_run_agent_tolerates_a_custom_agent_for_the_edit_cell() -> None:
+    """The Phase-3 edit cell execs a user-defined agent and runs it via
+    run_agent(). A custom agent that drops the belief attributes must still run
+    and serialize (belief simply renders as unknown)."""
+    import numpy as np
+
+    module = _load_pick_and_retry()
+
+    class GreedyAgent:
+        """Always grab the latest detection — no belief, no retry schedule."""
+
+        def reset(self):
+            self._last = None
+
+        def act(self, obs):
+            detections = obs.get("detections") or []
+            if detections:
+                self._last = np.asarray(detections[0]["position"], dtype=float)
+            if self._last is None:
+                return {"type": "look", "target": np.array([0.84, 0.52])}
+            return {"type": "pick", "position": self._last}
+
+        def update(self, obs, reward, info):
+            detections = obs.get("detections") or []
+            if detections:
+                self._last = np.asarray(detections[0]["position"], dtype=float)
+
+    trace = module.run_agent(GreedyAgent(), seed=3, render=False)
+    config = pick_and_retry_trace_to_playground(trace, **_geom())
+
+    assert config["totalSteps"] >= 1
+    assert json.loads(json.dumps(config)) == config
+    # No belief attributes -> belief radius is unknown for every step.
+    assert all(step["snapshot"]["belief"]["radius"] is None for step in config["steps"])
