@@ -105,6 +105,13 @@ def run(seed: int = 3, render: bool = True, max_steps: int = 40) -> Trace:
         result = env.step(action)
         obs, reward, done, info = result.as_tuple()
         agent.update(obs, reward, info)
+        # Record the agent's belief in the trace so it is inspectable without the
+        # live agent object (used by the browser playground and trace tooling).
+        info["belief_mean"] = (
+            None if agent.belief_mean is None else agent.belief_mean.copy()
+        )
+        info["belief_radius"] = float(agent.belief_radius)
+        info["retry_count"] = agent.retry_count
         trace.append(obs, action, reward, info)
 
         if render:
