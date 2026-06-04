@@ -77,7 +77,7 @@ star helps others find it.
 
 ## Status
 
-39 runnable examples · 38 README GIFs · 111 smoke / regression tests ·
+40 runnable examples · 38 README GIFs · 113 smoke / regression tests ·
 5 Gymnasium-style adapters · CI green on Python 3.10, 3.11, and 3.12.
 
 See `docs/status.md` for the implementation snapshot, `docs/plan.md` for the
