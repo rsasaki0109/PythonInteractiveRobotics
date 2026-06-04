@@ -35,8 +35,12 @@ seconds.
 
 **Try it without installing**
 
-- ▶ **Run in your browser:** the [live playground](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html)
-  with belief entropy, compare mode, and a failure timeline.
+- ▶ **Run the *real* Python in your browser:** the [live playground](https://rsasaki0109.github.io/PythonInteractiveRobotics/playground.html)
+  runs the actual `numpy` example code in-page via Pyodide — no install, no
+  server. Watch a tabletop robot miss, update its belief, and retry, with belief
+  entropy, compare mode, and a failure timeline.
+- ✏️ **Edit the robot's brain:** in the playground's pick-and-retry scenario you
+  can edit the agent's `act()` / retry schedule and re-run the real loop live.
 - 📓 **Open in Colab:** [pick and retry](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/pick_and_retry.ipynb),
   [safety filter](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/safety_filter_cbf.ipynb),
   [household task agent](https://colab.research.google.com/github/rsasaki0109/PythonInteractiveRobotics/blob/main/notebooks/household_task_agent.ipynb).
@@ -57,8 +61,10 @@ inspectable `Trace`, so you can study a run headless without rendering.
 
 **Under the hood**
 
-- 39 runnable examples · 38 generated GIFs · 5 Colab notebooks
-- 111 smoke / regression tests · CI green on Python 3.10, 3.11, and 3.12
+- 39 runnable examples · 39 generated GIFs · 5 Colab notebooks
+- 122 smoke / regression tests · CI green on Python 3.10, 3.11, and 3.12
+- the live playground runs the **unmodified** example code in-browser (Pyodide),
+  pinned to the source by a trace-contract test so it can't drift
 - Core deps: `numpy` + `matplotlib` only; optional Gymnasium-style adapters and
   ROS2 / simulator bridge docs for when you outgrow the toy worlds
 
@@ -87,12 +93,14 @@ If this helped you learn, teach, or prototype, a ⭐ helps others find it.
 Before tagging `v0.1.0`, confirm the launch surface is ready (see also
 `docs/public_launch.md`):
 
-- [ ] README top renders the hero GIF, the 8-line loop, and the browser link in
+- [x] README top renders the hero GIF, the 8-line loop, and the browser link in
       the first screen
-- [ ] `lessons/README.md` links resolve on GitHub and all 10 commands run
-- [ ] CI green on `main` for 3.10 / 3.11 / 3.12
+- [x] `lessons/README.md` links resolve on GitHub and all 10 commands run
+- [x] CI green on `main` for 3.10 / 3.11 / 3.12
 - [ ] GitHub repo "social preview" image set (Settings → General → Social preview)
-- [ ] Playground page loads from GitHub Pages
+      — **manual GitHub setting**; a frame of the hero GIF works
+- [x] Playground page loads from GitHub Pages (Pyodide phases 0–3 deployed;
+      browser smoke pass still recommended)
 - [ ] Tag the release: `git tag -a v0.1.0 -m "Tiny Robot Failure Lab" && git push origin v0.1.0`
 
 ## How to cut the release
