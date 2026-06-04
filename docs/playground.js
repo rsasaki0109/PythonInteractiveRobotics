@@ -53,6 +53,9 @@
     codeCell: document.getElementById("codeCell"),
     runCode: document.getElementById("runCodeButton"),
     resetCode: document.getElementById("resetCodeButton"),
+    challengePanel: document.getElementById("challengePanel"),
+    challengeBoard: document.getElementById("challengeBoard"),
+    scoreButton: document.getElementById("scoreButton"),
     reset: document.getElementById("resetButton"),
     step: document.getElementById("stepButton"),
     run: document.getElementById("runButton"),
@@ -104,6 +107,9 @@
   });
   elements.resetCode.addEventListener("click", () => {
     resetEditedAgent();
+  });
+  elements.scoreButton.addEventListener("click", () => {
+    runChallenge();
   });
   elements.replay.addEventListener("input", () => {
     state.replayIndex = clampReplayIndex(elements.replay.value);
@@ -197,6 +203,11 @@
         setRealStatus("running real Python: " + sourcePath(scenario));
         if (scenario === "pickretry") {
           populateDefaultAgentSource();
+          if (!elements.challengeBoard.textContent.trim()) {
+            renderChallengeMessage(
+              'Edit the agent above, then "Score ' + CHALLENGE_SEEDS + ' seeds" to see if you beat it.'
+            );
+          }
         }
       } catch (error) {
         if (scenario === "pickretry") {
@@ -458,6 +469,149 @@
     } catch (error) {
       setRealStatus("reset failed: " + error, true);
     }
+  }
+
+  // --- "Beat the robot" challenge ---------------------------------------------
+  // Scores the edited agent vs. the shipped one across many seeds. Single-seed
+  // scoring would reward overfitting; robustness across seeds is the real test.
+  const CHALLENGE_SEEDS = 10;
+  const CHALLENGE_DRIVER = [
+    "import json, os, sys, importlib.util",
+    "cwd = os.getcwd()",
+    "if cwd not in sys.path:",
+    "    sys.path.insert(0, cwd)",
+    "class _NoMatplotlib:",
+    "    def find_spec(self, name, path=None, target=None):",
+    "        if name == 'matplotlib' or name.startswith('matplotlib.'):",
+    "            raise ImportError('matplotlib is intentionally unavailable on the headless browser path')",
+    "        return None",
+    "sys.meta_path.insert(0, _NoMatplotlib())",
+    "path = os.path.join(cwd, 'examples', 'manipulation', '01_pick_and_retry.py')",
+    "spec = importlib.util.spec_from_file_location('pick_and_retry', path)",
+    "mod = importlib.util.module_from_spec(spec)",
+    "spec.loader.exec_module(mod)",
+    "from pir.viz.playground_trace import score_pick_and_retry",
+    "seeds = list(range(" + CHALLENGE_SEEDS + "))",
+    "baseline = score_pick_and_retry(mod.run_agent, mod.PickAndRetryAgent, seeds=seeds)",
+    "src = USER_SRC",
+    "if src and src.strip():",
+    "    ns = {}",
+    "    exec(src, ns)",
+    "    Agent = ns.get('PickAndRetryAgent')",
+    "    if Agent is None:",
+    "        raise ValueError('Your code must define a class named PickAndRetryAgent')",
+    "    you = score_pick_and_retry(mod.run_agent, Agent, seeds=seeds)",
+    "else:",
+    "    you = baseline",
+    "json.dumps({'seeds': seeds, 'baseline': baseline, 'you': you})",
+  ].join("\n");
+
+  async function runChallenge() {
+    stopRun();
+    elements.scoreButton.disabled = true;
+    renderChallengeMessage("scoring " + CHALLENGE_SEEDS + " seeds for both agents…");
+    setRealStatus("running the challenge…");
+    try {
+      const pyodide = await ensurePyodide();
+      pyodide.globals.set("USER_SRC", elements.codeCell.value || "");
+      const result = JSON.parse(await pyodide.runPythonAsync(CHALLENGE_DRIVER));
+      renderScoreboard(result);
+      setRealStatus("challenge scored across " + CHALLENGE_SEEDS + " seeds");
+    } catch (error) {
+      renderChallengeMessage("");
+      setRealStatus("challenge failed: " + error, true);
+    } finally {
+      elements.scoreButton.disabled = false;
+    }
+  }
+
+  function renderChallengeMessage(message) {
+    elements.challengeBoard.textContent = "";
+    if (!message) {
+      return;
+    }
+    const note = document.createElement("p");
+    note.className = "challenge-empty";
+    note.textContent = message;
+    elements.challengeBoard.appendChild(note);
+  }
+
+  function challengeVerdict(you, base) {
+    const same =
+      you.success_rate === base.success_rate &&
+      you.mean_reward === base.mean_reward &&
+      you.mean_steps === base.mean_steps;
+    if (same) {
+      return { cls: "tie", text: "You're running the shipped agent — edit it and score again to try to beat it." };
+    }
+    // Higher success rate wins; then higher reward; then fewer steps.
+    let youWin;
+    if (you.success_rate !== base.success_rate) {
+      youWin = you.success_rate > base.success_rate;
+    } else if (you.mean_reward !== base.mean_reward) {
+      youWin = you.mean_reward > base.mean_reward;
+    } else {
+      youWin = you.mean_steps < base.mean_steps;
+    }
+    return youWin
+      ? { cls: "win", text: "🏆 You beat the shipped agent across " + CHALLENGE_SEEDS + " seeds!" }
+      : { cls: "lose", text: "Shipped agent still wins — make your policy more robust across seeds." };
+  }
+
+  function renderScoreboard(result) {
+    const you = result.you;
+    const base = result.baseline;
+    elements.challengeBoard.textContent = "";
+
+    const verdict = challengeVerdict(you, base);
+    const banner = document.createElement("div");
+    banner.className = "challenge-verdict " + verdict.cls;
+    banner.textContent = verdict.text;
+    elements.challengeBoard.appendChild(banner);
+
+    // metric label, key, and whether higher is better
+    const rows = [
+      ["success rate", "success_rate", true, (v) => Math.round(v * 100) + "%"],
+      ["mean reward", "mean_reward", true, (v) => v.toFixed(2)],
+      ["mean steps", "mean_steps", false, (v) => v.toFixed(1)],
+      ["mean retries", "mean_retries", false, (v) => v.toFixed(1)],
+      ["mean grasp_miss", "mean_grasp_miss", false, (v) => v.toFixed(1)],
+    ];
+
+    const table = document.createElement("table");
+    table.className = "challenge-table";
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    ["metric", "baseline", "you"].forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    rows.forEach(([label, key, higherBetter, fmt]) => {
+      const tr = document.createElement("tr");
+      const name = document.createElement("td");
+      name.textContent = label;
+      tr.appendChild(name);
+
+      const baseCell = document.createElement("td");
+      baseCell.textContent = fmt(base[key]);
+      const youCell = document.createElement("td");
+      youCell.textContent = fmt(you[key]);
+
+      if (base[key] !== you[key]) {
+        const youBetter = higherBetter ? you[key] > base[key] : you[key] < base[key];
+        (youBetter ? youCell : baseCell).classList.add("better");
+      }
+      tr.appendChild(baseCell);
+      tr.appendChild(youCell);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    elements.challengeBoard.appendChild(table);
   }
 
   function stepOnce() {
@@ -955,6 +1109,7 @@
     }
     elements.answer.disabled = state.scenario === "pickretry";
     elements.codePanel.hidden = state.scenario !== "pickretry";
+    elements.challengePanel.hidden = state.scenario !== "pickretry";
 
     renderReplay(replayIndex);
     renderCompare();

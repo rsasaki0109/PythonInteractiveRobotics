@@ -16,6 +16,7 @@ from pathlib import Path
 from pir.viz.playground_trace import (
     clarifying_trace_to_playground,
     pick_and_retry_trace_to_playground,
+    score_pick_and_retry,
 )
 from pir.worlds.tabletop_2d import Tabletop2D
 
@@ -222,3 +223,44 @@ def test_run_agent_tolerates_a_custom_agent_for_the_edit_cell() -> None:
     assert json.loads(json.dumps(config)) == config
     # No belief attributes -> belief radius is unknown for every step.
     assert all(step["snapshot"]["belief"]["radius"] is None for step in config["steps"])
+
+
+SEEDS = list(range(10))
+
+
+def test_challenge_scoring_shape_and_baseline_is_robust() -> None:
+    module = _load_pick_and_retry()
+    baseline = score_pick_and_retry(module.run_agent, module.PickAndRetryAgent, seeds=SEEDS)
+
+    assert set(baseline) == {
+        "episodes",
+        "successes",
+        "success_rate",
+        "mean_steps",
+        "mean_retries",
+        "mean_reward",
+        "mean_grasp_miss",
+    }
+    assert baseline["episodes"] == len(SEEDS)
+    # The shipped agent should solve every seed in this small set.
+    assert baseline["success_rate"] == 1.0
+    assert json.loads(json.dumps(baseline)) == baseline
+
+
+def test_challenge_exposes_an_agent_that_ignores_belief() -> None:
+    """An agent that ignores its belief and always picks the same wrong spot
+    must score a lower success rate than the shipped, belief-driven agent."""
+    import numpy as np
+
+    module = _load_pick_and_retry()
+
+    class StubbornAgent(module.PickAndRetryAgent):
+        def act(self, obs):
+            # Never use the belief — stab a fixed corner far from the object.
+            return {"type": "pick", "position": np.array([0.1, 0.1])}
+
+    baseline = score_pick_and_retry(module.run_agent, module.PickAndRetryAgent, seeds=SEEDS)
+    stubborn = score_pick_and_retry(module.run_agent, StubbornAgent, seeds=SEEDS)
+
+    assert stubborn["success_rate"] < baseline["success_rate"]
+    assert stubborn["mean_reward"] < baseline["mean_reward"]

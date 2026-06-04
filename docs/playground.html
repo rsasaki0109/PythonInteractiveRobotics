@@ -124,6 +124,14 @@
             </div>
             <textarea id="codeCell" class="code-cell" spellcheck="false" rows="20" aria-label="Agent source code"></textarea>
           </section>
+
+          <section id="challengePanel" class="challenge-panel" aria-label="Challenge" hidden>
+            <div class="challenge-head">
+              <span>Challenge — your edited agent vs. the shipped one, across 10 seeds</span>
+              <button id="scoreButton" type="button">Score 10 seeds</button>
+            </div>
+            <div id="challengeBoard" class="challenge-board" aria-live="polite"></div>
+          </section>
         </div>
 
         <aside class="trace-panel" aria-labelledby="trace-title">
