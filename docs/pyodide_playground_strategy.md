@@ -157,13 +157,31 @@ belief radius shrinking 10 → 9.8 → 9.5 → 2.5, `holding=True`, `retries=2`.
 **Still to confirm in a real browser:** selecting the scenario boots Pyodide and
 the tabletop/belief/timeline redraw from the real trace.
 
-**Phase 3 — editable code cell (1–2 days).** Expose the agent's `act()` in a
-small editor so visitors can tweak the retry/belief logic and re-run. This is
-the "wow, I can edit the robot's brain in the browser" moment that converts to
-stars.
+**Phase 3 — editable code cell. ✅ built (Python path verified; needs a browser
+check).** The pick_and_retry scenario now shows an **"Agent brain"** editor
+pre-filled with the *real* `PickAndRetryAgent` source (fetched via
+`inspect.getsource` so it can never drift from the file). Editing it and clicking
+**Run edited agent** execs the user's class in Pyodide and runs it against the
+real `Tabletop2D` via the example's own `run_agent(...)` — the same loop the CLI
+uses, so there is no second loop to drift. Syntax/runtime errors surface inline.
 
-Ship Phase 0–1 behind the existing playground before any Hacker News launch;
-Phases 2–3 can follow the launch.
+This is the "edit the robot's brain in the browser" moment. The edited code runs
+entirely client-side (Pyodide is a WASM sandbox — exec'ing it is no more
+privileged than a local REPL), `USER_SRC` is passed via `pyodide.globals` to
+avoid string-escaping, and a custom agent that drops the belief attributes still
+runs (`run_agent` reads them defensively).
+
+Verified locally (unpacked-bundle sim, the exact drivers): the default source
+reproduces `seed=3` (`4 steps, retries=2`); removing the deliberate first offset
+makes it grab the belief mean immediately (`2 steps, retries=0`) — a live lesson
+in *why* the retry schedule exists; malformed code raises a caught error.
+`tests/test_playground_trace.py` exercises `run_agent` with a custom agent.
+**Still to confirm in a real browser:** the editor populates with the real
+source, edits re-run, and errors render inline.
+
+All three phases are built and Python-verified; the remaining work is a single
+browser pass over Phases 0–3 and (optionally) deleting the JS `clarifying`
+preview once the real path is the trusted default.
 
 ## Risks / watch-list
 
