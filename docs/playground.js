@@ -16,10 +16,12 @@
   const sourceLinks = {
     clarifying:
       "https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/35_clarifying_question.py",
+    pickretry:
+      "https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/manipulation/01_pick_and_retry.py",
     household:
       "https://github.com/rsasaki0109/PythonInteractiveRobotics/blob/main/examples/embodied_ai/36_household_task_agent.py",
   };
-  const scenarioValues = new Set(["clarifying", "household"]);
+  const scenarioValues = new Set(["clarifying", "pickretry", "household"]);
   const answerValues = new Set(["red", "blue"]);
   const failureValues = new Set([
     "all",
@@ -74,7 +76,7 @@
   let copyStatusTimer = null;
 
   elements.scenario.addEventListener("change", () => {
-    if (elements.scenario.value !== "clarifying") {
+    if (elements.scenario.value === "household") {
       elements.realPython.checked = false;
     }
     rebuild();
@@ -118,7 +120,15 @@
   });
 
   render();
-  if (readAutoplayParam()) {
+  if (elements.scenario.value === "pickretry") {
+    // Real-Python-only scenario: boot Pyodide and run it on load so shared
+    // ?scenario=pickretry links show the real loop, not the static placeholder.
+    rebuild().then(() => {
+      if (readAutoplayParam()) {
+        startRun();
+      }
+    });
+  } else if (readAutoplayParam()) {
     window.setTimeout(startRun, 180);
   }
 
@@ -130,11 +140,16 @@
     if (realConfig) {
       config = realConfig;
       source = "python";
+    } else if (scenario === "household") {
+      config = buildHouseholdScenario(answer);
+      source = "js";
+    } else if (scenario === "pickretry") {
+      // No JS dynamics for pick_and_retry; show the static tabletop until the
+      // real Python config (from Pyodide) is available.
+      config = buildPickRetryPlaceholder();
+      source = "pending";
     } else {
-      config =
-        scenario === "household"
-          ? buildHouseholdScenario(answer)
-          : buildClarifyingScenario(answer);
+      config = buildClarifyingScenario(answer);
       source = "js";
     }
     return {
@@ -154,20 +169,31 @@
   // Otherwise we use the instant JS preview so first paint never waits on Pyodide.
   async function rebuild() {
     stopRun();
+    const scenario = elements.scenario.value;
+    // pick_and_retry is real-Python-only: its dynamics are stochastic and
+    // belief-driven, so a hand-written JS mock would be exactly the drift we are
+    // removing. clarifying keeps a JS preview and opts into real Python.
     const useReal =
-      elements.realPython.checked && elements.scenario.value === "clarifying";
+      scenario === "pickretry" ||
+      (elements.realPython.checked && scenario === "clarifying");
     if (useReal) {
       setRealStatus("booting Pyodide + running real Python…");
       try {
-        const config = await fetchRealClarifyingConfig(elements.answer.value);
+        const config =
+          scenario === "pickretry"
+            ? await fetchRealPickRetryConfig()
+            : await fetchRealClarifyingConfig(elements.answer.value);
         state = buildState(config);
-        setRealStatus(
-          "running real Python: examples/embodied_ai/35_clarifying_question.py"
-        );
+        setRealStatus("running real Python: " + sourcePath(scenario));
       } catch (error) {
-        elements.realPython.checked = false;
-        state = buildState();
-        setRealStatus("Pyodide failed (" + error + ") — showing JS preview", true);
+        if (scenario === "pickretry") {
+          state = buildState();
+          setRealStatus("Pyodide failed (" + error + ") — pick_and_retry needs it", true);
+        } else {
+          elements.realPython.checked = false;
+          state = buildState();
+          setRealStatus("Pyodide failed (" + error + ") — showing JS preview", true);
+        }
       }
     } else {
       state = buildState();
@@ -175,6 +201,12 @@
     }
     updateLocation(false);
     render();
+  }
+
+  function sourcePath(scenario) {
+    return scenario === "pickretry"
+      ? "examples/manipulation/01_pick_and_retry.py"
+      : "examples/embodied_ai/35_clarifying_question.py";
   }
 
   function setRealStatus(message, isError) {
@@ -241,6 +273,66 @@
     const config = JSON.parse(json);
     realConfigCache[cacheKey] = config;
     return config;
+  }
+
+  // Reads the real Tabletop2D geometry (true object, occluder, camera) and runs
+  // the unmodified pick_and_retry loop, then serializes with the same helper
+  // pinned by tests/test_playground_trace.py.
+  const PICKRETRY_DRIVER = [
+    "import json, os, sys, importlib.util",
+    "cwd = os.getcwd()",
+    "if cwd not in sys.path:",
+    "    sys.path.insert(0, cwd)",
+    "class _NoMatplotlib:",
+    "    def find_spec(self, name, path=None, target=None):",
+    "        if name == 'matplotlib' or name.startswith('matplotlib.'):",
+    "            raise ImportError('matplotlib is intentionally unavailable on the headless browser path')",
+    "        return None",
+    "sys.meta_path.insert(0, _NoMatplotlib())",
+    "path = os.path.join(cwd, 'examples', 'manipulation', '01_pick_and_retry.py')",
+    "spec = importlib.util.spec_from_file_location('pick_and_retry', path)",
+    "mod = importlib.util.module_from_spec(spec)",
+    "spec.loader.exec_module(mod)",
+    "from pir.viz.playground_trace import pick_and_retry_trace_to_playground",
+    "from pir.worlds.tabletop_2d import Tabletop2D",
+    "geom = Tabletop2D(seed=3)",
+    "trace = mod.run(seed=3, render=False)",
+    "json.dumps(pick_and_retry_trace_to_playground(",
+    "    trace,",
+    "    object_xy=[float(geom.obj.position[0]), float(geom.obj.position[1])],",
+    "    occluder=[float(v) for v in geom.occluder],",
+    "    camera=[float(geom.camera_pos[0]), float(geom.camera_pos[1])],",
+    "))",
+  ].join("\n");
+
+  async function fetchRealPickRetryConfig() {
+    const cacheKey = "pickretry:3";
+    if (realConfigCache[cacheKey]) {
+      return realConfigCache[cacheKey];
+    }
+    const pyodide = await ensurePyodide();
+    const json = await pyodide.runPythonAsync(PICKRETRY_DRIVER);
+    const config = JSON.parse(json);
+    realConfigCache[cacheKey] = config;
+    return config;
+  }
+
+  function buildPickRetryPlaceholder() {
+    const initial = {
+      type: "tabletop2d",
+      command: "pick the block",
+      target: "block",
+      agentState: "scan_for_object",
+      failure: "none",
+      object: [64, 54],
+      occluder: [43, 42, 57, 68],
+      camera: [16, 50],
+      detection: null,
+      pickAt: null,
+      holding: false,
+      belief: { meanXY: null, radius: null, attempts: 0, retries: 0, policy: "scan" },
+    };
+    return { command: "pick the block", totalSteps: 0, initial, steps: [] };
   }
 
   function stepOnce() {
@@ -729,7 +821,14 @@
     elements.run.disabled = state.index >= state.config.steps.length && !timer;
     elements.copyTrace.disabled = state.trace.length === 0;
     elements.compare.disabled = state.scenario !== "household";
+    // clarifying opts in; pick_and_retry is always real Python; household is JS.
     elements.realPython.disabled = state.scenario !== "clarifying";
+    if (state.scenario === "pickretry") {
+      elements.realPython.checked = true;
+    } else if (state.scenario === "household") {
+      elements.realPython.checked = false;
+    }
+    elements.answer.disabled = state.scenario === "pickretry";
 
     renderReplay(replayIndex);
     renderCompare();
@@ -819,6 +918,12 @@
     }
     elements.beliefPanel.hidden = false;
 
+    // Spatial belief (pick_and_retry): position estimate + shrinking uncertainty.
+    if (typeof belief.red !== "number") {
+      renderSpatialBelief(belief);
+      return;
+    }
+
     const bars = document.createElement("div");
     bars.className = "belief-bars";
     [
@@ -834,6 +939,51 @@
       ["entropy", formatBits(belief.entropy)],
       ["ask gain", "+" + formatBits(belief.askGain)],
       ["policy", belief.policy],
+    ].forEach(([label, value]) => {
+      const metric = document.createElement("span");
+      metric.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      metric.appendChild(strong);
+      metrics.appendChild(metric);
+    });
+
+    elements.beliefPanel.appendChild(bars);
+    elements.beliefPanel.appendChild(metrics);
+  }
+
+  function renderSpatialBelief(belief) {
+    // One "uncertainty" bar (belief radius, smaller = more confident) plus the
+    // attempt/retry counters and the current policy.
+    const bars = document.createElement("div");
+    bars.className = "belief-bars";
+    const hasRadius = typeof belief.radius === "number";
+    // radius is on the 0..100 canvas; ~14 is the agent's initial uncertainty.
+    const fraction = hasRadius ? Math.min(1, belief.radius / 14) : 0;
+    const row = document.createElement("div");
+    row.className = "belief-row";
+    const name = document.createElement("span");
+    name.textContent = "uncertainty";
+    row.appendChild(name);
+    const track = document.createElement("div");
+    track.className = "belief-track";
+    const fill = document.createElement("div");
+    fill.className = "belief-fill belief-red";
+    fill.style.width = Math.round(fraction * 100) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    const value = document.createElement("strong");
+    value.className = "belief-value";
+    value.textContent = hasRadius ? belief.radius.toFixed(1) : "—";
+    row.appendChild(value);
+    bars.appendChild(row);
+
+    const metrics = document.createElement("div");
+    metrics.className = "belief-metrics";
+    [
+      ["attempts", String(belief.attempts || 0)],
+      ["retries", String(belief.retries || 0)],
+      ["policy", belief.policy || "scan"],
     ].forEach(([label, value]) => {
       const metric = document.createElement("span");
       metric.textContent = label;
@@ -928,9 +1078,115 @@
     elements.scene.textContent = "";
     if (snapshot.type === "household") {
       renderHousehold(snapshot);
+    } else if (snapshot.type === "tabletop2d") {
+      renderTabletop2D(snapshot);
     } else {
       renderTabletop(snapshot);
     }
+  }
+
+  // Continuous tabletop for pick_and_retry: true object vs. the agent's spatial
+  // belief (mean + uncertainty radius), the occluder, camera, last detection,
+  // and the current pick attempt. Mirrors the matplotlib render in tabletop_2d.py.
+  function renderTabletop2D(snapshot) {
+    const svg = createSvg("svg", {
+      class: "tabletop-svg",
+      viewBox: "0 0 100 100",
+      "aria-label": "Pick and retry tabletop",
+    });
+    svg.appendChild(createSvg("rect", { x: 4, y: 4, width: 92, height: 92, rx: 2, fill: "#fbfaf7" }));
+    for (let i = 10; i < 100; i += 10) {
+      svg.appendChild(createSvg("line", { x1: i, y1: 5, x2: i, y2: 95, class: "tabletop-grid" }));
+      svg.appendChild(createSvg("line", { x1: 5, y1: i, x2: 95, y2: i, class: "tabletop-grid" }));
+    }
+
+    const occ = snapshot.occluder;
+    if (occ) {
+      svg.appendChild(
+        createSvg("rect", {
+          x: occ[0],
+          y: occ[1],
+          width: occ[2] - occ[0],
+          height: occ[3] - occ[1],
+          fill: "#2a2a2a",
+          opacity: 0.16,
+        })
+      );
+    }
+
+    // true object (ground truth the agent never sees directly)
+    if (snapshot.object && !snapshot.holding) {
+      svg.appendChild(
+        createSvg("circle", { cx: snapshot.object[0], cy: snapshot.object[1], r: 4.5, fill: "#d94b3d", opacity: 0.85 })
+      );
+    }
+
+    // camera
+    if (snapshot.camera) {
+      svg.appendChild(
+        createSvg("rect", {
+          x: snapshot.camera[0] - 2,
+          y: snapshot.camera[1] - 2,
+          width: 4,
+          height: 4,
+          fill: "#2b6cb0",
+        })
+      );
+    }
+
+    // last detection (orange x)
+    if (snapshot.detection) {
+      svg.appendChild(drawCross(snapshot.detection, 3.5, "#dd7711", 1.6));
+    }
+
+    // agent belief: mean + uncertainty radius (green dashed circle)
+    const belief = snapshot.belief || {};
+    if (belief.meanXY) {
+      const r = Math.max(2, belief.radius || 0);
+      svg.appendChild(
+        createSvg("circle", {
+          cx: belief.meanXY[0],
+          cy: belief.meanXY[1],
+          r,
+          fill: "none",
+          stroke: "#47743a",
+          "stroke-width": 1.6,
+          "stroke-dasharray": "3 2",
+        })
+      );
+      svg.appendChild(
+        createSvg("circle", { cx: belief.meanXY[0], cy: belief.meanXY[1], r: 1.1, fill: "#47743a" })
+      );
+    }
+
+    // pick attempt (black +)
+    if (snapshot.pickAt) {
+      svg.appendChild(drawCross(snapshot.pickAt, 4, "#17201f", 1.8));
+    }
+
+    const caption = createSvg("text", { x: 7, y: 11, class: "svg-small" });
+    const bits = ["attempts: " + (belief.attempts || 0)];
+    if (snapshot.holding) {
+      bits.push("holding block");
+    } else if (snapshot.failure && snapshot.failure !== "none") {
+      bits.push(snapshot.failure);
+    }
+    caption.textContent = bits.join("   ");
+    svg.appendChild(caption);
+    elements.scene.appendChild(svg);
+  }
+
+  function drawCross(point, size, color, width) {
+    return createSvg("path", {
+      d:
+        "M " + (point[0] - size) + " " + point[1] +
+        " L " + (point[0] + size) + " " + point[1] +
+        " M " + point[0] + " " + (point[1] - size) +
+        " L " + point[0] + " " + (point[1] + size),
+      stroke: color,
+      "stroke-width": width,
+      "stroke-linecap": "round",
+    });
   }
 
   function renderTabletop(snapshot) {

@@ -129,9 +129,33 @@ on a multi-MB download. Full deletion waits until the real path is the verified
 default — at which point the JS mock can be dropped and the contract test becomes
 the single source of truth.
 
-**Phase 2 — tabletop renderer + hero loop (1–2 days).** Add the continuous
-tabletop renderer and wire `pick_and_retry`. Now the README hero GIF has a
-"run it yourself" twin.
+**Phase 2 — tabletop renderer + hero loop. ✅ built (Python path verified; needs
+a browser check).** The playground has a **"Pick and retry (real Python)"**
+scenario. It is real-Python-only: selecting it boots Pyodide and runs the
+**unmodified** `examples/manipulation/01_pick_and_retry.py` `run(seed=3)` loop —
+there is deliberately no JS mock, because the dynamics are stochastic and
+belief-driven and a hand-faked version would reintroduce the exact drift Pyodide
+removes. The README hero GIF now has a "run it yourself" twin.
+
+A continuous `tabletop2d` renderer draws the real scene: the true object vs. the
+agent's **spatial belief** (mean + a shrinking uncertainty radius), the occluder,
+the camera, the last detection, and each pick attempt — mirroring the matplotlib
+render in `pir/worlds/tabletop_2d.py`. The belief panel switches to a spatial
+layout (uncertainty bar + attempts/retries/policy).
+
+To make the loop's belief inspectable without the live agent object,
+`01_pick_and_retry.py` now records `belief_mean`/`belief_radius`/`retry_count`
+into the trace `info` each step (belief becomes first-class in the `Trace`).
+Scene geometry (true object, occluder, camera) is ground truth the agent never
+sees, so the driver reads it from a real `Tabletop2D` and passes it to
+`pick_and_retry_trace_to_playground` rather than hard-coding world constants.
+`tests/test_playground_trace.py` pins this second contract too.
+
+Verified locally (unpacked-bundle sim, the exact `playground.js` driver):
+`seed=3` yields the hero story — `scan → pick(miss) → pick(miss) → pick(done)`,
+belief radius shrinking 10 → 9.8 → 9.5 → 2.5, `holding=True`, `retries=2`.
+**Still to confirm in a real browser:** selecting the scenario boots Pyodide and
+the tabletop/belief/timeline redraw from the real trace.
 
 **Phase 3 — editable code cell (1–2 days).** Expose the agent's `act()` in a
 small editor so visitors can tweak the retry/belief logic and re-run. This is

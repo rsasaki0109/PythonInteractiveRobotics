@@ -13,7 +13,11 @@ import importlib.util
 import json
 from pathlib import Path
 
-from pir.viz.playground_trace import clarifying_trace_to_playground
+from pir.viz.playground_trace import (
+    clarifying_trace_to_playground,
+    pick_and_retry_trace_to_playground,
+)
+from pir.worlds.tabletop_2d import Tabletop2D
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -98,3 +102,80 @@ def test_config_is_plain_json() -> None:
     config = clarifying_trace_to_playground(_run("red"), answer="red")
     reparsed = json.loads(json.dumps(config))
     assert reparsed == config
+
+
+# --- pick_and_retry (continuous tabletop) -----------------------------------
+
+TABLETOP2D_FIELDS = {
+    "type",
+    "command",
+    "target",
+    "agentState",
+    "failure",
+    "object",
+    "occluder",
+    "camera",
+    "detection",
+    "pickAt",
+    "holding",
+    "belief",
+}
+SPATIAL_BELIEF_FIELDS = {"meanXY", "radius", "attempts", "retries", "policy"}
+
+
+def _run_pick_and_retry(seed: int = 3):
+    path = ROOT / "examples" / "manipulation" / "01_pick_and_retry.py"
+    spec = importlib.util.spec_from_file_location("pick_and_retry_contract", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.run(seed=seed, render=False)
+
+
+def _pick_and_retry_config(seed: int = 3):
+    geom = Tabletop2D(seed=seed)
+    return pick_and_retry_trace_to_playground(
+        _run_pick_and_retry(seed),
+        object_xy=list(map(float, geom.obj.position)),
+        occluder=[float(v) for v in geom.occluder],
+        camera=list(map(float, geom.camera_pos)),
+    )
+
+
+def test_pick_and_retry_shape_matches_tabletop2d_contract() -> None:
+    config = _pick_and_retry_config()
+
+    assert config["command"] == "pick the block"
+    assert config["totalSteps"] == len(config["steps"]) >= 1
+    assert set(config["initial"]) == TABLETOP2D_FIELDS
+    assert config["initial"]["type"] == "tabletop2d"
+    # occluder is the real Tabletop2D rectangle scaled to the 0..100 canvas.
+    assert config["initial"]["occluder"] == [43.0, 42.0, 57.0, 68.0]
+
+    for step in config["steps"]:
+        assert set(step) == STEP_FIELDS
+        snapshot = step["snapshot"]
+        assert set(snapshot) == TABLETOP2D_FIELDS
+        assert set(snapshot["belief"]) == SPATIAL_BELIEF_FIELDS
+
+
+def test_pick_and_retry_misses_then_picks_and_belief_appears() -> None:
+    config = _pick_and_retry_config(seed=3)
+    steps = config["steps"]
+
+    # seed=3 is the hero seed: at least one grasp_miss before the pick succeeds.
+    assert any(step["failure"] == "grasp_miss" for step in steps)
+
+    final = steps[-1]
+    assert final["agentState"] == "done"
+    assert final["snapshot"]["holding"] is True
+
+    # Belief becomes a concrete spatial estimate once the object is detected.
+    assert any(step["snapshot"]["belief"]["meanXY"] is not None for step in steps)
+    # Retry count is non-decreasing and ends at >=1 (it missed at least once).
+    assert final["snapshot"]["belief"]["retries"] >= 1
+
+
+def test_pick_and_retry_config_is_plain_json() -> None:
+    config = _pick_and_retry_config()
+    assert json.loads(json.dumps(config)) == config
