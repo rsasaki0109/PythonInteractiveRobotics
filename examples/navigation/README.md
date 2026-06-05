@@ -612,3 +612,46 @@ plan shortcut -> human correction -> update cost belief -> replan -> goal
 - Replace the hard-coded zone with a single corrected cell and spread cost to
   neighbors.
 - Count how many planned paths still cross corrected cells after feedback.
+
+## `38_monte_carlo_localization.py`
+
+### What this teaches
+
+Monte Carlo Localization (MCL) tracks pose with a particle filter and converges
+beautifully from a uniform prior — then fails the *kidnapped robot* problem: once
+the cloud collapses onto the true pose, a sudden teleport leaves no particles
+anywhere to recover with. Augmented MCL (Thrun et al., *Probabilistic Robotics*,
+Table 8.3) is the fix and the repo's thesis in one trick: track a fast and a slow
+running average of the measurement likelihood, and when the fast one drops below
+the slow one — the signature of a failure — inject random particles in proportion
+to the drop. A few land near the new pose and the cloud re-collapses there. Run
+with `--no-augment` to watch plain MCL stay lost.
+
+### Run
+
+```bash
+python examples/navigation/38_monte_carlo_localization.py
+python examples/navigation/38_monte_carlo_localization.py --no-augment   # cannot recover
+```
+
+### Key loop
+
+```text
+predict -> weight by range+bearing -> w_fast/w_slow drop ? inject : resample -> re-localize
+```
+
+### Simplifications
+
+- known map of point landmarks; range + bearing (world-frame heading) sensing
+- belief-independent open-loop motion, so the contrast is purely about recovery
+- a single scheduled kidnap (teleport) rather than continuous odometry slip
+- pose estimate is the weighted particle mean
+
+### Things to try
+
+- Toggle `--no-augment` and compare the `localization_lost` count (plain MCL
+  reports lost every step after the kidnap; augmented never does).
+- Move `kidnap_to` closer and watch plain MCL sometimes creep back.
+- Lower `num_particles` and watch augmented recovery get less reliable (fewer
+  injected particles land on the sharp likelihood peak).
+- Raise `bearing_noise` toward range-only sensing and watch ambiguity return.
