@@ -910,3 +910,29 @@ def test_plain_potential_field_stalls_in_the_minimum() -> None:
     # The escape recovers on the same scene and ends much closer to the goal.
     assert escaped.infos[-1]["success"] is True
     assert escaped.infos[-1]["distance_to_goal"] < plain.infos[-1]["distance_to_goal"]
+
+
+def test_rrt_replans_around_a_discovered_obstacle() -> None:
+    module = load_example("examples/navigation/41_rrt_replanning.py")
+
+    trace = module.run(seed=0, render=False)
+    final = trace.infos[-1]
+
+    # The first RRT path threads the gap where the hidden disc sits; the robot
+    # senses it, reports path_blocked, replans, and still reaches the goal.
+    assert final["success"] is True
+    assert final["replans"] >= 1
+    assert any(f.kind == "path_blocked" for f in trace.failures())
+    assert not any(f.kind == "collision" for f in trace.failures())
+    assert trace.observations[-1]["hidden_found"] is True
+
+
+def test_rrt_reaches_goal_across_seeds() -> None:
+    module = load_example("examples/navigation/41_rrt_replanning.py")
+
+    # RRT is randomized, but the planner + replanner reach the goal on every seed
+    # (whether or not the first sampled tree happened to dodge the hidden disc).
+    for seed in range(6):
+        trace = module.run(seed=seed, render=False)
+        assert trace.infos[-1]["success"] is True, f"seed {seed} did not reach the goal"
+        assert trace.infos[-1]["path_len"] > 0
