@@ -655,3 +655,47 @@ predict -> weight by range+bearing -> w_fast/w_slow drop ? inject : resample -> 
 - Lower `num_particles` and watch augmented recovery get less reliable (fewer
   injected particles land on the sharp likelihood peak).
 - Raise `bearing_noise` toward range-only sensing and watch ambiguity return.
+
+## `40_potential_field_escape.py`
+
+### What this teaches
+
+Artificial potential fields (Khatib, 1986) are the one-line local planner: step
+down the gradient of an attractive potential toward the goal plus a repulsive
+potential away from obstacles. Their famous failure is the **local minimum** — a
+spot where attraction and repulsion cancel short of the goal, so the robot
+stalls. Here an obstacle sits on the straight line to the goal, so plain descent
+walks into the stagnation point and stops; the world reports a `local_minimum`
+failure, and the agent recovers the way real planners do — **boundary
+following**, sliding tangentially around the obstacle until the goal-ward path
+reopens. Run with `--no-escape` to watch plain descent stall until timeout.
+
+### Run
+
+```bash
+python examples/navigation/40_potential_field_escape.py
+python examples/navigation/40_potential_field_escape.py --no-escape   # stalls
+```
+
+### Key loop
+
+```text
+attractive + repulsive force -> step -> no net progress ? boundary-follow : descend -> goal
+```
+
+### Simplifications
+
+- continuous 2D point robot, circular obstacles, Khatib repulsion within an
+  influence radius
+- the local minimum is detected by a lack of *net* progress toward the goal
+  (the robot oscillates in place), not by a single small step
+- escape is a fixed-length tangential slide committed to the goal-ward side
+- no dynamics or sensing noise, so the trap is a clean textbook stagnation
+
+### Things to try
+
+- Toggle `--no-escape` and compare the `local_minimum` count (plain descent fires
+  it every step; the escape fires it once and recovers).
+- Move the obstacle off the start–goal line and watch the trap weaken.
+- Add a second obstacle to build a concave pocket and a deeper minimum.
+- Raise `k_rep` and watch the stagnation point sit further from the obstacle.
