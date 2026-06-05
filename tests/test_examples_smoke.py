@@ -800,3 +800,40 @@ def test_behavior_tree_recovery_falls_back_to_relook_after_a_miss() -> None:
     )
     later_leaves = [info.get("bt_leaf") for info in trace.infos[first_miss + 1 :]]
     assert "relook_to_refine" in later_leaves
+
+
+def test_monte_carlo_localization_recovers_from_kidnap() -> None:
+    module = load_example("examples/navigation/38_monte_carlo_localization.py")
+
+    trace = module.run(seed=0, render=False, augment=True)
+    infos = trace.infos
+    kidnap = next(i for i, x in enumerate(infos) if x.get("failure") and x["failure"].kind == "kidnapped")
+
+    # Global localization converges from a uniform prior before the kidnap.
+    assert min(infos[i]["error"] for i in range(kidnap)) < module.MCLConfig().localized_tol
+    # The kidnap teleports the robot far away (the estimate is briefly very wrong).
+    assert infos[kidnap]["error"] > 3.0
+    # Augmented MCL injects particles in response (the recovery mechanism)...
+    assert max(x.get("inject_ratio", 0.0) for x in infos[kidnap:]) > 0.2
+    # ...and re-localizes, so the run ends recovered.
+    assert infos[-1]["success"] is True
+    assert infos[-1]["error"] <= module.MCLConfig().localized_tol
+
+
+def test_plain_mcl_cannot_recover_but_augmented_can() -> None:
+    module = load_example("examples/navigation/38_monte_carlo_localization.py")
+
+    plain = module.run(seed=0, render=False, augment=False)
+    augmented = module.run(seed=0, render=False, augment=True)
+
+    # Plain MCL never injects, so a collapsed cloud is stranded after the kidnap:
+    # it stays lost and emits localization_lost for the rest of the run.
+    assert all(x.get("inject_ratio", 0.0) == 0.0 for x in plain.infos)
+    assert plain.infos[-1]["success"] is False
+    lost = sum(1 for f in plain.failures() if f.kind == "localization_lost")
+    assert lost >= 10
+
+    # Augmented MCL recovers on the same seed and never has to report itself lost.
+    assert augmented.infos[-1]["success"] is True
+    assert augmented.infos[-1]["error"] < plain.infos[-1]["error"]
+    assert not any(f.kind == "localization_lost" for f in augmented.failures())
