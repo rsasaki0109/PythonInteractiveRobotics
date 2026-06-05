@@ -879,3 +879,34 @@ def test_ungrounded_language_only_violates_affordances_and_times_out() -> None:
     # Grounding the same scores in affordances turns the plan executable.
     assert grounded.infos[-1]["success"] is True
     assert len(grounded.actions) < len(ungrounded.actions)
+
+
+def test_potential_field_escapes_local_minimum() -> None:
+    module = load_example("examples/navigation/40_potential_field_escape.py")
+
+    trace = module.run(seed=0, render=False, escape=True)
+
+    # The head-on obstacle traps gradient descent; the agent detects it and
+    # boundary-follows out, then reaches the goal.
+    assert trace.infos[-1]["success"] is True
+    assert any(f.kind == "local_minimum" for f in trace.failures())
+    assert any(info.get("escaping") for info in trace.infos)
+    assert not any(f.kind == "collision" for f in trace.failures())
+
+
+def test_plain_potential_field_stalls_in_the_minimum() -> None:
+    module = load_example("examples/navigation/40_potential_field_escape.py")
+
+    plain = module.run(seed=0, render=False, escape=False)
+    escaped = module.run(seed=0, render=False, escape=True)
+
+    # Without the escape, descent stalls at the minimum and never recovers:
+    # local_minimum fires repeatedly and the run times out short of the goal.
+    assert plain.infos[-1]["success"] is False
+    assert sum(1 for f in plain.failures() if f.kind == "local_minimum") >= 3
+    assert any(f.kind == "timeout" for f in plain.failures())
+    assert not any(info.get("escaping") for info in plain.infos)
+
+    # The escape recovers on the same scene and ends much closer to the goal.
+    assert escaped.infos[-1]["success"] is True
+    assert escaped.infos[-1]["distance_to_goal"] < plain.infos[-1]["distance_to_goal"]
