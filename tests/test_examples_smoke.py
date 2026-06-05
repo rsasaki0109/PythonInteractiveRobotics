@@ -760,3 +760,43 @@ def test_model_error_recovery_runs_headless() -> None:
     assert any(info.get("action_type") == "probe" for info in trace.infos)
     assert any(info.get("agent_state") == "system_id" for info in trace.infos)
     assert any(info.get("agent_state") == "go_to_goal" for info in trace.infos)
+
+
+def test_behavior_tree_recovery_runs_headless() -> None:
+    module = load_example("examples/manipulation/37_behavior_tree_recovery.py")
+
+    trace = module.run(seed=3, render=False, max_steps=40)
+    final = trace.infos[-1]
+
+    # The tree lifts the block and reports SUCCESS at the root.
+    assert final["success"] is True
+    assert final["bt_status"] == module.Status.SUCCESS.value
+    assert final["bt_leaf"] == "grasp_at_belief"
+
+    leaves = [info.get("bt_leaf") for info in trace.infos]
+    # Both the recovery leaf (active perception) and the primary grasp leaf run:
+    # occlusion forces a re-look before the tree is confident enough to grasp.
+    assert "relook_to_refine" in leaves
+    assert "grasp_at_belief" in leaves
+
+
+def test_behavior_tree_recovery_falls_back_to_relook_after_a_miss() -> None:
+    module = load_example("examples/manipulation/37_behavior_tree_recovery.py")
+
+    # seed=4 misses at least one grasp; the Fallback must route back through
+    # relook_to_refine (recovery) before the retry, and still succeed.
+    trace = module.run(seed=4, render=False, max_steps=40)
+
+    assert trace.infos[-1]["success"] is True
+    assert any(failure.kind == "grasp_miss" for failure in trace.failures())
+    assert trace.summary().retry_count >= 1
+
+    # A relook leaf is ticked on some step *after* the first grasp miss.
+    first_miss = next(
+        i
+        for i, info in enumerate(trace.infos)
+        if isinstance(info.get("failure"), module.Failure)
+        and info["failure"].kind == "grasp_miss"
+    )
+    later_leaves = [info.get("bt_leaf") for info in trace.infos[first_miss + 1 :]]
+    assert "relook_to_refine" in later_leaves

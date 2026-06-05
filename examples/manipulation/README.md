@@ -449,3 +449,48 @@ calibrate q_hat -> observe scores -> prediction set -> singleton ? place : ask -
 - Remove the ask branch (always commit) and watch
   `wrong_sort_count` and `coverage_violation_count` rise on harder seeds.
 - Shrink `calibration_size` to `8` and watch `q_hat` swing seed-to-seed.
+
+## `37_behavior_tree_recovery.py`
+
+### What this teaches
+
+Recovery can be a property of *structure*, not a hand-written routine. This
+runs the same tabletop pick as `01_pick_and_retry.py` on the same `Tabletop2D`,
+but the policy is a reactive behavior tree (BT) — the Sequence/Fallback pattern
+roboticists use (BehaviorTree.CPP, py_trees, the ROS 2 Nav2 BT Navigator). A
+single `Fallback` holds the primary grasp first and a `relook_to_refine`
+recovery leaf second. A grasp miss simply grows the belief radius, which makes
+the `belief_confident?` precondition false, so the *same* fallback re-runs
+active perception before retrying. Occlusion and grasp-miss recovery share one
+declarative branch instead of two imperative `if` blocks.
+
+### Run
+
+```bash
+python examples/manipulation/37_behavior_tree_recovery.py
+```
+
+### Key loop
+
+```text
+tick tree -> Fallback[ confident? -> grasp ; else relook ] -> miss lowers confidence -> relook -> retry
+```
+
+### Simplifications
+
+- the same `Tabletop2D` world as `01_pick_and_retry.py`
+- a minimal three-status BT (SUCCESS / FAILURE / RUNNING) with Sequence,
+  Fallback, Condition, and Action nodes — no external BT library
+- one tick yields exactly one environment action (the RUNNING leaf)
+- belief is a single mean + shrinking radius, refined by an EMA over detections
+
+### Things to try
+
+- Compare with `01_pick_and_retry.py`: same world, imperative vs. declarative
+  recovery.
+- Raise `confidence_radius` and watch the tree grasp earlier (fewer re-looks,
+  more misses).
+- Add a `Condition("attempts_left?")` child so the tree gives up gracefully
+  instead of relying on the world's attempt budget.
+- Reorder the `grasp_or_recover` Fallback children and watch the policy break —
+  the order *is* the priority.
