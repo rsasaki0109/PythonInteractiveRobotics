@@ -837,3 +837,45 @@ def test_plain_mcl_cannot_recover_but_augmented_can() -> None:
     assert augmented.infos[-1]["success"] is True
     assert augmented.infos[-1]["error"] < plain.infos[-1]["error"]
     assert not any(f.kind == "localization_lost" for f in augmented.failures())
+
+
+def test_saycan_grounded_executes_a_feasible_plan() -> None:
+    module = load_example("examples/embodied_ai/39_saycan_affordance_grounding.py")
+
+    trace = module.run(seed=0, render=False, ground=True)
+    skills = [info["skill"] for info in trace.infos]
+
+    # SayCan walks out a feasible plan with no separate planner and no
+    # precondition violations: fetch the sponge, carry it, wipe.
+    assert trace.infos[-1]["success"] is True
+    assert skills[:4] == ["go_to_sponge", "pick_sponge", "go_to_table", "wipe_table"]
+    assert not any(f.kind == "affordance_violation" for f in trace.failures())
+    assert all(info.get("grounded") is True for info in trace.infos)
+
+
+def test_saycan_recovers_from_a_skill_slip() -> None:
+    module = load_example("examples/embodied_ai/39_saycan_affordance_grounding.py")
+
+    # seed=1 slips an afforded skill at least once; SayCan retries and still wins.
+    trace = module.run(seed=1, render=False, ground=True)
+
+    assert trace.infos[-1]["success"] is True
+    assert any(f.kind == "skill_slip" for f in trace.failures())
+
+
+def test_ungrounded_language_only_violates_affordances_and_times_out() -> None:
+    module = load_example("examples/embodied_ai/39_saycan_affordance_grounding.py")
+
+    ungrounded = module.run(seed=0, render=False, ground=False)
+    grounded = module.run(seed=0, render=False, ground=True)
+
+    # The raw LLM argmax commands "pick the sponge" from the wrong place forever:
+    # ungrounded language is relevant but not executable.
+    assert ungrounded.infos[-1]["success"] is False
+    violations = sum(1 for f in ungrounded.failures() if f.kind == "affordance_violation")
+    assert violations >= 5
+    assert any(f.kind == "timeout" for f in ungrounded.failures())
+
+    # Grounding the same scores in affordances turns the plan executable.
+    assert grounded.infos[-1]["success"] is True
+    assert len(grounded.actions) < len(ungrounded.actions)
